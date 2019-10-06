@@ -421,7 +421,7 @@ sensor:
            {{ 'mdi:numeric-' ~ dict_code[severity] ~ '-box' if severity in dict_code else 'mdi:numeric-0-box' }}
           {% endif %}
 
-      # natural_events GLOBAL LEVEL SENSOR
+      ## NATURAL EVENTS GLOBAL LEVEL SENSOR
       natural_events_level:
         friendly_name: Natural Events Level
         entity_id: 
@@ -523,7 +523,7 @@ automation:
           call_no_annuncio: 1
         data_template:
           title: >-
-            Burze - 
+            Burze -
             {% if trigger.from_state.state == 'off' %}
             {{ trigger.to_state.attributes.friendly_name }}.
             {% else %} AGGIORNAMENTO TEMPORALE. {% endif %}
@@ -595,7 +595,7 @@ automation:
           call_no_annuncio: 1
         data_template:
           title: >-
-            MeteoAlarm - 
+            MeteoAlarm -
             {% if trigger.from_state.state == 'off' %}
             {{ trigger.to_state.attributes.urgency }}. 
             {% else %} Aggiornamenti. {% endif %}
@@ -658,7 +658,7 @@ automation:
           call_no_annuncio: 1
         data_template:
           title: >-
-            Protezione Civile - 
+            Protezione Civile -
             {% if trigger.from_state.state == 'off' %}
             {{ trigger.to_state.attributes.friendly_name }}.
             {% else %} AGGIORNAMENTO DPC. {% endif %}
