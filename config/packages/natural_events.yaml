@@ -45,19 +45,19 @@ homeassistant:
         MEDIA PLAYER Google: &media_player_google 'media_player.red, media_player.black2'
         MEDIA PLAYER Alexa: &media_player_alexa 'media_player.studio'
       filter:
-        RAGGIO ZONA MeteoAlert in metri: &radius_meteoalert 25000
-        RAGGIO ZONA GeoAlert in metri: &radius_geoalert 500000
-        RAGGIO TERREMOTO in km: &radius_quake 500
+        RAGGIO ZONA MeteoAlert metri: &radius_meteoalert 25000
+        RAGGIO ZONA GeoAlert metri: &radius_geoalert 500000
+        RAGGIO TERREMOTO km: &radius_quake 500
         MAGNITUDO minimo: &magnitude 3.0
-        RAGGIO BURZE in km: &radius_burze 25
-        RAGGIO WWLLN in km: &radius_wwlln 25
-        WWLLN finestra in minuti: &windows 360
+        RAGGIO BURZE km: &radius_burze 25
+        RAGGIO WWLLN km: &radius_wwlln 25
+        WWLLN finestra minuti: &windows 360
       secret:
         LATITUDINE per le zone: &latitude !secret latitude_home
         LONGITUDINE per le zone: &longitude !secret longitude_home
         REGIONE MeteoAlaram: &province !secret regione 
-        ISTAT DPC apici inclusi: &istat !secret istat
-        API KEY Burze.net: &burze_api_key !secret burze_api_key
+        ISTAT DPC: &istat !secret istat
+        API KEY Burze: &burze_api_key !secret burze_api_key
     ##--------------------- FINE IMPOSTAZIONI PACKAGE ---------------------##
 
 ############################################################################
