@@ -280,6 +280,7 @@ binary_sensor:
         friendly_name: Evento terremoto
         entity_id: 
           - automation.natural_events_quake_notifications
+          - sensor.date
         device_class: vibration
         value_template: >-
           {%set last_date = states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
