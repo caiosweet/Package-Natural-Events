@@ -47,8 +47,7 @@ entities:
       }
     image: /local/hassiohelp/pkg_natural_events/sfondo_meteo.png
     elements:
-
-      - type: conditional
+      - type: conditional # Nessun Evento
         conditions:
           - entity: group.natural_events
             state: 'off'
@@ -81,9 +80,7 @@ entities:
               transform: 'translate(0%,-50%)'
               z-index: 98
 
-
-
-      - type: conditional
+      - type: conditional # Eventi Meteo
         conditions:
           - entity: group.meteoalert
             state: 'on'
@@ -160,8 +157,7 @@ entities:
               z-index: 1
             type: image
 
-
-      - type: conditional
+      - type: conditional # Eventi Geologici
         conditions:
           - entity: group.geoalert
             state: 'on'
@@ -182,7 +178,6 @@ entities:
               border-width: 'var(--my-border-width)'
               animation: 'var(--my-animation)'
               background-color: 'var(--global-level)'
-              #border-radius: 6px
               color: 'var(--my-color)'
               font-family: Trebuchet MS
               font-size: 120%
@@ -262,7 +257,6 @@ entities:
             type: image
 
 
-#########################################################################################################
   - type: custom:hui-conditional-card # NSCONDE/VISUALIZZA tutte le cards
     conditions:
       - entity: input_boolean.natural_events
