@@ -265,51 +265,8 @@ entities:
       type: entities
       style: |
         ha-card {border-radius: 0px; box-shadow: none; background: none;}
-      # CARDS VISUALIZZATE SOLO SE INPUT BOOLEAN NATUAR EVENTS ON!!
+      # CARDS VISUALIZZATE SOLO SE INPUT BOOLEAN NATURAL EVENTS ON!!
       entities:
-        - type: custom:auto-entities # MENU Impostazioni fold
-          show_empty: false
-          filter:
-            include:
-              - attributes:
-                  package: Natural_events
-            exclude:
-              - domain: binary_sensor
-              #- domain: group
-              - domain: sensor
-              - domain: script
-          card:
-            type: custom:fold-entity-row
-            style: |
-              :host {
-                color: {% if is_state(config.entity, 'on') %} yellow {% endif %};
-              }
-            head: input_boolean.natural_events #group.natural_events
-
-        - type: custom:auto-entities # SENSORI on
-          filter:
-            include:
-              - domain: binary_sensor
-                state: 'on'
-                attributes:
-                    package: Natural_events
-                options:
-                  secondary_info: last-changed
-                  style: |
-                    :host {
-                      {% set color = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
-                      color: {% if 'dpc' in config.entity %} {{color[state_attr(config.entity, 'level')|int]}} 
-                              {% elif 'meteoalarm' in config.entity %} {{states('sensor.meteoalarm_level')}}
-                              {% elif 'quake' in config.entity %} {{color[state_attr('binary_sensor.lastquake', 'level')|int]}}
-                            {% endif %};
-                    }
-          card:
-            type: entities
-            show_empty: false
-            style: |
-              ha-card {background: none; border-radius: 0px; box-shadow: none;}
-              .card-content {padding: 0}
-
         - type: custom:auto-entities # TERREMOTO conditional
           show_empty: false
           filter:
@@ -336,13 +293,17 @@ entities:
               {% set magnitudo = (state_attr('binary_sensor.lastquake', 'magnitude')|float) if not none else '0' %}
               {% set code = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
               {% set color = code[state_attr('binary_sensor.lastquake', 'level')|int] %}
-              <font color={{color}}>{{as_timestamp(data_utc)|timestamp_custom ('%H:%M:%S del %d-%m-%Y')}}</font> 
+              {% set lat = state_attr('binary_sensor.lastquake', 'latitude') %}
+              {% set lon = state_attr('binary_sensor.lastquake', 'longitude') %}
+              <font color={{color}}>{{as_timestamp(data_utc)|timestamp_custom ('%H:%M:%S del %d-%m-%Y')}}</font>
 
 
               Un terremoto di magnitudo <font color={{color}}> {{magnitudo}} </font> 
               è avvenuto nella zona: [{{state_attr('binary_sensor.lastquake', 'region')}}](https://www.google.com/maps/search/?api=1&query={{state_attr('binary_sensor.lastquake', 'latitude')}},{{state_attr('binary_sensor.lastquake', 'longitude')}})
               a <font color={{color}}> {{state_attr('binary_sensor.lastquake', 'distance')}} </font> km da casa,
-              con coordinate geografiche (lat, lon) {{state_attr('binary_sensor.lastquake', 'latitude')}}, {{state_attr('binary_sensor.lastquake', 'longitude')}}
+              con coordinate geografiche (lat, lon) {{lat}}, {{lon}}. 
+              
+              Tu ti trovi a {{distance(lat, lon, 'device_tracker.oneplus_5t') | round(1)}} km dall'epicentro.
 
 
               {% if magnitudo >= 3|int %}
@@ -423,7 +384,6 @@ entities:
               [Protezione Civile](http://www.protezionecivile.it/home) ~ [Vigilanza Meteo](http://www.protezionecivile.gov.it/dettaglio/-/journal_content/56/20182/1131180?refererPlid=42041&controlPanelCategory=current_site.content)
               ~ [Criticità Idro](http://www.protezionecivile.gov.it/attivita-rischi/meteo-idro/attivita/previsione-prevenzione/centro-funzionale-centrale-rischio-meteo-idrogeologico/previsionale/bollettini-criticita/bollettino-odierno) ~ [Radar](http://www.protezionecivile.gov.it/radar-dpc)
 
-
         - type: custom:auto-entities # BURZE conditional
           show_empty: false
           filter:
@@ -457,7 +417,6 @@ entities:
 
 
                     [Burze](https://burze.dzis.net) ~ [Blitzortung](http://map.blitzortung.org/#5.11/43.00/13.00) 
-
 
         - type: custom:auto-entities # METEOALARM divider
           show_empty: false
@@ -566,7 +525,7 @@ entities:
 
         - type: custom:hui-conditional-card # IFRAME wwlln
           conditions:
-            - entity: binary_sensor.lastwwlln
+            - entity: binary_sensor.burze_storms_nearby
               state: 'on'
           card:
               type: conditional
@@ -584,7 +543,6 @@ entities:
                   }
                 entities:
                   - zone.meteoalert
-                  - binary_sensor.lastwwlln
                 geo_location_sources:
                   - wwlln
                 dark_mode: true

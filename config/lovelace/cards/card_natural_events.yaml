@@ -105,7 +105,7 @@ entities:
       type: entities
       style: |
         ha-card {border-radius: 0px; box-shadow: none; background: none;}
-      # CARDS VISUALIZZATE SOLO SE INPUT BOOLEAN NATUAR EVENTS ON!!
+      # CARDS VISUALIZZATE SOLO SE INPUT BOOLEAN NATURAL EVENTS ON!!
       entities:
         - type: custom:auto-entities # TERREMOTO conditional
           show_empty: false
