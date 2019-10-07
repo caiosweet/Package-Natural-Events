@@ -46,9 +46,9 @@ homeassistant:
         MEDIA PLAYER Alexa: &media_player_alexa 'media_player.studio'
       filter:
         RAGGIO ZONA MeteoAlert metri: &radius_meteoalert 25000
-        RAGGIO ZONA GeoAlert metri: &radius_geoalert 500000
-        RAGGIO TERREMOTO km: &radius_quake 500
-        MAGNITUDO minimo: &magnitude 3.0
+        RAGGIO ZONA GeoAlert metri: &radius_geoalert 850000
+        RAGGIO TERREMOTO km: &radius_quake 800
+        MAGNITUDO minimo: &magnitude 3
         RAGGIO BURZE km: &radius_burze 25
         RAGGIO WWLLN km: &radius_wwlln 25
         WWLLN finestra minuti: &windows 360
@@ -192,13 +192,13 @@ zone:
     latitude: *latitude
     longitude: *longitude
     radius: *radius_geoalert
-    passive: true
+    #passive: true
 
   - name: meteoalert
     latitude: *latitude
     longitude: *longitude
     radius: *radius_meteoalert
-    passive: true
+    #passive: true
 #######################################-#######################################
 ##                                   GROUP
 #######################################-#######################################
@@ -537,7 +537,7 @@ automation:
             La scarica più vicina è avvenuta a *{{state_attr('binary_sensor.burze_storms_nearby', 'distance')}} km* 
             a *{{states('sensor.burze_direction')}}* da casa.
           message_tts: >-
-            {% if trigger.from_state.state == 'off' %} TTS Probabile arrivo di un temporale. 
+            {% if trigger.from_state.state == 'off' %} Probabile arrivo di un temporale. 
             {% else %} 
             Aggiornamento Temporale. Il fulmine più vicino è stato rilevato 
             a {{state_attr('binary_sensor.burze_storms_nearby', 'distance')}} km 
