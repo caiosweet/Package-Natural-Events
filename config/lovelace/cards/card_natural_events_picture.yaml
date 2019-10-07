@@ -267,61 +267,6 @@ entities:
         ha-card {border-radius: 0px; box-shadow: none; background: none;}
       # CARDS VISUALIZZATE SOLO SE INPUT BOOLEAN NATURAL EVENTS ON!!
       entities:
-        - type: custom:hui-entities-card # MENU Impostazioni fold, SENSORI on
-          style: |
-            ha-card {
-              background:none; border-radius: 0px; box-shadow: none; 
-            }
-          entities:
-            - type: custom:auto-entities # MENU Impostazioni fold
-              show_empty: false
-              filter:
-                include:
-                  - attributes:
-                      package: Natural_events
-                exclude:
-                  - domain: binary_sensor
-                  - domain: group
-                  - domain: sensor
-                  - domain: script
-                  - domain: zone
-              card:
-                type: custom:fold-entity-row
-                style: |
-                  :host {
-                    color: {% if is_state(config.entity, 'on') %} yellow {% endif %};
-                  }
-                head: input_boolean.natural_events
-
-            - type: custom:fold-entity-row
-              head: group.meteoalert
-            - type: custom:fold-entity-row
-              head: group.geoalert
-
-            - type: custom:auto-entities # SENSORI on
-              filter:
-                include:
-                  - domain: binary_sensor
-                    state: 'on'
-                    attributes:
-                        package: Natural_events
-                    options:
-                      secondary_info: last-changed
-                      style: |
-                        :host {
-                          {% set color = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
-                          color: {% if 'dpc' in config.entity %} {{color[state_attr(config.entity, 'level')|int]}} 
-                                  {% elif 'meteoalarm' in config.entity %} {{states('sensor.meteoalarm_level')}}
-                                  {% elif 'quake' in config.entity %} {{color[state_attr('binary_sensor.lastquake', 'level')|int]}}
-                                {% endif %};
-                        }
-              card:
-                type: entities
-                show_empty: false
-                style: |
-                  ha-card {background: none; border-radius: 0px; box-shadow: none;}
-                  .card-content {padding: 0}
-
         - type: custom:auto-entities # TERREMOTO conditional
           show_empty: false
           filter:
@@ -574,7 +519,6 @@ entities:
               "Neve": https://api.sat24.com/animated/EU/snow/3/Central%20European%20Standard%20Time/4614822' width=845 height=615 
               "Burze": https://burze.dzis.net/italia_fulmine_lebhaft_gruppi_ne.gif
               "WWLLN": https://wwlln.net/WWLLN_movies/Movie_of_Lightning_in_EurAfrica_BIG.gif
-              "Nessuna" : none
             entities: 
               - entity: input_select.meteo_map
 
@@ -606,7 +550,7 @@ entities:
 
         - type: custom:hui-conditional-card # IFRAME windy
           conditions:
-            - entity: group.geometeoalert
+            - entity: group.meteoalert
               state: 'on'
           card:
               type: conditional

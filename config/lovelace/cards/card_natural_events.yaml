@@ -359,7 +359,6 @@ entities:
               "Neve": https://api.sat24.com/animated/EU/snow/3/Central%20European%20Standard%20Time/4614822' width=845 height=615 
               "Burze": https://burze.dzis.net/italia_fulmine_lebhaft_gruppi_ne.gif
               "WWLLN": https://wwlln.net/WWLLN_movies/Movie_of_Lightning_in_EurAfrica_BIG.gif
-              "Nessuna" : none
             entities: 
               - entity: input_select.meteo_map
 
@@ -391,7 +390,7 @@ entities:
 
         - type: custom:hui-conditional-card # IFRAME windy
           conditions:
-            - entity: group.geometeoalert
+            - entity: group.meteoalert
               state: 'on'
           card:
               type: conditional
