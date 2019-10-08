@@ -806,10 +806,11 @@ script:
   no_service:
     alias: NO Service 
     sequence:
-      - service: system_log.write
-        data:
-          message: "Natural events package servizio inesistente."
-          level: warning
+      - delay: 00:00:00
+      # - service: system_log.write
+      #   data:
+      #     message: "Natural events package servizio inesistente."
+      #     level: warning
 
 #######################################-#######################################
 ##                                END PACKAGE
