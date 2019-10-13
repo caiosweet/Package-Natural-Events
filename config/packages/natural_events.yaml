@@ -192,13 +192,13 @@ zone:
     latitude: *latitude
     longitude: *longitude
     radius: *radius_geoalert
-    #passive: true
+    passive: true
 
   - name: meteoalert
     latitude: *latitude
     longitude: *longitude
     radius: *radius_meteoalert
-    #passive: true
+    passive: true
 #######################################-#######################################
 ##                                   GROUP
 #######################################-#######################################
