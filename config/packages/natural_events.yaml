@@ -254,6 +254,7 @@ input_boolean:
 #######################################-#######################################
 binary_sensor:
   - platform: dpc
+    name: 'dpc'
     istat: *istat
     warnings:
       - temporali_oggi
@@ -405,7 +406,7 @@ sensor:
             'Safe':'Green',
             'Moderate':'Yellow',
             'Severe':'Orange',
-            'High':'Red', } %}
+            'Extreme':'Red', } %}
           {{ dict_color[severity] if severity in dict_color else 'White' }}
           {% endif %}
         icon_template: >
@@ -418,7 +419,7 @@ sensor:
             'Safe':'1',
             'Moderate':'2',
             'Severe':'3',
-            'High':'4', } %}
+            'Extreme':'4', } %}
            {{ 'mdi:numeric-' ~ dict_code[severity] ~ '-box' if severity in dict_code else 'mdi:numeric-0-box' }}
           {% endif %}
 
@@ -436,7 +437,7 @@ sensor:
           - binary_sensor.dpc_idraulico_domani
           - binary_sensor.dpc_idrogeologico_domani
         value_template: >
-          {% set dict_code = {'Safe': '1', 'Moderate': '2', 'Severe': '3', 'High': '4'} %}
+          {% set dict_code = {'Safe': '1', 'Moderate': '2', 'Severe': '3', 'Extreme': '4'} %}
           {% set color = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
           {% set severity = state_attr('binary_sensor.meteoalarm','severity') %}
           {% set lev1 = dict_code[severity] if severity in dict_code else '0' %}
@@ -446,7 +447,7 @@ sensor:
           {% set lev_color = (lev1, lev2)|default(0, true)|max|first|int %}
           {{ color[lev_color] }}
         icon_template: >
-          {% set dict_code = {'Safe': '1', 'Moderate': '2', 'Severe': '3', 'High': '4'} %}
+          {% set dict_code = {'Safe': '1', 'Moderate': '2', 'Severe': '3', 'Extreme': '4'} %}
           {% set color = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
           {% set severity = state_attr('binary_sensor.meteoalarm','severity') %}
           {% set lev1 = dict_code[severity] if severity in dict_code else '0' %}
@@ -851,4 +852,5 @@ script:
     # | 1    | VERDE             | Nessun Avviso
     # | 2    | GIALLA            | 
     # | 3    | ARANCIONE         |
-    # | 4    | ROSSA             |
+    # | 4    | ROSSA             | 
+    
