@@ -32,6 +32,7 @@ homeassistant:
       customize: &customize
         package: 'Natural_events'
         author: 'Caio & Gianpi - www.hassiohelp.eu'
+        version: '2.0'
 
       expose: &expose
         <<: *customize
@@ -365,63 +366,42 @@ sensor:
             'NW':'arrow-top-left', } %}
           mdi:{{ dict_direction[cardinal] if cardinal in dict_direction else 'arrow-left-right' }}-bold-outline
 
-      ## METEOALARM TEMPLATE TYPE SENSOR
       meteoalarm_type:
         friendly_name: Meteoalarm type
         entity_id: binary_sensor.meteoalarm
         value_template: >
-          {% set event = state_attr('binary_sensor.meteoalarm', 'event') %}
-          {{'Non disponibile' if event == none else event.split(" ")[1:-1]|join(' ')}}
+          {% set list_type = ['Nessun Avviso','Vento','Neve/Ghiaccio','Temporali','Nebbia','Temperature massime estreme','Temperature minime estreme',
+          'Eventi Costieri', 'Incendi boschivi','Valanghe','Pioggia','Non disponibile','Alluvione','Pioggia/Alluvione'] %}
+          {% set type = state_attr('binary_sensor.meteoalarm', 'awareness_type') %}
+          {{ 'Non disponibile' if type == none else list_type[type.split(';')[0]|int] }}
         icon_template: >
-          {% set dict_type2 = {
-          'Nessun Avviso' : 'shield-outline',
-          'Vento' : 'weather-windy',
-          'Neve/Ghiaccio' : 'snowflake-alert',
-          'Temporali' : 'weather-lightning',
-          'Nebbia' : 'weather-fog',
-          'Temperature massime estreme' : 'thermometer-plus',
-          'Temperature minime estreme' : 'thermometer-minus',
-          'Eventi Costieri' : 'sailing',
-          'Incendi boschivi' : 'fire',
-          'Valanghe' : 'shovel',
-          'Pioggia' : 'weather-pouring',
-          'Non disponibile' : 'help-circle',
-          'Alluvione' : 'waves',
-          'Pioggia/Alluvione' : 'home-flood', } %}
-          {% set event = state_attr('binary_sensor.meteoalarm', 'event') %}
-          {% set event = '' if event == none else event.split(" ")[1:-1]|join(' ') %}
-          {{'mdi:'~dict_type2[event] if event in dict_type2 else 'mdi:help-circle'}}
+          {% set dict_type = {
+          0  : "shield-outline",
+          1  : "weather-windy",
+          2  : "snowflake-alert",
+          3  : "weather-lightning",
+          4  : "weather-fog",
+          5  : "thermometer-plus",
+          6  : "thermometer-minus",
+          7  : "sailing",
+          8  : "fire",
+          9  : "shovel",
+          10 : "weather-pouring",
+          11 : "help-circle",
+          12 : "waves",
+          13 : "home-flood", } %}
+          {% set type = state_attr('binary_sensor.meteoalarm', 'awareness_type') %}
+          {{ 'mdi:help-circle' if type == none else 'mdi:'~dict_type[type.split(';')[0]|int]}}
 
-      ## METEOALARM TEMPLATE LEVEL SENSOR
       meteoalarm_level:
         friendly_name: Meteoalarm level
         entity_id: binary_sensor.meteoalarm
         value_template: >
-          {% if state_attr('binary_sensor.meteoalarm', 'awareness_level') %}
-          {% set code_color = state_attr('binary_sensor.meteoalarm', 'awareness_level').split(';')[1] | default('Green', true)%}
-          {{ code_color|title }}
-          {% else %}
-          {% set severity = state_attr('binary_sensor.meteoalarm','severity') %}
-          {% set dict_color = {
-            'Safe':'Green',
-            'Moderate':'Yellow',
-            'Severe':'Orange',
-            'Extreme':'Red', } %}
-          {{ dict_color[severity] if severity in dict_color else 'White' }}
-          {% endif %}
+          {% set code_color = state_attr('binary_sensor.meteoalarm', 'awareness_level') %}
+          {{ 'White' if code_color == none else code_color.split(';')[1]|title }}
         icon_template: >
-          {% if state_attr('binary_sensor.meteoalarm', 'awareness_level') %}
-          {% set code = state_attr('binary_sensor.meteoalarm','awareness_level').split(';')[0] %}
-          {{'mdi:numeric-'~code~'-box'}}
-          {% else %}
-          {% set severity= state_attr('binary_sensor.meteoalarm','severity') %}
-          {% set dict_code = {
-            'Safe':'1',
-            'Moderate':'2',
-            'Severe':'3',
-            'Extreme':'4', } %}
-           {{ 'mdi:numeric-' ~ dict_code[severity] ~ '-box' if severity in dict_code else 'mdi:numeric-0-box' }}
-          {% endif %}
+          {% set code = state_attr('binary_sensor.meteoalarm','awareness_level') %}
+          {{'mdi:numeric-0-box' if code_colr == none else 'mdi:numeric-'~code.split(';')[0]~'-box'}}
 
       ## NATURAL EVENTS GLOBAL LEVEL SENSOR
       natural_events_level:
@@ -437,26 +417,23 @@ sensor:
           - binary_sensor.dpc_idraulico_domani
           - binary_sensor.dpc_idrogeologico_domani
         value_template: >
-          {% set dict_code = {'Safe': '1', 'Moderate': '2', 'Severe': '3', 'Extreme': '4'} %}
           {% set color = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
-          {% set severity = state_attr('binary_sensor.meteoalarm','severity') %}
-          {% set lev1 = dict_code[severity] if severity in dict_code else '0' %}
+          {% set code = state_attr('binary_sensor.meteoalarm','awareness_level') %}
+          {% set lev1 = '0' if code == none else code.split(';')[0] %}
           {% set lev2 = expand('group.natural_events')
             | selectattr("attributes.level", 'defined')
             | join(', ', attribute='attributes.level') %}
           {% set lev_color = (lev1, lev2)|default(0, true)|max|first|int %}
           {{ color[lev_color] }}
         icon_template: >
-          {% set dict_code = {'Safe': '1', 'Moderate': '2', 'Severe': '3', 'Extreme': '4'} %}
           {% set color = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
-          {% set severity = state_attr('binary_sensor.meteoalarm','severity') %}
-          {% set lev1 = dict_code[severity] if severity in dict_code else '0' %}
+          {% set code = state_attr('binary_sensor.meteoalarm','awareness_level') %}
+          {% set lev1 = '0' if code == none else code.split(';')[0] %}
           {% set lev2 = expand('group.natural_events')
             | selectattr("attributes.level", 'defined')
             | join(', ', attribute='attributes.level') %}
           {% set lev_color = (lev1, lev2)|default(0, true)|max|first|int %}
           {{ lev_color }}
-
 #######################################-#######################################
 ##                                 AUTOMATION
 #######################################-#######################################
@@ -597,27 +574,28 @@ automation:
           call_no_annuncio: 1
         data_template:
           title: >-
+            {% set start = state_attr('binary_sensor.meteoalarm', 'effective') %}
+            {% set end = state_attr('binary_sensor.meteoalarm', 'expires') %}
             MeteoAlarm -
             {% if trigger.from_state.state == 'off' %}
             {{ trigger.to_state.attributes.urgency }}. 
-            {% else %} Aggiornamenti. {% endif %}
-            {% set start = state_attr('binary_sensor.meteoalarm', 'effective') %}
-            {% set end = state_attr('binary_sensor.meteoalarm', 'expires') %}
-            {{as_timestamp(start)|timestamp_custom ('Valido dalle ore **%H:%M** del **%d/%m**')}}
-            {{as_timestamp(end)|timestamp_custom (' alle ore **%H:%M** del **%d/%m**')}}
+            {% else %}Aggiornamenti.{% endif %}
+            {{as_timestamp(start)|timestamp_custom('Valido dalle ore %H:%M del %d/%m')}}
+            {{as_timestamp(end)|timestamp_custom(' alle ore %H:%M del %d/%m')}}
           message: >-
             {% if trigger.from_state.state == 'off' %}
             Allerta Meteo.
             {% else %} Aggiornamento allerta meteo. {% endif %}
-            {{states('sensor.meteoalarm_type')}}. 
-            Descrizione {{state_attr('binary_sensor.meteoalarm', 'description')}}
+            *{{states('sensor.meteoalarm_type')}}.*
+            Descrizione *{{state_attr('binary_sensor.meteoalarm', 'description')}}*
           message_tts: 'Allerta Meteo'
           media_player_google: *media_player_google
           media_player_alexa: *media_player_alexa
           notify: *notify
           file: >-
             {% if is_state('input_boolean.natural_events_send_image', 'on') %}
-            /config/www/hassiohelp/pkg_natural_events/{{states.sensor.meteoalarm_type.attributes.icon |replace('mdi:','')}}.png
+            {% set type = state_attr('binary_sensor.meteoalarm', 'awareness_type') %}
+            /config/www/hassiohelp/pkg_natural_events/{{'0' if type == none else 'meteoalarm_'~type.split(';')[0]}}.png
             {% else %}
             {% endif %}
 #----------------------------------------------------------------------------------------------------#
@@ -728,7 +706,7 @@ script:
           title: >
             *{{ title }}*
           message: >
-            {{ message }}
+            {{message|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
 
       # URL IMAGE + TESTO
       - service_template: >-
@@ -741,14 +719,14 @@ script:
           title: >
             *{{ title }}*
           message: >
-            {{ message }}
+            {{message|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
           data:
             photo:
               - url: >-
                  {{url}}
                 caption: |
                   *{{title}}*
-                  {{message}}
+                  {{message|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
 
       # FILE IMAGE + TESTO
       - service_template: >-
@@ -761,14 +739,14 @@ script:
           title: >
             *{{ title }}*
           message: >
-            {{ message }}
+            {{message|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
           data:
             photo:
               - file: >-
                   {{file}}
                 caption: |
                   *{{title}}*
-                  {{message}}
+                  {{message|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
 
       # AUDIO
       - condition: time
@@ -788,7 +766,7 @@ script:
           entity_id: >-
             {{media_player_google}}
           message: >
-            {{ message_tts | replace('\n','') | replace('   ',' ') | replace('  ',' ')}}
+            {{message_tts|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
 
       - service_template: >-
           {% if media_player_alexa | length > 1  %}
@@ -800,7 +778,7 @@ script:
           target: >-
             {{media_player_alexa}}
           message: >
-            {{ message_tts | replace('\n','') | replace('   ',' ') | replace('  ',' ')}}
+            {{message_tts|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
           data:
             type: tts
 
@@ -852,5 +830,4 @@ script:
     # | 1    | VERDE             | Nessun Avviso
     # | 2    | GIALLA            | 
     # | 3    | ARANCIONE         |
-    # | 4    | ROSSA             | 
-    
+    # | 4    | ROSSA             |
