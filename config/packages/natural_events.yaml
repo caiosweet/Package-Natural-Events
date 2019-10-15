@@ -366,6 +366,7 @@ sensor:
             'NW':'arrow-top-left', } %}
           mdi:{{ dict_direction[cardinal] if cardinal in dict_direction else 'arrow-left-right' }}-bold-outline
 
+      ## METEOALARM TEMPLATE TYPE SENSOR
       meteoalarm_type:
         friendly_name: Meteoalarm type
         entity_id: binary_sensor.meteoalarm
@@ -393,6 +394,7 @@ sensor:
           {% set type = state_attr('binary_sensor.meteoalarm', 'awareness_type') %}
           {{ 'mdi:help-circle' if type == none else 'mdi:'~dict_type[type.split(';')[0]|int]}}
 
+      ## METEOALARM TEMPLATE LEVEL SENSOR
       meteoalarm_level:
         friendly_name: Meteoalarm level
         entity_id: binary_sensor.meteoalarm
@@ -401,7 +403,7 @@ sensor:
           {{ 'White' if code_color == none else code_color.split(';')[1]|title }}
         icon_template: >
           {% set code = state_attr('binary_sensor.meteoalarm','awareness_level') %}
-          {{'mdi:numeric-0-box' if code_colr == none else 'mdi:numeric-'~code.split(';')[0]~'-box'}}
+          {{'mdi:numeric-0-box' if code == none else 'mdi:numeric-'~code.split(';')[0]~'-box'}}
 
       ## NATURAL EVENTS GLOBAL LEVEL SENSOR
       natural_events_level:
