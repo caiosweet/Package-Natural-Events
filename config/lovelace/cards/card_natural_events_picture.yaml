@@ -45,7 +45,7 @@ entities:
         border-width: var(--my-border-width);
         background: var(--my-background);
       }
-    image: /local/hassiohelp/pkg_natural_events/sfondo_meteo.png
+    image: /local/hassiohelp/pkg_natural_events/background.png
     elements:
       - type: conditional # Nessun Evento
         conditions:
@@ -132,7 +132,7 @@ entities:
               z-index: 98
 
           - entity: binary_sensor.dpc_temporali_oggi
-            image: /local/hassiohelp/pkg_natural_events/temporali_oggi.png
+            image: /local/hassiohelp/pkg_natural_events/dpc_temporali_oggi.png
             state_filter:
               'on': opacity(1)
               'off': opacity(0)
@@ -145,7 +145,7 @@ entities:
             type: image
 
           - entity: binary_sensor.dpc_temporali_domani
-            image: /local/hassiohelp/pkg_natural_events/temporali_domani.png
+            image: /local/hassiohelp/pkg_natural_events/dpc_temporali_domani.png
             state_filter:
               'on': opacity(1)
               'off': opacity(0)
@@ -192,7 +192,7 @@ entities:
               z-index: 98
 
           - entity: binary_sensor.dpc_idraulico_oggi
-            image: /local/hassiohelp/pkg_natural_events/idraulico_oggi.png
+            image: /local/hassiohelp/pkg_natural_events/dpc_idraulico_oggi.png
             state_filter:
               'on': opacity(1)
               'off': opacity(0)
@@ -205,7 +205,7 @@ entities:
             type: image
 
           - entity: binary_sensor.dpc_idrogeologico_oggi
-            image: /local/hassiohelp/pkg_natural_events/idrogeologico_oggi.png
+            image: /local/hassiohelp/pkg_natural_events/dpc_idrogeologico_oggi.png
             state_filter:
               'on': opacity(1)
               'off': opacity(0)
@@ -218,7 +218,7 @@ entities:
             type: image
 
           - entity: binary_sensor.dpc_idraulico_domani
-            image: /local/hassiohelp/pkg_natural_events/idraulico_domani.png
+            image: /local/hassiohelp/pkg_natural_events/dpc_idraulico_domani.png
             state_filter:
               'on': opacity(1)
               'off': opacity(0)
@@ -231,7 +231,7 @@ entities:
             type: image
 
           - entity: binary_sensor.dpc_idrogeologico_domani
-            image: /local/hassiohelp/pkg_natural_events/idrogeologico_domani.png
+            image: /local/hassiohelp/pkg_natural_events/dpc_idrogeologico_domani.png
             state_filter:
               'on': opacity(1)
               'off': opacity(0)
