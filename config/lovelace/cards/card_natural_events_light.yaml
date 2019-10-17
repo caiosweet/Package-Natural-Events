@@ -158,21 +158,17 @@ cards:
         ___
 
 
-        <font size="4" color= {{states('sensor.meteoalarm_level')}}> <ha-icon
-        icon="{{state_attr('sensor.meteoalarm_level', 'icon')}}" style="width:
-        36px; height: 36px;"></ha-icon> </font> <font size="4" color=
-        {{states('sensor.meteoalarm_level')}}> <ha-icon
-        icon="{{state_attr('sensor.meteoalarm_type', 'icon')}}" style="width:
-        36px; height: 36px;"></ha-icon></font> <font size="4" color=
-        {{states('sensor.meteoalarm_level')}}>
-        {{state_attr('binary_sensor.meteoalarm', 'event')}} </font><font
-        size="4" color= grey> {{state_attr('binary_sensor.meteoalarm',
-        'urgency')}} </font>
-          {% set start = state_attr('binary_sensor.meteoalarm', 'effective') %}
-          {% set end = state_attr('binary_sensor.meteoalarm', 'expires') %}
-        <font><center>{{as_timestamp(start)|timestamp_custom ('Valido dalle ore
-        **%H:%M** del **%d/%m**')}} {{as_timestamp(end)|timestamp_custom (' alle
-        ore **%H:%M** del **%d/%m**')}}</font>
+        <font size="4" color= {{states('sensor.meteoalarm_level')}}> 
+        <ha-icon icon="{{state_attr('sensor.meteoalarm_level', 'icon')}}" style="width: 36px; height: 36px;"></ha-icon></font> 
+        <font size="4" color= {{states('sensor.meteoalarm_level')}}> 
+        <ha-icon icon="{{state_attr('sensor.meteoalarm_type', 'icon')}}" style="width: 36px; height: 36px;"></ha-icon></font> 
+        <font size="4" color= {{states('sensor.meteoalarm_level')}}>
+        {{state_attr('binary_sensor.meteoalarm', 'event')}}</font>
+        <font size="4" color= grey> {{state_attr('binary_sensor.meteoalarm', 'urgency')}}</font>
+        {% set start = state_attr('binary_sensor.meteoalarm', 'effective') %}
+        {% set end = state_attr('binary_sensor.meteoalarm', 'expires') %}
+        <font><center>{{as_timestamp(start)|timestamp_custom ('Valido dalle ore **%H:%M** del **%d/%m**')}}
+        {{as_timestamp(end)|timestamp_custom (' alle ore **%H:%M** del **%d/%m**')}}</font>
 
         **Titolo**
 
