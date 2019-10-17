@@ -25,12 +25,12 @@ cards:
 
       {% if is_state('group.natural_events', 'on') %} <font
       size="4"><center><ha-icon icon="mdi:alert" style="width: 48px; height:
-      48px;"></ha-icon>&nbsp; ALLERTA EVENTI CRITICI</center></font> {% else %}
+      48px;"></ha-icon>&nbsp; ALLERTA EVENTI CRITICI</font> {% else %}
       <font size="4"><center><ha-icon icon="mdi:shield-check-outline"
-      style="width;48px; height: 48px;"></ha-icon>&nbsp; NESSUN EVENTO SEGNALATO
+      style="width;48px; height: 48px;"></ha-icon>&nbsp; NESSUN EVENTO SEGNALATO</font>
       {% set summary = states('sensor.dark_sky_daily_summary') %}
 
-      <center></font> <font size="3">{{'' if summary  == 'unknown' else summary }}</font> {% endif %}
+      <center><font size="3">{{'' if summary  == 'unknown' else summary }}</font> {% endif %}
   - type: entities
     title: ''
     style: |
@@ -172,7 +172,7 @@ cards:
           {% set end = state_attr('binary_sensor.meteoalarm', 'expires') %}
         <font><center>{{as_timestamp(start)|timestamp_custom ('Valido dalle ore
         **%H:%M** del **%d/%m**')}} {{as_timestamp(end)|timestamp_custom (' alle
-        ore **%H:%M** del **%d/%m**')}}</center></font>
+        ore **%H:%M** del **%d/%m**')}}</font>
 
         **Titolo**
 

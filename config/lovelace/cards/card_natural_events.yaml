@@ -288,7 +288,7 @@ entities:
               {% set start = state_attr('binary_sensor.meteoalarm', 'effective') %}
               {% set end = state_attr('binary_sensor.meteoalarm', 'expires') %}
               <font><center> {{as_timestamp(start)|timestamp_custom ('Valido dalle ore **%H:%M** del **%d/%m**')}}
-              {{as_timestamp(end)|timestamp_custom (' alle ore **%H:%M** del **%d/%m**')}} </center></font>
+              {{as_timestamp(end)|timestamp_custom (' alle ore **%H:%M** del **%d/%m**')}}</font>
 
 
               **Titolo**
