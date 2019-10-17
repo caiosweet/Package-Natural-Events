@@ -289,6 +289,7 @@ entities:
               ha-card {background: none; border-radius: 0px; box-shadow: none; color: gray;}
               .card-content {padding: 0}
             content: >-
+              {% set device_tracker = 'device_tracker.oneplus_5t' %}
               {% set data_utc = state_attr('binary_sensor.lastquake', 'publication_date') %}
               {% set magnitudo = (state_attr('binary_sensor.lastquake', 'magnitude')|float) if not none else '0' %}
               {% set code = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
@@ -303,7 +304,7 @@ entities:
               a <font color={{color}}> {{state_attr('binary_sensor.lastquake', 'distance')}} </font> km da casa,
               con coordinate geografiche (lat, lon) {{lat}}, {{lon}}. 
               
-              Tu ti trovi a {{distance(lat, lon, 'device_tracker.oneplus_5t') | round(1) if (lat and lon) is defined else none}} km dall'epicentro.
+              Tu ti trovi a {{distance(lat, lon, device_tracker) | round(1) if (lat and lon) is defined else none}} km dall'epicentro.
 
 
               {% if magnitudo >= 3|int %}
@@ -447,7 +448,7 @@ entities:
               {% set start = state_attr('binary_sensor.meteoalarm', 'effective') %}
               {% set end = state_attr('binary_sensor.meteoalarm', 'expires') %}
               <font><center> {{as_timestamp(start)|timestamp_custom ('Valido dalle ore **%H:%M** del **%d/%m**')}}
-              {{as_timestamp(end)|timestamp_custom (' alle ore **%H:%M** del **%d/%m**')}} </center></font>
+              {{as_timestamp(end)|timestamp_custom (' alle ore **%H:%M** del **%d/%m**')}}</font>
 
 
               **Titolo**
