@@ -39,8 +39,9 @@ entities:
       {% else %} 
       <ha-icon icon="mdi:shield-check" style="width: 48px; height: 48px;"></ha-icon> &nbsp; NESSUN EVENTO CRITICO
 
-      {{states('sensor.dark_sky_daily_summary')}}
-      {% endif %}</center>
+      {% set summary = states('sensor.dark_sky_daily_summary') %}
+      <center>{{'' if summary  == 'unknown' else summary }}
+      {% endif %}
 
   - type: custom:hui-entities-card # MENU Impostazioni fold, SENSORI on
     style: |
