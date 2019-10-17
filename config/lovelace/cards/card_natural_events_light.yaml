@@ -27,9 +27,10 @@ cards:
       size="4"><center><ha-icon icon="mdi:alert" style="width: 48px; height:
       48px;"></ha-icon>&nbsp; ALLERTA EVENTI CRITICI</center></font> {% else %}
       <font size="4"><center><ha-icon icon="mdi:shield-check-outline"
-      style="width;48px; height: 48px;"></ha-icon>&nbsp; NESSUN EVENTO
-      SEGNALATO<center></font> <font
-      size="3">{{states('sensor.dark_sky_daily_summary')}}</font> {% endif %}
+      style="width;48px; height: 48px;"></ha-icon>&nbsp; NESSUN EVENTO SEGNALATO
+      {% set summary = states('sensor.dark_sky_daily_summary') %}
+
+      <center></font> <font size="3">{{'' if summary  == 'unknown' else summary }}</font> {% endif %}
   - type: entities
     title: ''
     style: |
