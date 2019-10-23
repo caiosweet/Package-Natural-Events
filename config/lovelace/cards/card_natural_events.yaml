@@ -153,7 +153,7 @@ entities:
               [PGA](http://shakemap.rm.ingv.it/shake/{{state_attr('binary_sensor.lastquake', 'short_id')}}/download/pga.jpg) ~ 
               [PGV](http://shakemap.rm.ingv.it/shake/{{state_attr('binary_sensor.lastquake', 'short_id')}}/download/pgv.jpg) ~ 
               [TvMap](http://shakemap.rm.ingv.it/shake/{{state_attr('binary_sensor.lastquake', 'short_id')}}/download/tvmap.jpg) ~ 
-              [TvMap2](http://shakemap.rm.ingv.it/shake/{{state_attr('binary_sensor.lastquake', 'short_id')}}/download/tvmap.jpg) ~ 
+              [TvMap2](http://shakemap.rm.ingv.it/shake/{{state_attr('binary_sensor.lastquake', 'short_id')}}/download/tvmap_bare.jpg) ~ 
               [HaiSentitoIlTerremoto](http://eventi.haisentitoilterremoto.it/{{state_attr('binary_sensor.lastquake', 'short_id')}}/{{state_attr('binary_sensor.lastquake', 'short_id')}}_mcs.jpg)
 
 
