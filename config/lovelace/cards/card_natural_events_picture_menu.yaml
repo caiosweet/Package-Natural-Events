@@ -359,7 +359,7 @@ entities:
               a <font color={{color}}> {{state_attr('binary_sensor.lastquake', 'distance')}} </font> km da casa,
               con coordinate geografiche (lat, lon) {{lat}}, {{lon}}. 
               
-              Tu ti trovi a {{distance(lat, lon, device_tracker) | round(1) if (lat and lon) is defined else none}} km dall'epicentro.
+              Tu ti trovi a {{distance(lat, lon, device_tracker) | round(1) if (lat and lon) else none}} km dall'epicentro.
 
 
               {% if magnitudo >= 3|int %}
