@@ -19,7 +19,7 @@ entities:
       }
       ha-card {
         animation: {% if is_state('group.natural_events', 'on') %} blink 2s linear 3 {% endif %};
-        #border-radius: 5px 5px 0px 0px;
+        border-radius: var(--ha-card-border-radius) var(--ha-card-border-radius) 0px 0px;
         border-style: solid;
         box-shadow: none;
         {% if is_state('group.natural_events', 'on') %}
@@ -311,7 +311,7 @@ entities:
               {%set severity= state_attr('sensor.dark_sky_alerts','title'~x).split(' ')[0]-%}
               {%set event = state_attr('sensor.dark_sky_alerts','title'~x).split(' ')[1:-1]|join(' ')-%}
               {%set gt = state_attr('sensor.dark_sky_alerts','time'~x)|timestamp_custom("%w")|int%}
-              {%set ge = state_attr('sensor.dark_sky_alerts','time'~x)|timestamp_custom("%w")|int%}
+              {%set ge = state_attr('sensor.dark_sky_alerts','expires'~x)|timestamp_custom("%w")|int%}
 
               <font color= {{severity}}> <ha-icon icon="{{'mdi:numeric-'~dict_code[severity]~'-box' if severity in dict_code else 'mdi:numeric-0-box'-}}" ></ha-icon> </font>
               <font color= {{severity}}> {{dict_type[event]}}</font>
