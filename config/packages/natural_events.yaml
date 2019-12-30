@@ -597,7 +597,7 @@ automation:
           file: >-
             {% if is_state('input_boolean.natural_events_send_image', 'on') %}
             {% set type = state_attr('binary_sensor.meteoalarm', 'awareness_type') %}
-            /config/www/hassiohelp/pkg_natural_events/{{'0' if type == none else 'meteoalarm_'~type.split(';')[0]}}.png
+            /config/www/hassiohelp/pkg_natural_events/{{'meteoalarm_11' if type == none else 'meteoalarm_'~type.split(';')[0]}}.png
             {% else %}
             {% endif %}
 #----------------------------------------------------------------------------------------------------#
