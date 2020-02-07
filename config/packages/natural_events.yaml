@@ -32,7 +32,7 @@ homeassistant:
       customize: &customize
         package: 'Natural_events'
         author: 'Caio & Gianpi - www.hassiohelp.eu'
-        version: '2.0'
+        version: '2.4'
 
       expose: &expose
         <<: *customize
