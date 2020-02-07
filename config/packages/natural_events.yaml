@@ -284,6 +284,7 @@ binary_sensor:
           - automation.natural_events_quake_notifications
           - sensor.date
         device_class: vibration
+        # availability_template: False
         value_template: >-
           {% set last_date = states.geo_location
             | selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
@@ -293,42 +294,42 @@ binary_sensor:
         attribute_templates:
           distance: >-
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-             |sort(attribute='attributes.publication_date')|map(attribute='state')|list|last|default('False')}}
-          latitude: >-
+             |sort(attribute='attributes.publication_date')|map(attribute='state')|list|last}}
+          lat: >-
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.latitude')|list|last|default('False')}}
-          longitude: >-
+              |sort(attribute='attributes.publication_date')|map(attribute='attributes.latitude')|list|last}}
+          long: >-
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.longitude')|list|last|default('False')}}
+              |sort(attribute='attributes.publication_date')|map(attribute='attributes.longitude')|list|last}}
           title: >-
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.title')|list|last|default('False')}}
+              |sort(attribute='attributes.publication_date')|map(attribute='attributes.title')|list|last}}
           region: >-
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.region')|list|last|default('False')}}
+              |sort(attribute='attributes.publication_date')|map(attribute='attributes.region')|list|last}}
           magnitude: >-
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.magnitude')|list|last|default('False')}}
+              |sort(attribute='attributes.publication_date')|map(attribute='attributes.magnitude')|list|last}}
           publication_date: >-
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.publication_date')|list|last|default('False')}}
+              |sort(attribute='attributes.publication_date')|map(attribute='attributes.publication_date')|list|last}}
           short_id: >-
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.short_id')|list|last|default('False')}}
+              |sort(attribute='attributes.publication_date')|map(attribute='attributes.short_id')|list|last}}
           image_url: >-
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.image_url')|list|last|default('False')}}
+              |sort(attribute='attributes.publication_date')|map(attribute='attributes.image_url')|list|last}}
           attribution: >-
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.attribution')|list|last|default('False')}}
+              |sort(attribute='attributes.publication_date')|map(attribute='attributes.attribution')|list|last}}
           level: >-
             {%set m = states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.magnitude')|list|last|default('False')%}
+              |sort(attribute='attributes.publication_date')|map(attribute='attributes.magnitude')|list|last|default(0)%}
               {% set m = m|float %}
               {%if 0<=m<=1.9%}0{%elif 2<=m<=2.9%}1{%elif 3<=m<=3.9%}2{%elif 4<=m<=5.9%}3{%else%}4{%endif%}
           external_id: >-
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-            |sort(attribute='attributes.publication_date')|map(attribute='attributes.external_id')|list|last|replace('smi:','')|default('False')}}
+            |sort(attribute='attributes.publication_date')|map(attribute='attributes.external_id')|list|last|replace('smi:','')}}
 
 #######################################-#######################################
 ##                                  SENSOR
