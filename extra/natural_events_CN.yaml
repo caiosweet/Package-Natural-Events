@@ -694,7 +694,7 @@ automation:
             {%set severity= state_attr('sensor.dark_sky_alerts','title'~x).split(' ')[0]-%}
             {%set event = state_attr('sensor.dark_sky_alerts','title'~x).split(' ')[1:-1]|join(' ')-%}
             {%set gt = state_attr('sensor.dark_sky_alerts','time'~x)|timestamp_custom("%w")|int%}
-            {%set ge = state_attr('sensor.dark_sky_alerts','time'~x)|timestamp_custom("%w")|int%}
+            {%set ge = state_attr('sensor.dark_sky_alerts','expires'~x)|timestamp_custom("%w")|int%}
             {{state_attr('sensor.dark_sky_alerts', 'title'~x).split(' ')[-1]}}({{loop.index}})
             {{"-".ljust(18, "-")}}
             {{dict_code[severity] if severity in dict_code else '0'}} {{color[severity]}} {{'Non disponibile' if event == none else dict_type[event]}}
