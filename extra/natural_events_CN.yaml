@@ -41,10 +41,10 @@ homeassistant:
 
     ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
       setting:
-        SCRIPT centro notifiche: &script 'script.natural_events_notifications' #'script.my_notify'
-        SERVIZIO Notify: &notify 'notify.telegram'
-        MEDIA PLAYER Google: &media_player_google 'media_player.red, media_player.black2'
-        MEDIA PLAYER Alexa: &media_player_alexa 'media_player.studio'
+        SCRIPT centro notifiche: &script script.my_notify 
+        # SERVIZIO Notify: &notify 'telegram'
+        # MEDIA PLAYER Google: &media_player_google ''
+        # MEDIA PLAYER Alexa: &media_player_alexa ''
       filter:
         RAGGIO ZONA MeteoAlert metri: &radius_meteoalert 25000
         RAGGIO ZONA GeoAlert metri: &radius_geoalert 850000
@@ -146,13 +146,6 @@ homeassistant:
     ################################################
     ## Zone
     ################################################
-    script.natural_events_notifications:
-      <<: *customize
-      friendly_name: Centro Notifiche
-      icon: mdi:account-tie
-    ################################################
-    ## Zone
-    ################################################
     zone.geoalert:
       <<: *customize
       friendly_name: Zona Allerta Geologica
@@ -187,6 +180,8 @@ geo_location:
 wwlln:
   radius: *radius_wwlln
   window: *windows
+  latitude: *latitude
+  longitude: *longitude
 
 zone:
   - name: geoalert
@@ -212,6 +207,7 @@ group:
   meteoalert:
     name: Allerta Meteo
     entities:
+      - sensor.dark_sky_alerts
       - binary_sensor.meteoalarm
       - binary_sensor.burze_storms_nearby
       - binary_sensor.dpc_temporali_oggi
@@ -266,6 +262,8 @@ binary_sensor:
       - idrogeologico_domani
 
   - platform: burze_dzis_net
+    latitude: *latitude
+    longitude: *longitude
     api_key: *burze_api_key
     name: burze
     storms_nearby:
@@ -436,13 +434,19 @@ sensor:
             | join(', ', attribute='attributes.level') %}
           {% set lev_color = (lev1, lev2)|default(0, true)|max|first|int %}
           {{ lev_color }}
+
+   ## METEOALARM_M CUATOM COMPONENT
+  # - platform: meteoalarm_m
+  #   id: 'IT011-Marche'
+  #   name: alert
+  #   scan_interval: 3600
 #######################################-#######################################
 ##                                 AUTOMATION
 #######################################-#######################################
 automation:
-    #----------------------------------------------------------------------------------------------------#
-    # START-UP - natural_events (Crea gruppo di tutti i binary sensor e aggiorna alcuni sensori)
-    #----------------------------------------------------------------------------------------------------#
+#----------------------------------------------------------------------------------------------------#
+# START-UP - natural_events (Crea gruppo di tutti i binary sensor e aggiorna alcuni sensori)
+#----------------------------------------------------------------------------------------------------#
   - id: natural_events_startup
     alias: natural_events_startup
     initial_state: true
@@ -458,7 +462,6 @@ automation:
       #     object_id: "natural_events"
       #     name: "Sensori natural_events"
       #     icon: mdi:earth
-      #     visible: true
       #     entities: >
       #       {%- for item in states.binary_sensor if ((item.attributes.package | lower).startswith('natural_events')) -%}
       #       {{ item.entity_id }}{% if not loop.last %}, {% endif %}
@@ -476,29 +479,30 @@ automation:
 #----------------------------------------------------------------------------------------------------#
   - id: natural_events_burze_notifications
     alias: natural_events_burze_notifications
-    hide_entity: true
     initial_state: true
     trigger:
       platform: state
       entity_id: 
         - binary_sensor.burze_storms_nearby
     condition:
-      - condition: and
-        conditions:
-          - condition: or
-            conditions:
-              - condition: template
-                value_template: "{{ trigger.to_state.state == 'on' }}"
-          - condition: or
-            conditions:
-              - condition: template
-                value_template: "{{ trigger.from_state.state == 'off' }}"
-              - condition: template
-                value_template: >
-                  {{ trigger.to_state.attributes.distance < trigger.from_state.attributes.distance }}
+      # - condition: and
+      #   conditions:
+      #     - condition: or
+      #       conditions:
+      #         - condition: template
+      #           value_template: "{{ trigger.to_state.state == 'on' }}"
+      #     - condition: or
+      #       conditions:
+      #         - condition: template
+      #           value_template: "{{ trigger.from_state.state == 'off' }}"
+      #         - condition: template
+      #           value_template: >
+      #             {{ trigger.to_state.attributes.distance < trigger.from_state.attributes.distance }}
+        - condition: template
+          value_template: "{{ trigger.to_state.state == 'on' and (trigger.from_state.state == 'off' 
+            or trigger.to_state.attributes.distance < trigger.from_state.attributes.distance )}}"
+
     action:
-      - wait_template: >-
-          {{ is_state('script.natural_events_notifications', 'off') }}
       - service: *script
         data:
           call_no_annuncio: 1
@@ -528,9 +532,9 @@ automation:
             /config/www/hassiohelp/pkg_natural_events/burze.png
             {% else %}
             {% endif %}
-          media_player_google: *media_player_google
-          media_player_alexa: *media_player_alexa
-          notify: *notify
+          # media_player_google: *media_player_google
+          # media_player_alexa: *media_player_alexa
+          # notify: *notify
 
 #----------------------------------------------------------------------------------------------------#
 # METEOALARM - Notifica criticità meteo nella regione impostata - Vedi tabella a fine package
@@ -542,35 +546,36 @@ automation:
       platform: state
       entity_id: binary_sensor.meteoalarm
     condition:
-      - condition: and
-        conditions:
-          - condition: or
-            conditions:
-              - condition: template
-                value_template: "{{ trigger.to_state.state == 'on' }}"
-          - condition: or
-            conditions:
-              - condition: template
-                value_template: "{{ trigger.from_state.state == 'off' }}"
-              - condition: template
-                value_template: "{{ trigger.to_state.attributes.effective != trigger.from_state.attributes.effective }}"
-              - condition: template
-                value_template: "{{ trigger.to_state.attributes.expires != trigger.from_state.attributes.expires }}"
-              - condition: template
-                value_template: "{{ trigger.to_state.attributes.onset != trigger.from_state.attributes.onset }}"
-              - condition: template
-                value_template: "{{ trigger.to_state.attributes.awareness_type != trigger.from_state.attributes.awareness_type }}"
-              - condition: template
-                value_template: "{{ trigger.to_state.attributes.awareness_level != trigger.from_state.attributes.awareness_level }}"
-              - condition: template
-                value_template: "{{ trigger.to_state.attributes.urgency != trigger.from_state.attributes.urgency }}"
-              - condition: template
-                value_template: "{{ trigger.to_state.attributes.severity != trigger.from_state.attributes.severity }}"
-              - condition: template
-                value_template: "{{ trigger.to_state.attributes.awareness_level != trigger.from_state.attributes.event }}"
+      - condition: template
+        value_template: "{{ trigger.to_state.state == 'on' and (trigger.from_state.state == 'off' 
+          or trigger.to_state.attributes != trigger.from_state.attributes)}}"
+      # - condition: and
+      #   conditions:
+      #     - condition: or
+      #       conditions:
+      #         - condition: template
+      #           value_template: "{{ trigger.to_state.state == 'on' }}"
+      #     - condition: or
+      #       conditions:
+      #         - condition: template
+      #           value_template: "{{ trigger.from_state.state == 'off' }}"
+      #         - condition: template
+      #           value_template: "{{ trigger.to_state.attributes.effective != trigger.from_state.attributes.effective }}"
+      #         - condition: template
+      #           value_template: "{{ trigger.to_state.attributes.expires != trigger.from_state.attributes.expires }}"
+      #         - condition: template
+      #           value_template: "{{ trigger.to_state.attributes.onset != trigger.from_state.attributes.onset }}"
+      #         - condition: template
+      #           value_template: "{{ trigger.to_state.attributes.awareness_type != trigger.from_state.attributes.awareness_type }}"
+      #         - condition: template
+      #           value_template: "{{ trigger.to_state.attributes.awareness_level != trigger.from_state.attributes.awareness_level }}"
+      #         - condition: template
+      #           value_template: "{{ trigger.to_state.attributes.urgency != trigger.from_state.attributes.urgency }}"
+      #         - condition: template
+      #           value_template: "{{ trigger.to_state.attributes.severity != trigger.from_state.attributes.severity }}"
+      #         - condition: template
+      #           value_template: "{{ trigger.to_state.attributes.awareness_level != trigger.from_state.attributes.event }}"
     action:
-      - wait_template: >-
-          {{ is_state('script.natural_events_notifications', 'off') }}
       - service: *script
         data:
           call_no_annuncio: 1
@@ -591,15 +596,16 @@ automation:
             *{{states('sensor.meteoalarm_type')}}.*
             Descrizione *{{state_attr('binary_sensor.meteoalarm', 'description')}}*
           message_tts: 'Allerta Meteo'
-          media_player_google: *media_player_google
-          media_player_alexa: *media_player_alexa
-          notify: *notify
+          # media_player_google: *media_player_google
+          # media_player_alexa: *media_player_alexa
+          # notify: *notify
           file: >-
             {% if is_state('input_boolean.natural_events_send_image', 'on') %}
             {% set type = state_attr('binary_sensor.meteoalarm', 'awareness_type') %}
             /config/www/hassiohelp/pkg_natural_events/{{'meteoalarm_11' if type == none else 'meteoalarm_'~type.split(';')[0]}}.png
             {% else %}
             {% endif %}
+
 #----------------------------------------------------------------------------------------------------#
 # PROTEZIONE CIVILE - Notifica criticità meteo-idro nella provincia impostata - Vedi tabella a fine package
 #----------------------------------------------------------------------------------------------------#
@@ -616,25 +622,26 @@ automation:
         - binary_sensor.dpc_idraulico_domani
         - binary_sensor.dpc_temporali_domani
     condition:
-      - condition: and
-        conditions:
-          - condition: or
-            conditions:
-              - condition: template
-                value_template: "{{ trigger.to_state.state == 'on' }}"
-          - condition: or
-            conditions:
-              - condition: template
-                value_template: "{{ trigger.from_state.state == 'off' }}"
-              - condition: template
-                value_template: "{{ trigger.to_state.attributes.data != trigger.from_state.attributes.data }}"
-              - condition: template
-                value_template: "{{ trigger.to_state.attributes.allerta != trigger.from_state.attributes.allerta }}"
-              - condition: template
-                value_template: "{{ trigger.to_state.attributes.info != trigger.from_state.attributes.info }}"
+      - condition: template
+        value_template: "{{ trigger.to_state.state == 'on' and (trigger.from_state.state == 'off' 
+          or trigger.to_state.attributes != trigger.from_state.attributes)}}"
+      # - condition: and
+      #   conditions:
+      #     - condition: or
+      #       conditions:
+      #         - condition: template
+      #           value_template: "{{ trigger.to_state.state == 'on' }}"
+      #     - condition: or
+      #       conditions:
+      #         - condition: template
+      #           value_template: "{{ trigger.from_state.state == 'off' }}"
+      #         - condition: template
+      #           value_template: "{{ trigger.to_state.attributes.data != trigger.from_state.attributes.data }}"
+      #         - condition: template
+      #           value_template: "{{ trigger.to_state.attributes.allerta != trigger.from_state.attributes.allerta }}"
+      #         - condition: template
+      #           value_template: "{{ trigger.to_state.attributes.info != trigger.from_state.attributes.info }}"
     action:
-      - wait_template: >-
-          {{ is_state('script.natural_events_notifications', 'off') }}
       - service: *script
         data:
           call_no_annuncio: 1
@@ -651,16 +658,57 @@ automation:
             Rischio {{trigger.to_state.attributes.rischio}}. Allerta {{trigger.to_state.attributes.alleta}} {{trigger.to_state.attributes.info}}.
           message_tts: >-
             {{ trigger.to_state.attributes.friendly_name }}. Allerta {{trigger.to_state.attributes.alleta}} {{trigger.to_state.attributes.info}}.
-          media_player_google: *media_player_google
-          media_player_alexa: *media_player_alexa
-          notify: *notify
+          # media_player_google: *media_player_google
+          # media_player_alexa: *media_player_alexa
+          # notify: *notify
+
+#----------------------------------------------------------------------------------------------------#
+# DARK SKY - Notifica criticità meteo 
+#----------------------------------------------------------------------------------------------------#
+  - id: natural_events_dark_sky_alerts_notifications
+    alias: natural_events_dark_sky_alerts_notifications
+    initial_state: true
+    trigger:
+      platform: state
+      entity_id: sensor.dark_sky_alerts
+    action:
+      - service: notify.telegram
+        data_template:
+          title: >-
+            *Dark Sky Allerta*
+          message: |
+            {%set gg =['dom','lun','mar','mer','gio','ven','sab']%}
+            {%set color = {'Green':'Verde', 'Yellow':'Gialla', 'Orange':'Arancione', 'Red':'Rossa'} %}
+            {%set dict_code={'Green':'1','Yellow':'2','Orange':'3','Red':'4'}%}
+            {%set dict_type={'No Warnings': 'Nessun Avviso','Wind': 'Vento',
+            'Snow-Ice': 'Neve-Ghiaccio','Thunderstorm': 'Temporali',
+            'Fog': 'Nebbia','Extreme High Temperatures': 'Temperature massime estreme',
+            'Extreme Low Temperatures': 'Temperature minime estreme',
+            'Costal Event': 'Eventi Costieri','Forest Fire': 'Incendi bischivi',
+            'Avalanche': 'Valanghe','Rain': 'Pioggia',
+            'Unavailable': 'Non disponibile','Flooding': 'Alluvione',
+            'Rain-Flooding': 'Pioggia-Alluvione'}%}
+            {%set item_num=states('sensor.dark_sky_alerts')|int%}
+            {%for n in range(0,item_num)-%}
+            {% if item_num > 1%}{%set x = '_'~n %}{%else%}{%set x = '' %}{%endif%}
+            {%set severity= state_attr('sensor.dark_sky_alerts','title'~x).split(' ')[0]-%}
+            {%set event = state_attr('sensor.dark_sky_alerts','title'~x).split(' ')[1:-1]|join(' ')-%}
+            {%set gt = state_attr('sensor.dark_sky_alerts','time'~x)|timestamp_custom("%w")|int%}
+            {%set ge = state_attr('sensor.dark_sky_alerts','expires'~x)|timestamp_custom("%w")|int%}
+            {{state_attr('sensor.dark_sky_alerts', 'title'~x).split(' ')[-1]}}({{loop.index}})
+            {{"-".ljust(18, "-")}}
+            {{dict_code[severity] if severity in dict_code else '0'}} {{color[severity]}} {{'Non disponibile' if event == none else dict_type[event]}}
+            {{gg[gt]|capitalize}} {{state_attr('sensor.dark_sky_alerts','time'~x)|timestamp_custom("%d %H:%M")}} 
+            {{gg[ge]|capitalize}} {{state_attr('sensor.dark_sky_alerts','expires'~x)|timestamp_custom("%d %H:%M")}}
+            {{'mdi:numeric-'~dict_code[severity]~'-box' if severity in dict_code else 'mdi:numeric-0-box'-}}
+            {%-endfor-%}
 
 #----------------------------------------------------------------------------------------------------#
 # GEO LOCATION - Notifica Terremoti
 #----------------------------------------------------------------------------------------------------#
   - id: natural_events_quake_notifications
     alias: natural_events_quake_notifications
-    initial_state: 'on'
+    initial_state: true
     trigger:
       - platform: geo_location
         source: 'ingv_centro_nazionale_terremoti'
@@ -669,13 +717,12 @@ automation:
     condition:
       - condition: template
         value_template: >
-          {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.publication_date))/3600*60)|int < 60 }}
+          {{( (as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.publication_date))/3600*60 )|int < 60 }}
     action:
-      - wait_template: >-
-          {{ is_state('script.natural_events_notifications', 'off') }}
       - service: *script
         data_template:
-          title: '*Rilevato terremoto*'
+          title: >-
+            Rilevato terremoto. Epicentro: {{ trigger.to_state.attributes.region }}
           message: >-
             {% set data_utc = trigger.to_state.attributes.publication_date %}
             Rilevato terremoto di magnitudo: *{{trigger.to_state.attributes.magnitude}}* 
@@ -685,113 +732,10 @@ automation:
           message_tts: >-
             Rilevato terremoto
           url: >-
-              {{trigger.to_state.attributes.image_url}}
-          notify: *notify
-          media_player_google: *media_player_google
-          media_player_alexa: *media_player_alexa
-
-#######################################-#######################################
-##                                  SCRIPT
-#######################################-#######################################
-script:
-  natural_events_notifications:
-    alias: Notifiche Geo Alert 
-    sequence:
-      # SOLO TESTO
-      - service_template: >-
-          {% if (url|length == 0 and file|length == 0) and notify|length > 1%}
-            {{notify}}
-          {% else %}
-            script.no_service
-          {% endif %}
-        data_template:
-          title: >
-            *{{ title }}*
-          message: >
-            {{message|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
-
-      # URL IMAGE + TESTO
-      - service_template: >-
-          {% if url|length > 1 %}
-            {{notify}}
-          {% else %}
-            script.no_service
-          {% endif %}
-        data_template:
-          title: >
-            *{{ title }}*
-          message: >
-            {{message|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
-          data:
-            photo:
-              - url: >-
-                 {{url}}
-                caption: |
-                  *{{title}}*
-                  {{message|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
-
-      # FILE IMAGE + TESTO
-      - service_template: >-
-          {% if file|length > 1 %}
-            {{notify}}
-          {% else %}
-            script.no_service
-          {% endif %}
-        data_template:
-          title: >
-            *{{ title }}*
-          message: >
-            {{message|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
-          data:
-            photo:
-              - file: >-
-                  {{file}}
-                caption: |
-                  *{{title}}*
-                  {{message|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
-
-      # AUDIO
-      - condition: time
-        after: '07:00:00'
-        before: '23:00:00'
-      - condition: template
-        value_template: >
-          {{message_tts | length > 1}}
-
-      - service_template: >-
-          {% if media_player_google | length > 1 %}
-            tts.google_translate_say
-          {% else %}
-            script.no_service
-          {% endif %}
-        data_template:
-          entity_id: >-
-            {{media_player_google}}
-          message: >
-            {{message_tts|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
-
-      - service_template: >-
-          {% if media_player_alexa | length > 1  %}
-            notify.alexa_media
-          {% else %}
-            script.no_service
-          {% endif %}
-        data_template:
-          target: >-
-            {{media_player_alexa}}
-          message: >
-            {{message_tts|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
-          data:
-            type: tts
-
-  no_service:
-    alias: NO Service 
-    sequence:
-      - delay: 00:00:00
-      # - service: system_log.write
-      #   data:
-      #     message: "Natural events package servizio inesistente."
-      #     level: warning
+            {{trigger.to_state.attributes.image_url}}
+          # notify: *notify
+          # media_player_google: *media_player_google
+          # media_player_alexa: *media_player_alexa
 
 #######################################-#######################################
 ##                                END PACKAGE
@@ -802,8 +746,8 @@ script:
     # |------|---------------------------|
     # | 0    | No Warnings               | Nessun Avviso
     # | 1    | Wind                      | Vento
-    # | 2    | Snow/Ice                  | Neve/Ghiaccio
-    # | 3    | Thunderstorms             | Temporali
+    # | 2    | Snow-Ice                  | Neve-Ghiaccio
+    # | 3    | Thunderstorm              | Temporali
     # | 4    | Fog                       | Nebbia
     # | 5    | Extreme High Temperatures | Temperature massime estreme
     # | 6    | Extreme Low Temperatures  | Temperature minime estreme
@@ -813,7 +757,7 @@ script:
     # | 10   | Rain                      | Pioggia
     # | 11   | Unavailable               | Non disponibile
     # | 12   | Flooding                  | Alluvione
-    # | 13   | Rain/Flooding             | Pioggia/Alluvione
+    # | 13   | Rain-Flooding             | Pioggia-Alluvione
 
     #### Awareness Levels
     # | Code | Level             |
@@ -824,7 +768,6 @@ script:
     # | 3    | Orange            | Arancione
     # | 4    | Red               | Rosso
 
-
     ## DIPARTIMENTO PROTEZIONE CIVILE LEGEND
     # | Code | Level             |
     # |------|-------------------|
@@ -833,3 +776,10 @@ script:
     # | 2    | GIALLA            | 
     # | 3    | ARANCIONE         |
     # | 4    | ROSSA             |
+
+    #### DARK SKY Severity
+    # | Code | Level             |
+    # |------|-------------------|
+    # | -    | Advisory          | un individuo dovrebbe essere consapevole del tempo potenzialmente grave (consultivo)
+    # | -    | Watch             | un individuo dovrebbe prepararsi a condizioni meteorologiche potenzialmente avverse (Osservare/Vigilare)
+    # | -    | Warning           | un individuo dovrebbe agire immediatamente per proteggere se stesso e gli altri da condizioni meteorologiche potenzialmente avverse (Allarme)

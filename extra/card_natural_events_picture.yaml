@@ -255,7 +255,7 @@ entities:
               z-index: 0
             type: image
 
-  - type: custom:hui-conditional-card # NSCONDE/VISUALIZZA tutte le cards
+  - type: custom:hui-conditional-card # NSCONDE/VISUALIZZA MENU
     conditions:
       - entity: input_boolean.natural_events
         state: 'on'
@@ -265,7 +265,6 @@ entities:
         ha-card {border-radius: 0px; box-shadow: none; background: none;}
       # CARDS VISUALIZZATE SOLO SE INPUT BOOLEAN NATURAL EVENTS ON!!
       entities:
-
         - type: custom:hui-entities-card # MENU Impostazioni fold, SENSORI on
           style: |
             ha-card {
@@ -273,7 +272,7 @@ entities:
             }
           entities:
             - type: custom:auto-entities # MENU Impostazioni fold
-              show_empty: false
+              #show_empty: false
               filter:
                 include:
                   - attributes:
@@ -321,7 +320,16 @@ entities:
                   ha-card {background: none; border-radius: 0px; box-shadow: none;}
                   .card-content {padding: 0}
 
-
+  - type: custom:hui-conditional-card # NSCONDE/VISUALIZZA tutte le cards
+    conditions:
+      - entity: input_boolean.natural_events
+        state: 'on'
+    card:
+      type: entities
+      style: |
+        ha-card {border-radius: 0px; box-shadow: none; background: none;}
+      # CARDS VISUALIZZATE SOLO SE INPUT BOOLEAN NATURAL EVENTS ON!!
+      entities:
         - type: custom:auto-entities # TERREMOTO conditional
           show_empty: false
           filter:
@@ -349,13 +357,13 @@ entities:
               {% set magnitudo = (state_attr('binary_sensor.lastquake', 'magnitude')|float) if not none else '0' %}
               {% set code = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
               {% set color = code[state_attr('binary_sensor.lastquake', 'level')|int] %}
-              {% set lat = state_attr('binary_sensor.lastquake', 'lat') %}
-              {% set lon = state_attr('binary_sensor.lastquake', 'long') %}
+              {% set lat = state_attr('binary_sensor.lastquake', 'latitude') %}
+              {% set lon = state_attr('binary_sensor.lastquake', 'longitude') %}
               <font color={{color}}>{{as_timestamp(data_utc)|timestamp_custom ('%H:%M:%S del %d-%m-%Y')}}</font>
 
 
               Un terremoto di magnitudo <font color={{color}}> {{magnitudo}} </font> 
-              è avvenuto nella zona: [{{state_attr('binary_sensor.lastquake', 'region')}}](https://www.google.com/maps/search/?api=1&query={{state_attr('binary_sensor.lastquake', 'lat')}},{{state_attr('binary_sensor.lastquake', 'long')}})
+              è avvenuto nella zona: [{{state_attr('binary_sensor.lastquake', 'region')}}](https://www.google.com/maps/search/?api=1&query={{state_attr('binary_sensor.lastquake', 'latitude')}},{{state_attr('binary_sensor.lastquake', 'longitude')}})
               a <font color={{color}}> {{state_attr('binary_sensor.lastquake', 'distance')}} </font> km da casa,
               con coordinate geografiche (lat, lon) {{lat}}, {{lon}}. 
               
