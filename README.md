@@ -22,7 +22,6 @@ Guide [Natural Events](https://hassiohelp.eu/2019/10/06/package-eventi-naturali/
 <p align="center">
 <img src="./card_natural_events_picture.png">
 <br><br>
-Custom Cards: card-mod, button-entity-row, fold-entity-row
 </p>
 
 ## [My Lovelace Card Picture Element Menu](./extra/card_natural_events.yaml)
