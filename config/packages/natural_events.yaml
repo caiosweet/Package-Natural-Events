@@ -184,10 +184,6 @@ geo_location:
     radius: *radius_quake
     minimum_magnitude: *magnitude
 
-wwlln:
-  radius: *radius_wwlln
-  window: *windows
-
 zone:
   - name: geoalert
     latitude: *latitude
