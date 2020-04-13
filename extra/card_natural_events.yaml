@@ -1,16 +1,17 @@
 type: entities # Card Principale Entità
 style: |
   ha-card {
-      border-color: {% if is_state('group.natural_events', 'on') %} {{states('sensor.natural_events_level')}} {% else %} Green {% endif %};
-      border-style: solid;
-      border-width: 0px 1px 1px 1px;
-    #background: --ha-card-background;
+      border: 1px solid {% if is_state('group.natural_events', 'on') %} {{states('sensor.natural_events_level')}} {% else %} Green {% endif %};
   }
   .card-content {
     padding: 0;
   }
+  .card-content > div {
+    margin: 0 !important;
+  }
 entities:
-  - type: custom:hui-markdown-card # TESTATINA PRINCIPALE
+  - type: custom:hui-element #custom:hui-markdown-card # TESTATINA PRINCIPALE
+    card_type: markdown
     style: |
       @keyframes blink {
         30% {
@@ -43,11 +44,13 @@ entities:
       <center>{{'' if summary  == 'unknown' else summary }}
       {% endif %}
 
-  - type: custom:hui-entities-card # MENU Impostazioni fold, SENSORI on
+  - type: custom:hui-element # MENU Impostazioni fold, SENSORI on
+    card_type: entities
     style: |
       ha-card {
         background:none; border-radius: 0px; box-shadow: none; 
       }
+      div#states.card-content {padding-block-end: 0;padding-block-start: 0;}
     entities:
       - type: custom:auto-entities # MENU Impostazioni fold
         show_empty: false
@@ -98,7 +101,8 @@ entities:
             ha-card {background: none; border-radius: 0px; box-shadow: none;}
             .card-content {padding: 0}
 
-  - type: custom:hui-conditional-card # NSCONDE/VISUALIZZA tutte le cards
+  - type: custom:hui-element # NSCONDE/VISUALIZZA tutte le cards
+    card_type: conditional
     conditions:
       - entity: input_boolean.natural_events
         state: 'on'
@@ -106,6 +110,8 @@ entities:
       type: entities
       style: |
         ha-card {border-radius: 0px; box-shadow: none; background: none;}
+        div#states.card-content {padding: 0;}
+
       # CARDS VISUALIZZATE SOLO SE INPUT BOOLEAN NATURAL EVENTS ON!!
       entities:
         - type: custom:auto-entities # TERREMOTO conditional
@@ -163,7 +169,8 @@ entities:
 
               [INGV](http://terremoti.ingv.it/) ~ [HaiSentitoIlTerremoto Web](http://www.haisentitoilterremoto.it/)
 
-        - type: custom:hui-conditional-card # TERREMOTO geolocation
+        - type: custom:hui-element # TERREMOTO geolocation
+          card_type: conditional
           conditions:
             - entity: binary_sensor.lastquake
               state: 'on'
@@ -367,25 +374,20 @@ entities:
               - entity_id: sensor.alert
                 state: '> 0'
           card:
-        # - type: custom:hui-conditional-card
-        #   conditions:
-        #     - entity: sensor.alert
-        #       state_not: '0'
-        #   card:
-              type: custom:flex-table-card
-              # title: today
-              entities:
-                include: sensor.alert
-              columns:
-                - attr_as_list: today
-                  modify: x.code.concat(' ', x.event)
-                  name: Oggi
-                - attr_as_list: today
-                  modify: x.italiano
-                  name: ''
-                - attr_as_list: today
-                  modify: x.end
-                  name: ''
+            type: custom:flex-table-card
+            # title: today
+            entities:
+              include: sensor.alert
+            columns:
+              - attr_as_list: today
+                modify: x.code.concat(' ', x.event)
+                name: Oggi
+              - attr_as_list: today
+                modify: x.italiano
+                name: ''
+              - attr_as_list: today
+                modify: x.end
+                name: ''
 
         - type: custom:auto-entities # CUSTOM COMPONENT meteoalarm_m conditional
           show_empty: false
@@ -394,27 +396,23 @@ entities:
               - entity_id: sensor.alert
                 state: '> 0'
           card:
-        # - type: custom:hui-conditional-card
-        #   conditions:
-        #     - entity: sensor.alert
-        #       state_not: '0'
-        #   card:
-              type: custom:flex-table-card
-              # title: tomorrow
-              entities:
-                include: sensor.alert
-              columns:
-                - attr_as_list: tomorrow
-                  modify: x.code.concat(' ', x.event)
-                  name: Domani
-                - attr_as_list: tomorrow
-                  modify: x.italiano
-                  name: ''
-                - attr_as_list: tomorrow
-                  modify: x.end
-                  name: ''
+            type: custom:flex-table-card
+            # title: tomorrow
+            entities:
+              include: sensor.alert
+            columns:
+              - attr_as_list: tomorrow
+                modify: x.code.concat(' ', x.event)
+                name: Domani
+              - attr_as_list: tomorrow
+                modify: x.italiano
+                name: ''
+              - attr_as_list: tomorrow
+                modify: x.end
+                name: ''
 
-        - type: custom:hui-conditional-card # MAPPA Giorno/Notte
+        - type: custom:hui-element # MAPPA Giorno/Notte
+          card_type: conditional
           conditions:
             - entity: group.natural_events
               state: 'off'
@@ -432,7 +430,8 @@ entities:
                 "above_horizon": https://api.sat24.com/animated/IT/visual/3/Central%20European%20Standard%20Time/3065655' width=845 height=615
                 "below_horizon": https://api.sat24.com/animated/IT/infraPolair/3/Central%20European%20Standard%20Time/2523464' width=845 height=615
 
-        - type: custom:hui-conditional-card # MAPPE meteo
+        - type: custom:hui-element # MAPPE meteo
+          card_type: conditional
           conditions:
             - entity: group.meteoalert
               state: 'on'
@@ -469,7 +468,8 @@ entities:
             entities: 
               - entity: input_select.meteo_map
 
-        - type: custom:hui-conditional-card # IFRAME wwlln
+        - type: custom:hui-element # IFRAME wwlln
+          card_type: conditional
           conditions:
             - entity: binary_sensor.burze_storms_nearby
               state: 'on'
@@ -495,7 +495,8 @@ entities:
                 default_zoom: 8
                 aspect_ratio: 100%
 
-        - type: custom:hui-conditional-card # IFRAME windy
+        - type: custom:hui-element # IFRAME windy
+          card_type: conditional
           conditions:
             - entity: group.meteoalert
               state: 'on'
