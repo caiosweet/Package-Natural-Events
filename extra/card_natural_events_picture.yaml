@@ -2,19 +2,15 @@ type: entities # Card Principale Entità
 style: |
   ha-card {
     {% if is_state('input_boolean.natural_events', 'on') and is_state('group.natural_events', 'on') %}
-      border-color: {{states('sensor.natural_events_level')}};
-      border-style: solid;
-      border-width: 0px 1px 1px 1px;
-    {% else %}
-      border-width: 0px;
+      border: 1px solid {% if is_state('group.natural_events', 'on') %} {{states('sensor.natural_events_level')}} {% else %} Green {% endif %}; {% else %}
     {% endif %}
       background: --ha-card-background;
   }
-  .card-content {
-    padding: 0;
-  }
+  .card-content {padding: 0;}
+  .card-content > div {margin: 0 !important;}
 entities:
-  - type: custom:hui-picture-elements-card
+  - type: custom:hui-element
+    card_type: picture-elements
     style: |
       @keyframes blink {
         30% {
@@ -78,7 +74,6 @@ entities:
               top: 95%
               transform: 'translate(0%,-50%)'
               z-index: 98
-
       - type: conditional # Eventi Meteo
         conditions:
           - entity: group.meteoalert
@@ -91,7 +86,6 @@ entities:
               left: 'var(--meteoalarm-level-left)'
               top: 20%
               z-index: 99
-
           - type: state-icon
             entity: sensor.meteoalarm_type
             style: 
@@ -99,7 +93,6 @@ entities:
               left: 'var(--meteoalarm-type-left)'
               top: 20%
               z-index: 99
-
           - type: state-label
             entity: group.meteoalert
             prefix: 'Meteo '
@@ -116,7 +109,6 @@ entities:
               border-width: 'var(--my-border-width)'
               animation: 'var(--my-animation)'
               background-color: 'var(--global-level)'
-              #border-radius: 6px
               color: 'var(--my-color)'
               font-family: Trebuchet MS
               font-size: 120%
@@ -129,7 +121,6 @@ entities:
               top: 5%
               transform: 'translate(0%,-50%)'
               z-index: 98
-
           - entity: binary_sensor.dpc_temporali_oggi
             image: /local/hassiohelp/pkg_natural_events/dpc_temporali_oggi.png
             state_filter:
@@ -142,7 +133,6 @@ entities:
               width: 100%
               z-index: 1
             type: image
-
           - entity: binary_sensor.dpc_temporali_domani
             image: /local/hassiohelp/pkg_natural_events/dpc_temporali_domani.png
             state_filter:
@@ -155,7 +145,6 @@ entities:
               width: 100%
               z-index: 1
             type: image
-
       - type: conditional # Eventi Geologici
         conditions:
           - entity: group.geoalert
@@ -189,7 +178,6 @@ entities:
               top: 95%
               transform: 'translate(0%,-50%)'
               z-index: 98
-
           - entity: binary_sensor.dpc_idraulico_oggi
             image: /local/hassiohelp/pkg_natural_events/dpc_idraulico_oggi.png
             state_filter:
@@ -202,7 +190,6 @@ entities:
               width: 100%
               z-index: 2
             type: image
-
           - entity: binary_sensor.dpc_idrogeologico_oggi
             image: /local/hassiohelp/pkg_natural_events/dpc_idrogeologico_oggi.png
             state_filter:
@@ -215,7 +202,6 @@ entities:
               width: 100%
               z-index: 1
             type: image
-
           - entity: binary_sensor.dpc_idraulico_domani
             image: /local/hassiohelp/pkg_natural_events/dpc_idraulico_domani.png
             state_filter:
@@ -228,7 +214,6 @@ entities:
               width: 100%
               z-index: 2
             type: image
-
           - entity: binary_sensor.dpc_idrogeologico_domani
             image: /local/hassiohelp/pkg_natural_events/dpc_idrogeologico_domani.png
             state_filter:
@@ -241,7 +226,6 @@ entities:
               width: 100%
               z-index: 1
             type: image
-
           - entity: binary_sensor.lastquake
             image: /local/hassiohelp/pkg_natural_events/sisma.png
             state_filter:
@@ -255,7 +239,8 @@ entities:
               z-index: 0
             type: image
 
-  - type: custom:hui-conditional-card # NSCONDE/VISUALIZZA MENU
+  - type: custom:hui-element # NSCONDE/VISUALIZZA MENU
+    card_type: conditional
     conditions:
       - entity: input_boolean.natural_events
         state: 'on'
@@ -263,13 +248,14 @@ entities:
       type: entities
       style: |
         ha-card {border-radius: 0px; box-shadow: none; background: none;}
+        div#states.card-content {padding: 0;}
       # CARDS VISUALIZZATE SOLO SE INPUT BOOLEAN NATURAL EVENTS ON!!
       entities:
-        - type: custom:hui-entities-card # MENU Impostazioni fold, SENSORI on
+        - type: custom:hui-element # MENU Impostazioni fold, SENSORI on
+          card_type: entities
           style: |
-            ha-card {
-              background:none; border-radius: 0px; box-shadow: none; 
-            }
+            ha-card {background:none; border-radius: 0px; box-shadow: none;}
+            div#states.card-content {padding-block-end: 0;padding-block-start: 0;}
           entities:
             - type: custom:auto-entities # MENU Impostazioni fold
               #show_empty: false
@@ -320,7 +306,8 @@ entities:
                   ha-card {background: none; border-radius: 0px; box-shadow: none;}
                   .card-content {padding: 0}
 
-  - type: custom:hui-conditional-card # NSCONDE/VISUALIZZA tutte le cards
+  - type: custom:hui-element # NSCONDE/VISUALIZZA tutte le cards
+    card_type: conditional
     conditions:
       - entity: input_boolean.natural_events
         state: 'on'
@@ -328,6 +315,8 @@ entities:
       type: entities
       style: |
         ha-card {border-radius: 0px; box-shadow: none; background: none;}
+        div#states.card-content {padding: 0;}
+
       # CARDS VISUALIZZATE SOLO SE INPUT BOOLEAN NATURAL EVENTS ON!!
       entities:
         - type: custom:auto-entities # TERREMOTO conditional
@@ -357,13 +346,13 @@ entities:
               {% set magnitudo = (state_attr('binary_sensor.lastquake', 'magnitude')|float) if not none else '0' %}
               {% set code = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
               {% set color = code[state_attr('binary_sensor.lastquake', 'level')|int] %}
-              {% set lat = state_attr('binary_sensor.lastquake', 'latitude') %}
-              {% set lon = state_attr('binary_sensor.lastquake', 'longitude') %}
+              {% set lat = state_attr('binary_sensor.lastquake', 'lat') %}
+              {% set lon = state_attr('binary_sensor.lastquake', 'long') %}
               <font color={{color}}>{{as_timestamp(data_utc)|timestamp_custom ('%H:%M:%S del %d-%m-%Y')}}</font>
 
 
               Un terremoto di magnitudo <font color={{color}}> {{magnitudo}} </font> 
-              è avvenuto nella zona: [{{state_attr('binary_sensor.lastquake', 'region')}}](https://www.google.com/maps/search/?api=1&query={{state_attr('binary_sensor.lastquake', 'latitude')}},{{state_attr('binary_sensor.lastquake', 'longitude')}})
+              è avvenuto nella zona: [{{state_attr('binary_sensor.lastquake', 'region')}}](https://www.google.com/maps/search/?api=1&query={{state_attr('binary_sensor.lastquake', 'lat')}},{{state_attr('binary_sensor.lastquake', 'long')}})
               a <font color={{color}}> {{state_attr('binary_sensor.lastquake', 'distance')}} </font> km da casa,
               con coordinate geografiche (lat, lon) {{lat}}, {{lon}}. 
               
@@ -385,7 +374,8 @@ entities:
 
               [INGV](http://terremoti.ingv.it/) ~ [HaiSentitoIlTerremoto Web](http://www.haisentitoilterremoto.it/)
 
-        - type: custom:hui-conditional-card # TERREMOTO geolocation
+        - type: custom:hui-element # TERREMOTO geolocation
+          card_type: conditional
           conditions:
             - entity: binary_sensor.lastquake
               state: 'on'
@@ -426,7 +416,7 @@ entities:
           filter:
             include:
               - entity_id: "*binary_sensor.dpc_*"
-                state: 'on'
+                state: "on"
                 attributes:
                     level: "> 0"
           card:
@@ -482,15 +472,65 @@ entities:
 
                     [Burze](https://burze.dzis.net) ~ [Blitzortung](http://map.blitzortung.org/#5.11/43.00/13.00) 
 
+
+        # - type: custom:auto-entities # DARKSKY divider
+        #   show_empty: false
+        #   filter:
+        #     include:
+        #       - entity_id: sensor.dark_sky_alerts
+        #         state: '> 0'
+        #   card:
+        #     type: custom:text-divider-row
+        #     text: ALLERTA METEO DARKSKY
+
         - type: custom:auto-entities # METEOALARM divider
           show_empty: false
           filter:
             include:
               - entity_id: binary_sensor.meteoalarm
                 state: 'on'
+              - entity_id: sensor.dark_sky_alerts
+                state: '> 0'
           card:
             type: custom:text-divider-row
             text: METEO ALARM
+
+        - type: custom:auto-entities # DARKSKY ALERTS markdown conditional
+          show_empty: false
+          filter:
+            include:
+              - entity_id: sensor.dark_sky_alerts
+                state: '> 0'
+          card:
+            type: markdown
+            style: |
+              ha-card {background: none; border-radius: 0px; box-shadow: none;}
+            content: >
+              {%set gg =['dom','lun','mar','mer','gio','ven','sab']%}
+              {%set color = {'Green':'Verde', 'Yellow':'Gialla', 'Orange':'Arancione', 'Red':'Rossa'} %}
+              {%set dict_code={'Green':'1','Yellow':'2','Orange':'3','Red':'4'}%}
+              {%set dict_type={'No Warnings': 'Nessun Avviso','Wind': 'Vento',
+              'Snow-Ice': 'Neve-Ghiaccio','Thunderstorm': 'Temporali',
+              'Fog': 'Nebbia','Extreme High Temperatures': 'Temperature massime estreme',
+              'Extreme Low Temperatures': 'Temperature minime estreme',
+              'Costal Event': 'Eventi Costieri','Forest Fire': 'Incendi bischivi',
+              'Avalanche': 'Valanghe','Rain': 'Pioggia',
+              'Unavailable': 'Non disponibile','Flooding': 'Alluvione',
+              'Rain-Flooding': 'Pioggia-Alluvione'}%}
+              {%set item_num=states('sensor.dark_sky_alerts')|int%}
+              {%for n in range(0,item_num)-%}
+              {% if item_num > 1%}{%set x = '_'~n %}{%else%}{%set x = '' %}{%endif%}
+              {%set severity= state_attr('sensor.dark_sky_alerts','title'~x).split(' ')[0]-%}
+              {%set event = state_attr('sensor.dark_sky_alerts','title'~x).split(' ')[1:-1]|join(' ')-%}
+              {%set gt = state_attr('sensor.dark_sky_alerts','time'~x)|timestamp_custom("%w")|int%}
+              {%set ge = state_attr('sensor.dark_sky_alerts','expires'~x)|timestamp_custom("%w")|int%}
+
+              <font color= {{severity}}> <ha-icon icon="{{'mdi:numeric-'~dict_code[severity]~'-box' if severity in dict_code else 'mdi:numeric-0-box'-}}" ></ha-icon> </font>
+              <font color= {{severity}}> {{dict_type[event]}}</font>
+              da {{gg[gt]|capitalize}} {{state_attr('sensor.dark_sky_alerts','time'~x)|timestamp_custom(" ore %H:%M")}} a {{gg[ge]|capitalize}} {{state_attr('sensor.dark_sky_alerts','expires'~x)|timestamp_custom(" ore %H:%M")}}
+              {%-endfor%}
+
+              ___
 
         - type: custom:auto-entities # METEOALARM markdown conditional
           show_empty: false
@@ -510,8 +550,8 @@ entities:
               
               {% set start = state_attr('binary_sensor.meteoalarm', 'effective') %}
               {% set end = state_attr('binary_sensor.meteoalarm', 'expires') %}
-              <font><center> {{as_timestamp(start)|timestamp_custom ('Valido dalle ore **%H:%M** del **%d/%m**')}}
-              {{as_timestamp(end)|timestamp_custom (' alle ore **%H:%M** del **%d/%m**')}}</font></center>
+              <font> {{as_timestamp(start)|timestamp_custom ('Dal **%d/%m** ore **%H:%M** ')}}
+              {{as_timestamp(end)|timestamp_custom ('al **%d/%m** ore **%H:%M**')}}</font>
 
 
               **Titolo**
@@ -531,7 +571,53 @@ entities:
 
               [MeteoAlarm]({{state_attr('binary_sensor.meteoalarm', 'web')}}) 
 
-        - type: custom:hui-conditional-card # MAPPA Giorno/Notte
+
+        - type: custom:auto-entities # CUSTOM COMPONENT meteoalarm_m conditional
+          show_empty: false
+          filter:
+            include:
+              - entity_id: sensor.alert
+                state: '> 0'
+          card:
+            type: custom:flex-table-card
+            # title: today
+            entities:
+              include: sensor.alert
+            columns:
+              - attr_as_list: today
+                modify: x.code.concat(' ', x.event)
+                name: Oggi
+              - attr_as_list: today
+                modify: x.italiano
+                name: ''
+              - attr_as_list: today
+                modify: x.end
+                name: ''
+
+        - type: custom:auto-entities # CUSTOM COMPONENT meteoalarm_m conditional
+          show_empty: false
+          filter:
+            include:
+              - entity_id: sensor.alert
+                state: '> 0'
+          card:
+            type: custom:flex-table-card
+            # title: tomorrow
+            entities:
+              include: sensor.alert
+            columns:
+              - attr_as_list: tomorrow
+                modify: x.code.concat(' ', x.event)
+                name: Domani
+              - attr_as_list: tomorrow
+                modify: x.italiano
+                name: ''
+              - attr_as_list: tomorrow
+                modify: x.end
+                name: ''
+
+        - type: custom:hui-element # MAPPA Giorno/Notte
+          card_type: conditional
           conditions:
             - entity: group.natural_events
               state: 'off'
@@ -549,7 +635,8 @@ entities:
                 "above_horizon": https://api.sat24.com/animated/IT/visual/3/Central%20European%20Standard%20Time/3065655' width=845 height=615
                 "below_horizon": https://api.sat24.com/animated/IT/infraPolair/3/Central%20European%20Standard%20Time/2523464' width=845 height=615
 
-        - type: custom:hui-conditional-card # MAPPE meteo
+        - type: custom:hui-element # MAPPE meteo
+          card_type: conditional
           conditions:
             - entity: group.meteoalert
               state: 'on'
@@ -586,7 +673,8 @@ entities:
             entities: 
               - entity: input_select.meteo_map
 
-        - type: custom:hui-conditional-card # IFRAME wwlln
+        - type: custom:hui-element # IFRAME wwlln
+          card_type: conditional
           conditions:
             - entity: binary_sensor.burze_storms_nearby
               state: 'on'
@@ -612,7 +700,8 @@ entities:
                 default_zoom: 8
                 aspect_ratio: 100%
 
-        - type: custom:hui-conditional-card # IFRAME windy
+        - type: custom:hui-element # IFRAME windy
+          card_type: conditional
           conditions:
             - entity: group.meteoalert
               state: 'on'
