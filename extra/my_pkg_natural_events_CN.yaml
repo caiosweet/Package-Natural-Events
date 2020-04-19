@@ -32,7 +32,7 @@ homeassistant:
       customize: &customize
         package: 'Natural_events'
         author: 'Caio & Gianpi - www.hassiohelp.eu'
-        version: '2.4'
+        version: '2.6'
 
       expose: &expose
         <<: *customize
@@ -52,7 +52,7 @@ homeassistant:
         MAGNITUDO minimo: &magnitude 3
         RAGGIO BURZE km: &radius_burze 25
         RAGGIO WWLLN km: &radius_wwlln 25
-        WWLLN finestra minuti: &windows 360
+        WWLLN finestra minuti: &windows 3600
       secret:
         LATITUDINE per le zone: &latitude !secret latitude_home
         LONGITUDINE per le zone: &longitude !secret longitude_home
@@ -429,11 +429,11 @@ sensor:
           {% set lev_color = (lev1, lev2)|default(0, true)|max|first|int %}
           {{ lev_color }}
 
-   ## METEOALARM_M CUATOM COMPONENT
-  # - platform: meteoalarm_m
-  #   id: 'IT011-Marche'
-  #   name: alert
-  #   scan_interval: 3600
+   ## METEOALARM_M CUASTOM COMPONENT
+  - platform: meteoalarm_m
+    id: 'IT011-Marche'
+    name: alert
+    scan_interval: 3600
 #######################################-#######################################
 ##                                 AUTOMATION
 #######################################-#######################################
@@ -479,19 +479,6 @@ automation:
       entity_id: 
         - binary_sensor.burze_storms_nearby
     condition:
-      # - condition: and
-      #   conditions:
-      #     - condition: or
-      #       conditions:
-      #         - condition: template
-      #           value_template: "{{ trigger.to_state.state == 'on' }}"
-      #     - condition: or
-      #       conditions:
-      #         - condition: template
-      #           value_template: "{{ trigger.from_state.state == 'off' }}"
-      #         - condition: template
-      #           value_template: >
-      #             {{ trigger.to_state.attributes.distance < trigger.from_state.attributes.distance }}
         - condition: template
           value_template: "{{ trigger.to_state.state == 'on' and (trigger.from_state.state == 'off' 
             or trigger.to_state.attributes.distance < trigger.from_state.attributes.distance )}}"
@@ -543,32 +530,6 @@ automation:
       - condition: template
         value_template: "{{ trigger.to_state.state == 'on' and (trigger.from_state.state == 'off' 
           or trigger.to_state.attributes != trigger.from_state.attributes)}}"
-      # - condition: and
-      #   conditions:
-      #     - condition: or
-      #       conditions:
-      #         - condition: template
-      #           value_template: "{{ trigger.to_state.state == 'on' }}"
-      #     - condition: or
-      #       conditions:
-      #         - condition: template
-      #           value_template: "{{ trigger.from_state.state == 'off' }}"
-      #         - condition: template
-      #           value_template: "{{ trigger.to_state.attributes.effective != trigger.from_state.attributes.effective }}"
-      #         - condition: template
-      #           value_template: "{{ trigger.to_state.attributes.expires != trigger.from_state.attributes.expires }}"
-      #         - condition: template
-      #           value_template: "{{ trigger.to_state.attributes.onset != trigger.from_state.attributes.onset }}"
-      #         - condition: template
-      #           value_template: "{{ trigger.to_state.attributes.awareness_type != trigger.from_state.attributes.awareness_type }}"
-      #         - condition: template
-      #           value_template: "{{ trigger.to_state.attributes.awareness_level != trigger.from_state.attributes.awareness_level }}"
-      #         - condition: template
-      #           value_template: "{{ trigger.to_state.attributes.urgency != trigger.from_state.attributes.urgency }}"
-      #         - condition: template
-      #           value_template: "{{ trigger.to_state.attributes.severity != trigger.from_state.attributes.severity }}"
-      #         - condition: template
-      #           value_template: "{{ trigger.to_state.attributes.awareness_level != trigger.from_state.attributes.event }}"
     action:
       - service: *script
         data:
@@ -649,9 +610,9 @@ automation:
             {% if trigger.from_state.state == 'off' %}
             Bollettino Protezione Civile
             {% else %} Aggiornamento bollettino. {% endif %}
-            Rischio {{trigger.to_state.attributes.rischio}}. Allerta {{trigger.to_state.attributes.alleta}} {{trigger.to_state.attributes.info}}.
+            Rischio {{trigger.to_state.attributes.rischio}}. Allerta {{trigger.to_state.attributes.allerta}} {{trigger.to_state.attributes.info}}.
           message_tts: >-
-            {{ trigger.to_state.attributes.friendly_name }}. Allerta {{trigger.to_state.attributes.alleta}} {{trigger.to_state.attributes.info}}.
+            {{ trigger.to_state.attributes.friendly_name }}. Allerta {{trigger.to_state.attributes.allerta}} {{trigger.to_state.attributes.info}}.
           # media_player_google: *media_player_google
           # media_player_alexa: *media_player_alexa
           # notify: *notify
@@ -674,14 +635,14 @@ automation:
             {%set gg =['dom','lun','mar','mer','gio','ven','sab']%}
             {%set color = {'Green':'Verde', 'Yellow':'Gialla', 'Orange':'Arancione', 'Red':'Rossa'} %}
             {%set dict_code={'Green':'1','Yellow':'2','Orange':'3','Red':'4'}%}
-            {%set dict_type={'No Warnings': 'Nessun Avviso','Wind': 'Vento',
-            'Snow-Ice': 'Neve-Ghiaccio','Thunderstorm': 'Temporali',
-            'Fog': 'Nebbia','Extreme High Temperatures': 'Temperature massime estreme',
-            'Extreme Low Temperatures': 'Temperature minime estreme',
-            'Costal Event': 'Eventi Costieri','Forest Fire': 'Incendi bischivi',
+            {%set dict_type={'No-warnings': 'Nessun Avviso','Wind': 'Vento',
+            'Snow-ice': 'Neve-Ghiaccio','Thunderstorm': 'Temporali',
+            'Fog': 'Nebbia','High-temperature': 'Caldo intenso',
+            'Low-temperature': 'Freddo intenso',
+            'Costal-event': 'Eventi Costieri','Forest-fire': 'Incendi bischivi',
             'Avalanche': 'Valanghe','Rain': 'Pioggia',
             'Unavailable': 'Non disponibile','Flooding': 'Alluvione',
-            'Rain-Flooding': 'Pioggia-Alluvione'}%}
+            'Rain-flooding': 'Pioggia-Alluvione'}%}
             {%set item_num=states('sensor.dark_sky_alerts')|int%}
             {%for n in range(0,item_num)-%}
             {% if item_num > 1%}{%set x = '_'~n %}{%else%}{%set x = '' %}{%endif%}
