@@ -3,6 +3,9 @@ from datetime import timedelta
 import logging
 from typing import Optional
 
+from .georss_ingv_centro_nazionale_terremoti_client import (
+    IngvCentroNazionaleTerremotiFeedManager,
+)
 import voluptuous as vol
 
 from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
@@ -13,13 +16,14 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
+    LENGTH_KILOMETERS,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.event import track_time_interval
 
-#REQUIREMENTS = ["georss_ingv_centro_nazionale_terremoti_client==0.1"]
+# REQUIREMENTS = ["georss_ingv_centro_nazionale_terremoti_client==0.1"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,12 +39,8 @@ CONF_MINIMUM_MAGNITUDE = "minimum_magnitude"
 
 DEFAULT_MINIMUM_MAGNITUDE = 0.0
 DEFAULT_RADIUS_IN_KM = 50.0
-DEFAULT_UNIT_OF_MEASUREMENT = "km"
 
 SCAN_INTERVAL = timedelta(minutes=5)
-
-SIGNAL_DELETE_ENTITY = "ingv_centro_nazionale_terremoti_delete_{}"
-SIGNAL_UPDATE_ENTITY = "ingv_centro_nazionale_terremoti_update_{}"
 
 SOURCE = "ingv_centro_nazionale_terremoti"
 
@@ -90,7 +90,6 @@ class IngvCentroNazionaleTerremotiFeedEntityManager:
         minimum_magnitude,
     ):
         """Initialize the Feed Entity Manager."""
-        from .georss_ingv_centro_nazionale_terremoti_client import IngvCentroNazionaleTerremotiFeedManager
 
         self._hass = hass
         self._feed_manager = IngvCentroNazionaleTerremotiFeedManager(
@@ -127,11 +126,11 @@ class IngvCentroNazionaleTerremotiFeedEntityManager:
 
     def _update_entity(self, external_id):
         """Update entity."""
-        dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY.format(external_id))
+        dispatcher_send(self._hass, f"ingv_centro_nazionale_terremoti_update_{external_id}")
 
     def _remove_entity(self, external_id):
         """Remove entity."""
-        dispatcher_send(self._hass, SIGNAL_DELETE_ENTITY.format(external_id))
+        dispatcher_send(self._hass, f"ingv_centro_nazionale_terremoti_delete_{external_id}")
 
 
 class IngvCentroNazionaleTerremotiLocationEvent(GeolocationEvent):
@@ -158,12 +157,12 @@ class IngvCentroNazionaleTerremotiLocationEvent(GeolocationEvent):
         """Call when entity is added to hass."""
         self._remove_signal_delete = async_dispatcher_connect(
             self.hass,
-            SIGNAL_DELETE_ENTITY.format(self._external_id),
+            f"ingv_centro_nazionale_terremoti_delete_{self._external_id}",
             self._delete_callback,
         )
         self._remove_signal_update = async_dispatcher_connect(
             self.hass,
-            SIGNAL_UPDATE_ENTITY.format(self._external_id),
+            f"ingv_centro_nazionale_terremoti_update_{self._external_id}",
             self._update_callback,
         )
 
@@ -243,7 +242,7 @@ class IngvCentroNazionaleTerremotiLocationEvent(GeolocationEvent):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return DEFAULT_UNIT_OF_MEASUREMENT
+        return LENGTH_KILOMETERS
 
     @property
     def device_state_attributes(self):
