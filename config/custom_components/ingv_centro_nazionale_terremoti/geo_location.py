@@ -28,7 +28,7 @@ from homeassistant.helpers.event import track_time_interval
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_EXTERNAL_ID = "external_id"
-ATTR_SHORT_ID = "short_id"
+ATTR_EVENT_ID = "event_id"
 ATTR_IMAGE_URL = "image_url"
 ATTR_MAGNITUDE = "magnitude"
 ATTR_PUBLICATION_DATE = "publication_date"
@@ -148,7 +148,7 @@ class IngvCentroNazionaleTerremotiLocationEvent(GeolocationEvent):
         self._region = None
         self._magnitude = None
         self._publication_date = None
-        self._short_id = None
+        self._event_id = None
         self._image_url = None
         self._remove_signal_delete = None
         self._remove_signal_update = None
@@ -200,7 +200,7 @@ class IngvCentroNazionaleTerremotiLocationEvent(GeolocationEvent):
         self._region = feed_entry.region
         self._magnitude = feed_entry.magnitude
         self._publication_date = feed_entry.published
-        self._short_id = feed_entry.short_id
+        self._event_id = feed_entry.event_id
         self._image_url = feed_entry.image_url
 
     @property
@@ -255,7 +255,7 @@ class IngvCentroNazionaleTerremotiLocationEvent(GeolocationEvent):
             (ATTR_MAGNITUDE, self._magnitude),
             (ATTR_ATTRIBUTION, self._attribution),
             (ATTR_PUBLICATION_DATE, self._publication_date),
-            (ATTR_SHORT_ID, self._short_id),
+            (ATTR_EVENT_ID, self._event_id),
             (ATTR_IMAGE_URL, self._image_url),
         ):
             if value or isinstance(value, bool):
