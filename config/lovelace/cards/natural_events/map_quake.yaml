@@ -1,0 +1,16 @@
+type: map
+style: |
+  ha-card {
+    border-radius: var(--ha-card-border-radius);
+    border: solid 1px var(--accent-color); 
+    box-shadow: none;
+    margin: 16px;
+  }
+# entities:
+#   - zone.geoalert
+geo_location_sources:
+  - all
+  # - ingv_centro_nazionale_terremoti
+# dark_mode: true
+default_zoom: 10
+aspect_ratio: 100%

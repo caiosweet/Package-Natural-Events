@@ -1,0 +1,44 @@
+type: conditional
+conditions:
+  - entity: binary_sensor.meteoalarm
+    state: 'on'
+card:
+  type: vertical-stack
+  cards:
+    # - type: entities
+    #   style: |
+    #     ha-card {
+    #       background: none;
+    #       box-shadow: none;
+    #       --secondary-text-color: {{state_attr('binary_sensor.global','meteoalarm_level')}};
+    #     }
+    #     .card-content {padding: 0;}
+    #   entities:
+    #     - type: custom:text-divider-row
+    #       text: METEO ALARM
+    - type: custom:text-divider-row
+      text: METEO ALARM
+    - type: markdown
+      style: |
+        ha-card {background: none; border-radius: 0px; box-shadow: none;}
+      content: >
+        {% set global = 'binary_sensor.global' %}
+        {% set l = state_attr('binary_sensor.meteoalarm', 'awareness_level').split(';')[0]%}
+        {% set t = state_attr('binary_sensor.meteoalarm', 'awareness_type').split(';')[0]%}
+        <font color= {{state_attr(global,'meteoalarm_level')}}> <ha-icon icon="{{state_attr(global, 'meteoalarm_level_icon')}}"></ha-icon></font>
+        <font color= {{state_attr(global,'meteoalarm_level')}}> <ha-icon icon="{{state_attr(global, 'meteoalarm_type_icon')}}"></ha-icon></font>
+        <font color= {{state_attr(global,'meteoalarm_level')}}> {{state_attr('binary_sensor.meteoalarm', 'event')}}
+        <img src="https://www.meteoalarm.eu/documents/rss/wflag-l{{'0' if l == none else l.split(';')[0]}}-t{{'0' if t == none else t.split(';')[0]}}.jpg"></font>
+        <font color= var(--primary-text-color)> **{{state_attr('binary_sensor.meteoalarm', 'urgency')|upper}}**</font><br>
+        {% set days = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"] %}
+        {% set start = as_timestamp(state_attr('binary_sensor.meteoalarm', 'effective')) %}
+        {% set end = as_timestamp(state_attr('binary_sensor.meteoalarm', 'expires')) %}
+        <font>Da {{days[start|timestamp_custom('%w')|int]}}{{start|timestamp_custom(' %d alle %H:%M')}}</font>
+        a {{days[end|timestamp_custom('%w')|int]}}{{end|timestamp_custom(' %d alle %H:%M')}}</font><br><br>
+        **Titolo**<br>
+        <font color= var(--primary-text-color)> {{state_attr('binary_sensor.meteoalarm', 'headline')}} </font><br><br>
+        **Descrizione**<br>
+        <font color= var(--primary-text-color)> {{state_attr('binary_sensor.meteoalarm', 'description')}} </font><br><br>
+        **Istruzioni**<br>
+        <font color= var(--primary-text-color)> {{state_attr('binary_sensor.meteoalarm', 'instruction')}} </font><br><br>
+        [MeteoAlarm]({{state_attr('binary_sensor.meteoalarm', 'web')}}) 

@@ -1,0 +1,33 @@
+type: "custom:button-card"
+style: |
+  {% set global = 'binary_sensor.global' %}
+  @keyframes blink {
+    30% {
+      background: {% if is_state(global, 'on') %} gray {% endif %};
+    }
+  }
+  ha-card {
+    {% if is_state(global, 'on') %}
+      animation:  blink 2s linear 3;
+      border: 1px solid {{state_attr(global,'level')}};
+      border-radius: var(--ha-card-border-radius) var(--ha-card-border-radius) 0px 0px;
+      box-shadow: none;
+      background: {{state_attr(global,'level')}};
+      # --bc-heading-color-dark: {% if  state_attr(global,'level') in ['White','Yellow'] %} red; {% else %} yellow; {% endif %}
+      color: {% if state_attr(global,'level') in ['White','Yellow','Orange'] %} var(--disabled-text-color) {% endif %};
+    {% else %}
+    background: Green;
+    border: Green;
+    {% endif %}
+    }
+  }
+entity: input_boolean.natural_events
+show_icon: false
+# color_type: label-card
+name: >
+  [[[
+    if (states['binary_sensor.global'].state == 'on')
+    return `<ha-icon icon="mdi:alert" style="width: 24px; height: 24px;"></ha-icon> &nbsp;` 
+    + "EVENTI NATURALI" + `&nbsp; <ha-icon icon="mdi:alert" style="width: 24px; height: 24px;"></ha-icon>`
+    return "NESSUN EVENTO CRITICO"
+  ]]]

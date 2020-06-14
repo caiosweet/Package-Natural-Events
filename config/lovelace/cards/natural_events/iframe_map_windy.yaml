@@ -1,0 +1,46 @@
+type: vertical-stack 
+cards:
+- type: conditional
+  conditions:
+    - entity: input_select.meteo_iframe
+      state: 'Windy Alert'
+  card: 
+    type: iframe
+    style: |
+      ha-card {
+        border-radius: var(--ha-card-border-radius);
+        border: solid 1px var(--accent-color); 
+        margin: 16px;
+      }
+    aspect_ratio: 100%
+    url: https://embed.windy.com/embed2.html?lat=42.000&lon=12.000&zoom=5&level=surface&overlay=capAlerts&menu=&type=map&location=coordinates&detail=&detailLat=42.000&detailLon=12.000
+
+- type: conditional
+  conditions:
+    - entity: input_select.meteo_iframe
+      state: 'Protezione Civile'
+  card: 
+    type: iframe
+    style: |
+      ha-card {
+        border-radius: var(--ha-card-border-radius);
+        border: solid 1px var(--accent-color); 
+        margin: 16px;
+      }
+    aspect_ratio: 100%
+    url: 'http://www.protezionecivile.gov.it/radar-dpc'
+
+- type: conditional
+  conditions:
+    - entity: input_select.meteo_iframe
+      state: 'Blitzortung'
+  card: 
+    type: iframe
+    style: |
+      ha-card {
+        border-radius: var(--ha-card-border-radius);
+        border: solid 1px var(--accent-color); 
+        margin: 16px;
+      }
+    aspect_ratio: 100%
+    url: 'http://map.blitzortung.org/#5.11/42.5/12.51' # Il Centro geografico d'Italia

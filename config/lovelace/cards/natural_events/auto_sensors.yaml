@@ -1,0 +1,168 @@
+type: custom:auto-entities # SENSORI ON + Pulsanti MAPS 
+card:
+  type: entities
+  show_empty: false
+  # state_color: true
+  style: |
+    ha-card { background: none; border-radius: 0px; box-shadow: none; #background-color: var(--primary-background-color);}
+    # .card-content {padding: 0px}
+  header:
+    type: buttons
+    entities:
+      - entity: input_boolean.natural_events
+        name: Info
+      - entity: group.natural_events 
+        name: Map
+        icon: mdi:image-off
+        tap_action:
+          action: call-service
+          service: input_select.select_option
+          service_data:
+            entity_id: input_select.geo_map, input_select.meteo_map, input_select.meteo_iframe
+            option: Nessuna
+      - entity: input_select.geo_map
+        name: Geo
+        tap_action:
+          action: call-service
+          service: input_select.select_next
+          service_data:
+            entity_id: input_select.geo_map
+      - entity: input_select.meteo_map
+        name: Meteo
+        tap_action:
+          action: call-service
+          service: input_select.select_next
+          service_data:
+            entity_id: input_select.meteo_map
+      - entity: input_select.meteo_iframe
+        name: I-Frame
+        tap_action:
+          action: call-service
+          service: input_select.select_next
+          service_data:
+            entity_id: input_select.meteo_iframe
+      # - entity: input_boolean.natural_events_send_image
+entities:
+  - type: divider
+filter:
+  exclude: 
+    - entity_id: 'binary_sensor.global'
+  include:
+    - entity_id: 'binary_sensor.*'
+      state: 'on'
+      attributes:
+          package: Natural_events
+      options:
+        entity: this.entity_id
+        secondary_info: last-changed
+        state_color: true
+        style: |
+          :host {
+            --color:
+              {% set color = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
+              {% if 'dpc' in config.entity %} {{color[state_attr(config.entity, 'level')|int]}}
+              {% elif 'meteoalarm' in config.entity %} {{state_attr('binary_sensor.global','meteoalarm_level')}}
+              {% elif 'quake' in config.entity %} {{color[state_attr('binary_sensor.lastquake', 'level')|int]}}
+              {% elif 'burze' in config.entity and states(config.entity) == 'on'%}
+                {% set d = state_attr(config.entity,'distance') %}
+                {% if d %}
+                  {% if d <= 1 %}Red{% elif 1 < d <= 5 %}Orange{% elif 5 < d <= 10 %}Yellow{% else %}Green{% endif %}
+                {% endif %}
+              {% endif %};
+            color: var(--color);
+            ##--paper-item-icon-color: var(--color);
+          }
+    - entity_id: 'sensor.m*'
+      state: '> 0'
+      attributes: 
+          package: Natural_events
+      options:
+        entity: this.entity_id
+        secondary_info: last-changed
+        # state_color: true
+        style: |
+          :host {
+            {% set dict_code={'Green':'1','Yellow':'2','Orange':'3','Red':'4'} %}
+            {% set color = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
+            {% macro code() %}
+            {%- for s  in ['today', 'tomorrow'] -%}
+              {% set v = state_attr('sensor.meteoalarm_custom', s) -%}
+                {% if v -%}
+                  {% for d  in v -%}
+                  {{dict_code[d['code']]}}
+                  {% endfor -%}
+                {% endif -%}
+            {%- endfor -%}
+            {% endmacro -%}
+            --color: {{color[code()|max|int]}};
+            color: var(--color);
+            --paper-item-icon-color: var(--paper-item-icon-active-color);
+          }
+
+    # - entity_id: geo_location.*
+    #   attributes:
+    #     source: gdacs
+    #     alert_level: "/^((?!Green).)*$/"
+    #   options:
+    #     style: |
+    #       :host {
+    #         color: {{state_attr(config.entity, 'alert_level')}};
+    #         --paper-item-icon-color: {{state_attr(config.entity, 'alert_level')}};
+    #       }
+
+    # - entity_id: geo_location.*
+    #   attributes:
+    #     source: ingv_centro_nazionale_terremoti
+    #     magnitude: ">= 3"
+    #   options:
+    #     entity: this.entity_id
+    #     secondary_info: last-changed
+    #     style: |
+    #       :host {
+    #         {% set color = {0:'White', 1:'White', 2:'Green', 3:'Yellow', 4:'Orange', 5:'Red'} %}
+    #         color: {{color[state_attr(config.entity, 'magnitude')|int]}};
+    #         --paper-item-icon-color: {{color[state_attr(config.entity, 'magnitude')|int]}};
+    #       }
+
+  # template: |
+  #         {% set hour = 160 %}
+  #         {%- set t = as_timestamp(now()) - hour*(60 * 60) %}
+  #         {%- for s in states.geo_location %}
+  #         {%- if s.attributes.source == 'ingv_centro_nazionale_terremoti' and s.last_updated != None and as_timestamp(s.attributes.publication_date) > t %}
+  #         {{ s.entity_id }}{{ ',' if not loop.last else ''}}{%- endif %}
+  #         {%- endfor %}
+
+
+    # - group: group.geoalert
+    #   attributes:
+    #     source: ingv_centro_nazionale_terremoti
+    #     magnitude: ">= 3"
+    #   options:
+    #     entity: this.entity_id
+    #     secondary_info: last-changed
+    #     style: |
+    #       :host {
+    #         {% set color = {0:'White', 1:'White', 2:'Green', 3:'Yellow', 4:'Orange', 5:'Red'} %}
+    #         color: {{color[state_attr(config.entity, 'magnitude')|int]}};
+    #         --paper-item-icon-color: {{color[state_attr(config.entity, 'magnitude')|int]}};
+    #       }
+
+
+#              {% elif 'meteoalarm_custom' in config.entity %} {{state_attr('sensor.meteoalarm_custom', 'code')}}
+    # - entity_id: geo_location.*
+    #   attributes:
+    #     source: ingv_centro_nazionale_terremoti
+    #     magnitude: ">= 3"
+    #   last_changed: < 900 # Minutes
+    #   options:
+    #     entity: this.entity_id
+    #     secondary_info: last-changed
+    #     style: |
+    #       :host {
+    #         {% set color = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
+    #         color: {{color[state_attr(config.entity, 'magnitude')]}};
+    #         --paper-item-icon-color: {{color[state_attr(config.entity, 'magnitude')]}};
+    #       }
+
+# sort:
+#   {attribute: days,method: attribute,numeric: true,count: 6,first: 0}

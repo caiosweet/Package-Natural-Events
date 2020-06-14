@@ -1,0 +1,52 @@
+type: conditional # CONDITIONAL MAPPE meteo
+conditions:
+  - entity: input_select.meteo_map
+    state_not: 'Nessuna'
+card:
+  type: picture-entity
+  style: |
+    ha-card {
+      border-radius: var(--ha-card-border-radius);
+      border: solid 1px var(--accent-color);
+      box-shadow: none;
+      margin: 16px;
+    }
+  title: Nuvole
+  entity: input_select.meteo_map
+  tap_action:
+    action: call-service
+    service: input_select.select_next
+    service_data:
+      entity_id: input_select.meteo_map
+  hold_action:
+    action: call-service
+    service: input_select.select_previous
+    service_data:
+      entity_id: input_select.meteo_map
+  state_image:
+    "Nuvole e Sole": https://api.sat24.com/animated/IT/visual/3/
+    "Nuvole Infrared": https://api.sat24.com/animated/IT/infraPolair/3/ 
+    "Pioggia": https://api.sat24.com/animated/IT/rainTMC/3/
+    "Neve": https://api.sat24.com/animated/EU/snow/3/
+    "Il Meteo": http://cdn-radar.ilmeteo.it/italy.gif
+    "Burze": https://burze.dzis.net/italia_fulmine_lebhaft.gif
+    "Burze Nord Ovest": https://burze.dzis.net/italia_fulmine_lebhaft_gruppi_nw.gif
+    "Burze Nord Est": https://burze.dzis.net/italia_fulmine_lebhaft_gruppi_ne.gif
+    "Burze Sud Ovest": https://burze.dzis.net/italia_fulmine_lebhaft_gruppi_sw.gif
+    "Burze Sud Est": https://burze.dzis.net/italia_fulmine_lebhaft_gruppi_se.gif
+    "WWLLN": https://wwlln.net/WWLLN_movies/Movie_of_Lightning_in_EurAfrica_BIG.gif
+  entities: 
+    - entity: input_select.meteo_map
+
+#https://api.sat24.com/mostrecent/
+# Define map Type visual5hdcomplete, infraPolair, rainTMC, snow
+# Link Example
+# https://api.sat24.com/mostrecent/IT/visual5hdcomplete or
+# https://api.sat24.com/mostrecent/IT/infraPolair
+
+#https://api.sat24.com/animated/
+# Define map Type visual, infraPolair, rainTMC, snow
+# Numbers define map size 1-small, 2-medium, 3-large
+# Link Example
+# https://api.sat24.com/animated/IT/visual/1/
+# https://api.sat24.com/animated/IT/infraPolair/2/

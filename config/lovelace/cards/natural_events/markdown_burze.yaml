@@ -1,0 +1,22 @@
+type: conditional # BURZE conditional divider markdown
+conditions:
+  - entity: binary_sensor.burze_storms_nearby
+    state: 'on'
+card:
+  type: vertical-stack
+  cards:
+    - type: custom:text-divider-row
+      text: BURZE
+    - type: markdown
+      style: |
+        ha-card {background: none; border-radius: 0px; box-shadow: none;}
+      content: >-
+        <font color= var(--error-color)>{{state_attr('binary_sensor.burze_storms_nearby', 'number')}}</font>
+        <font color= yellow><ha-icon icon="mdi:flash" style="width: 24px; height: 24px; transform: rotate(35deg);"></ha-icon></font> 
+        in <font color= var(--error-color)> {{state_attr('binary_sensor.burze_storms_nearby', 'period')}}</font> minuti.
+        Il più vicino è caduto a <font color= var(--error-color)> {{state_attr('binary_sensor.burze_storms_nearby', 'distance')}} Km </font> 
+        a <font color= var(--error-color)> {{state_attr('binary_sensor.global','burze_direction')}} </font>
+        </font> da casa.
+
+
+        [Burze](https://burze.dzis.net) ~ [Blitzortung](http://map.blitzortung.org/#5.11/43.00/13.00) 

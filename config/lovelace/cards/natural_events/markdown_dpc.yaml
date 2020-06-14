@@ -1,0 +1,42 @@
+type: vertical-stack
+cards:
+  - type: custom:auto-entities # DPC conditional
+    show_empty: false
+    filter:
+      include:
+        - entity_id: "*binary_sensor.dpc_*"
+          state: 'on'
+          # attributes:
+          #   level: '> 0'
+    card:
+      type: custom:text-divider-row # DPC divider
+      text: PROTEZIONE CIVILE
+
+  - type: 'custom:auto-entities'
+    show_empty: false
+    filter:
+      include:
+        - entity_id: binary_sensor.dpc_*
+          state: 'on'
+          # attributes:
+          #   level: '> 0'
+    card:
+      type: markdown
+      entity_id: this.entity_id
+      style: |
+        ha-card {background: none; border-radius: 0px; box-shadow: none;}
+        # .card-content {padding: 0}
+      content: >
+        {% set color = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
+        {% for e in config.entities %}
+
+
+        <font color= {{color[state_attr(e.entity, 'level')|int]}}>
+        <ha-icon icon="{{ 'mdi:numeric-' ~ state_attr(e.entity, 'level')|int ~ '-box'}}" style="width: 36px; height: 36px;"></ha-icon> 
+        <ha-icon icon="{{ state_attr(e.entity, 'icon')}}" style="width: 36px; height: 36px;"></ha-icon> 
+        {{state_attr(e.entity, 'friendly_name')}} - {{state_attr(e.entity, 'allerta')}} {{state_attr(e.entity, 'info')}}</font>
+        {%- endfor %}
+
+
+        [Protezione Civile](http://www.protezionecivile.it/home) ~ [Vigilanza Meteo](http://www.protezionecivile.gov.it/dettaglio/-/journal_content/56/20182/1131180?refererPlid=42041&controlPanelCategory=current_site.content)
+        ~ [Criticità Idro](http://www.protezionecivile.gov.it/attivita-rischi/meteo-idro/attivita/previsione-prevenzione/centro-funzionale-centrale-rischio-meteo-idrogeologico/previsionale/bollettini-criticita/bollettino-odierno) ~ [Radar](http://www.protezionecivile.gov.it/radar-dpc)

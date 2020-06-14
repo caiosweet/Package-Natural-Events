@@ -1,0 +1,26 @@
+type: custom:fold-entity-row # 1 group.meteoalert
+head: 
+  entity: group.meteoalert
+  state_color: true
+  style: |
+    :host {
+      {% if is_state('group.meteoalert', 'on') or not is_state('sensor.meteoalarm_custom', '0') %} 
+      --paper-item-icon-color: var(--paper-item-icon-active-color);
+      {% endif %}
+    }
+group_config:
+  state_color: true
+  secondary_info: last-changed
+  style: |
+    :host {
+      {% set color = {0:'var(--primary-text-color)', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
+      color: {% if 'dpc' in config.entity %} {{color[state_attr(config.entity, 'level')|int]}} 
+              {% elif 'meteoalarm' in config.entity %} {{state_attr('binary_sensor.global','meteoalarm_level')}}
+              {% elif 'burze' in config.entity and states(config.entity) == 'on'%}
+                {% set d = state_attr(config.entity,'distance') %}
+                {% if d %}
+                  {% if d <= 1 %}Red{% elif 1 < d <= 5 %}Orange{% elif 5 < d <= 10 %}Yellow{% else %}Green{% endif %}
+                {% endif %}
+              {% endif %};
+       {% if 'meteoalarm_custom' in config.entity %} --paper-item-icon-color: var(--paper-item-icon-active-color);{% endif %}
+    }
