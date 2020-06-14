@@ -160,7 +160,7 @@ homeassistant:
 #-------------------------------------
 gdacs:
   # categories: [Drought, Earthquake, Flood, Tropical Cyclone, Tsunami, Volcano]
-  radius: 3000 #*radius_quake
+  radius: *radius_quake
   latitude: *latitude
   longitude: *longitude
 
