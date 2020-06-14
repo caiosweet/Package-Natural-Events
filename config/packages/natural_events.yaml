@@ -765,22 +765,6 @@ automation:
           media_player_google: *media_player_google
           media_player_alexa: *media_player_alexa
           notify: *notify
-
-      ### PER TEST
-      - delay: 00:00:05
-      - service: script.natural_events_notifications
-        data_template:
-          title: >-
-            Rilevato terremoto. Epicentro: {{ trigger.to_state.attributes.region }}
-          message: >-
-            {% set data_utc = trigger.to_state.attributes.publication_date %}
-            Rilevato terremoto di magnitudo: {{trigger.to_state.attributes.magnitude}} 
-            a una distanza di {{ trigger.to_state.state }} Km da casa. 
-            Epicentro: {{ trigger.to_state.attributes.region }}
-            {{as_timestamp(data_utc)|timestamp_custom ('Data %d/%m/%Y Ore %H:%M:%S')}}
-          url: >-
-            {{trigger.to_state.attributes.image_url}}
-          notify: notify.telegram
 #----------------------------------------------------------------------------------------------------#
 # GEO LOCATION - Notifica GDACS # Global Disaster Alert and Coordination System
 #                               # Sistema di allarme e coordinamento globale per le catastrofi
