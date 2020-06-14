@@ -166,21 +166,3 @@ filter:
 
 # sort:
 #   {attribute: days,method: attribute,numeric: true,count: 6,first: 0}
-
-#--paper-item-icon-color:
-#ingv_centro_nazionale_terremoti
-# type: entities
-# entities: 
-#   - type: custom:auto-entities
-#     card:
-#       type: entities
-#       title: Plants
-#       show_header_toggle: false
-#     filter:
-#       include:
-#         - domain: plant
-#           options:
-#             type: custom:layout-card
-#             cards:
-#               - type: plant-status
-#                 entity: this.entity_id
