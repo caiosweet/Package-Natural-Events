@@ -1,0 +1,37 @@
+type: "custom:button-card"
+style: |
+  ha-card {
+      {% set global = 'binary_sensor.global' %}
+      --my-background: {% if is_state(global, 'on') %} {{state_attr(global, 'level')}} {% else %} Green {% endif %};
+      --my-color: {% if state_attr(global,'level') in ['White','Yellow','Orange'] %} var(--disabled-text-color) {% endif %};
+  }
+color_type: card
+entity: group.natural_events
+layout: icon_name
+name: Eventi Naturali
+double_tap_action:
+  action: navigate
+  navigation_path: /lovelace/meteo
+tap_action:
+  action: call-service
+  service: input_boolean.toggle
+  service_data:
+    entity_id: input_boolean.natural_events
+state:
+  - value: "on"
+    icon: mdi:alert
+    styles:
+      card:
+        - animation: blink 2s ease 3
+        - background-color: >
+            var(--my-background)
+        - color: >
+            var(--my-color)
+        - font-size: 32px
+      name:
+        - padding-right: 100px
+      icon:
+        - width: 32px
+  - operator: default
+    color: green
+    icon: mdi:shield-check

@@ -1,0 +1,31 @@
+type: custom:auto-entities # MENU Impostazioni fold
+show_empty: false
+filter:
+  include:
+    - attributes:
+        package: Natural_events
+      options:
+        state_color: true
+  exclude:
+    - entity_id: input_boolean.natural_events
+    - domain: binary_sensor
+    - domain: group
+    - domain: sensor
+    - domain: script
+    - domain: zone
+card:
+  type: custom:fold-entity-row
+  # style: |
+  #   :host {
+  #     color: {% if is_state(config.entity, 'on') %} red {% endif %};
+  #   }
+  head: 
+    entity: input_boolean.natural_events
+    tap_action:
+      action: toggle
+    style: |
+      :host {
+        {% if is_state('input_boolean.natural_events', 'on') %} 
+        --paper-item-icon-color: var(--paper-item-icon-active-color);
+        {% endif %}
+      }

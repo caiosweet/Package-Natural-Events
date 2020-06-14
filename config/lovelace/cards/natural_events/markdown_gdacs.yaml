@@ -1,0 +1,47 @@
+type: custom:auto-entities # CONDITIONAL GDACS
+show_empty: false
+# sort:
+#   {attribute: from_date, method: attribute, reverse: true, count: 3, first: 1}
+filter:
+  include:
+    - entity_id: geo_location.*
+      attributes:
+        source: gdacs
+        alert_level: "/^((?!Green).)*$/" # Escludi string
+      # options:
+card:
+  type: vertical-stack
+  cards:
+    - type: custom:text-divider-row
+      text:  GDACS
+    - type: markdown # GDACS
+      style: |
+        ha-card {background: none; border-radius: 0px; box-shadow: none;}
+      content: |
+        {% for state in states.geo_location %}
+        {% if state.attributes.source=="gdacs" %}
+        <font color="{{ state.attributes.alert_level }}"><ha-icon icon="{{ state.attributes.icon }}"></ha-icon> **{{ state.name }}</font>**
+
+        Descrizione: <font color= var(--primary-text-color)>{{ state.attributes.description }}</font>
+
+        *Rilasciato: <font color= var(--primary-text-color)>{{ state.attributes.from_date.strftime("%d.%m.%Y %H:%M") }}*</font>
+        *Fine: <font color= var(--primary-text-color)>{{ state.attributes.to_date.strftime("%d.%m.%Y %H:%M") }}*</font>
+        {% endif %}
+        {% endfor %}
+
+
+#and state.attributes.alert_level != 'Green'
+
+  # type: custom:hui-markdown-card #hui-element
+#   # card_type: markdown # GDACS
+  # entity: this.entity_id
+  # style: |
+  #   ha-card {background: none; border-radius: 0px; box-shadow: none;}
+#   content: |
+#     {% set stato = states.this.entity_id %}
+#     ### <font color="{{ stato.attributes.alert_level }}"><ha-icon icon="{{ stato.attributes.icon }}"></ha-icon> {{ stato.name }}</font>
+
+#     {{ stato.attributes.description }}
+
+#     *Rilasciato: {{ stato.attributes.from_date.strftime("%d.%m.%Y %H:%M") }}*
+#     *Fine: {{ stato.attributes.to_date.strftime("%d.%m.%Y %H:%M") }}*

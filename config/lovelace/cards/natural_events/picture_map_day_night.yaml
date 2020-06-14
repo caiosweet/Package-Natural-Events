@@ -1,0 +1,12 @@
+type: picture-entity
+style: |
+  ha-card {
+    border-radius: var(--ha-card-border-radius);
+    border: solid 1px var(--accent-color);
+    box-shadow: none;
+    margin: 16px;
+  }
+entity: sun.sun
+state_image:
+  "above_horizon": https://api.sat24.com/animated/IT/visual/3/Central%20European%20Standard%20Time/3065655' width=845 height=615
+  "below_horizon": https://api.sat24.com/animated/IT/infraPolair/3/Central%20European%20Standard%20Time/2523464' width=845 height=615
