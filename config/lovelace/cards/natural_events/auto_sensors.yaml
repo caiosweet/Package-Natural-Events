@@ -7,13 +7,18 @@ card:
     ha-card { background: none; border-radius: 0px; box-shadow: none; #background-color: var(--primary-background-color);}
     # .card-content {padding: 0px}
   header:
-    type: buttons
-    entities:
+    type: custom:paper-buttons-row
+    buttons:
       - entity: input_boolean.natural_events
         name: Info
-      - entity: group.natural_events 
+      - entity: group.natural_events
         name: Map
         icon: mdi:image-off
+        style:
+          button:
+            color: var(--paper-item-icon-color)
+          ripple:
+            color: orange
         tap_action:
           action: call-service
           service: input_select.select_option
@@ -27,21 +32,56 @@ card:
           service: input_select.select_next
           service_data:
             entity_id: input_select.geo_map
+        style:
+          button:
+            color: var(--paper-item-icon-active-color)
+        state_styles:
+          Nessuna:
+            button:
+              color: var(--paper-item-icon-color)
       - entity: input_select.meteo_map
         name: Meteo
+        state_text:
+          Nuvole Infrared: Notte
+          Nuvole e Sole: Giorno
+          Pioggia: Pioggia
+          Neve: Neve
+          Il Meteo: Il meteo
+          Burze: Burze
+          Burze Nord Ovest: Burze NO
+          Burze Nord Est: Burze NE
+          Burze Sud Ovest: Burze SO
+          Burze Sud Est: Burze SE
         tap_action:
           action: call-service
           service: input_select.select_next
           service_data:
             entity_id: input_select.meteo_map
+        style:
+          button:
+            color: var(--paper-item-icon-active-color)
+        state_styles:
+          Nessuna:
+            button:
+              color: var(--paper-item-icon-color)
       - entity: input_select.meteo_iframe
         name: I-Frame
+        state_text:
+          Windy Alert: Alert
+          Protezione Civile: DPC
+          Blitzortung: Blitz
         tap_action:
           action: call-service
           service: input_select.select_next
           service_data:
             entity_id: input_select.meteo_iframe
-      # - entity: input_boolean.natural_events_send_image
+        style:
+          button:
+            color: var(--paper-item-icon-active-color)
+        state_styles:
+          Nessuna:
+            button:
+              color: var(--paper-item-icon-color)
 entities:
   - type: divider
 filter:
