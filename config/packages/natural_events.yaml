@@ -544,9 +544,8 @@ automation:
             or trigger.to_state.attributes.distance < trigger.from_state.attributes.distance )}}"
     action:
       - service: *script
-        data:
-          call_no_annuncio: 1
         data_template:
+          call_no_annuncio: 1
           title: >-
             Burze -
             {% if trigger.from_state.state == 'off' %}
@@ -597,9 +596,8 @@ automation:
           or (trigger.to_state.attributes != trigger.from_state.attributes))}}"
     action:
       - service: *script
-        data:
-          call_no_annuncio: 1
         data_template:
+          call_no_annuncio: 1
           title: >-
             Protezione Civile - {{trigger.to_state.attributes.rischio}}.
             {% if trigger.from_state.state == 'on' %}
@@ -632,9 +630,8 @@ automation:
           or trigger.to_state.attributes != trigger.from_state.attributes)}}"
     action:
       - service: *script
-        data:
-          call_no_annuncio: 1
         data_template:
+          call_no_annuncio: 1
           title: >-
             MeteoAlarm -
             {% if trigger.from_state.state == 'off' %}
@@ -673,7 +670,7 @@ automation:
       entity_id: sensor.meteoalarm_custom
     condition:
       - condition: template
-        value_template: "{{ not is_state('sensor.meteoalarm_custom', '0') }}"
+        value_template: "{{ not is_state('sensor.meteoalarm_custom', '0') }}" #TODO camnbio data
     action:
       - service: *script
         data_template:
@@ -700,10 +697,11 @@ automation:
             {%- for d  in v %}
             {{color[d['code']][0] + dict_type[d['event']][0] + dict_type[d['event']][1]}} allerta {{color[d['code']][1]}}
             Descrizione: {{d['italiano']}}
-            Orario: {{d['start'].split(' ')[1]}} - {{d['end'].split(' ')[1]}}
+            Data: {{d['start']|trim("CEST")|replace('.','/')}} - {{d['end']|trim("CEST")|replace('.','/')}}
             {%- endfor %}
             {%- endif %}
             {%- endfor %}
+          #Orario: {{d['start'].split(' ')[1]}} - {{d['end'].split(' ')[1]}}
           message_tts: >-
             {% set day = {'today':'Oggi', 'tomorrow':'Domani'} %}
             {% set color = {'Green':'Verde', 'Yellow':'Gialla', 'Orange':'Arancione', 'Red':'Rossa'} %}
@@ -748,6 +746,7 @@ automation:
     action:
       - service: *script
         data_template:
+          call_no_annuncio: 1
           title: >-
             Rilevato terremoto. Epicentro: {{ trigger.to_state.attributes.region }}
           message: >-
