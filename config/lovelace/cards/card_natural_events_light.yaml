@@ -38,7 +38,8 @@ cards:
     {% set summary = states('sensor.dark_sky_daily_summary') %}
     {% set risk = {'Green':'Verde', 'Yellow':'Gialla', 'Orange':'Arancione', 'Red':'Rossa'} %}
     {% if is_state(global, 'on') %}
-    <center><b><ha-icon icon="mdi:alarm-light"></ha-icon>&nbsp;EVENTI NATURALI - ALLERTA <ha-icon icon="{{state_attr(global,'icon')}}"></ha-icon>&nbsp;{{risk[state_attr(global,'level')]|upper}}
+    <center><b><ha-icon icon="mdi:alarm-light"></ha-icon>&nbsp; EVENTI NATURALI - 
+    MAX ALLERTA {{risk[state_attr(global,'level')]|upper}} &nbsp;<ha-icon icon="{{state_attr(global,'icon')}}"></ha-icon>
     {% else %}
     <center><ha-icon icon="mdi:shield-check"></ha-icon> &nbsp; NESSUN EVENTO SEGNALATO
     <center>{{'' if summary == 'unknown' else summary }}
@@ -86,15 +87,16 @@ cards:
                   {% endif %}
                 }
         - type: custom:fold-entity-row # 1 group.meteoalert
+          style: |
+            #head { 
+              {% if is_state('group.meteoalert', 'on') %}
+              --paper-item-icon-color: var(--paper-item-icon-active-color);
+              {% endif %}
+            }
+          # padding: 0 #Allinea icone a sx
           head: 
             entity: group.meteoalert
             state_color: true
-            style: |
-              :host {
-                {% if is_state('group.meteoalert', 'on') or not is_state('sensor.meteoalarm_custom', '0') %} 
-                --paper-item-icon-color: var(--paper-item-icon-active-color);
-                {% endif %}
-              }
           group_config:
             state_color: true
             secondary_info: last-changed
@@ -112,26 +114,26 @@ cards:
                 {% if 'meteoalarm_custom' in config.entity %} --paper-item-icon-color: var(--paper-item-icon-active-color);{% endif %}
               }
         - type: custom:fold-entity-row # 2 group.geoalert
+          style: |
+            #head { 
+              {% if is_state('group.geoalert', 'on') %}
+              --paper-item-icon-color: var(--paper-item-icon-active-color);
+              {% endif %}
+            }
           head: 
             entity: group.geoalert
             state_color: true
-            style: |
-              :host {
-                {% if is_state('group.geoalert', 'on') %} 
-                --paper-item-icon-color: var(--paper-item-icon-active-color);
-                {% endif %}
-              }
           group_config:
             state_color: true
             secondary_info: last-changed
             style: |
               :host {
-                {% set color = {0:'var(--primary-text-color)', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
-                color: {% if 'dpc' in config.entity %} {{color[state_attr(config.entity, 'level')|int]}} 
-                        {% elif 'meteoalarm' in config.entity %} {{state_attr('binary_sensor.global','meteoalarm_level')}}
-                        {% elif 'quake' in config.entity and states('binary_sensor.lastquake') == 'on' %} {{color[state_attr('binary_sensor.lastquake', 'level')|int]}}
-                      {% endif %};
-                {% if 'meteoalarm_custom' in config.entity %} --paper-item-icon-color: var(--paper-item-icon-active-color);{% endif %}
+                  {% set color = {0:'var(--primary-text-color)', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
+                  color: {% if 'dpc' in config.entity %} {{color[state_attr(config.entity, 'level')|int]}} 
+                          {% elif 'meteoalarm' in config.entity %} {{state_attr('binary_sensor.global','meteoalarm_level')}}
+                          {% elif 'quake' in config.entity and states('binary_sensor.lastquake') == 'on' %} {{color[state_attr('binary_sensor.lastquake', 'level')|int]}}
+                        {% endif %};
+                  {% if 'meteoalarm_custom' in config.entity %} --paper-item-icon-color: var(--paper-item-icon-active-color);{% endif %}
               }
 #################################################################
 ## AUTOENTITIES SENSORS ON AND BUTTONS MAPS
@@ -304,6 +306,7 @@ cards:
           ___
           
           #### TEMPORALI
+
           <font color= var(--error-color)>{{state_attr('binary_sensor.burze_storms_nearby', 'number')}}</font>
           <font color= yellow><ha-icon icon="mdi:flash" style="width: 24px; height: 24px; transform: rotate(35deg);"></ha-icon></font> 
           in <font color= var(--error-color)> {{state_attr('binary_sensor.burze_storms_nearby', 'period')}}</font> minuti.
@@ -481,6 +484,45 @@ cards:
           {% endif %}
 
           [INGV](http://terremoti.ingv.it/) ~ [HaiSentitoIlTerremoto Web](http://www.haisentitoilterremoto.it/)
+
+    - type: custom:auto-entities # CONDITIONAL ULTIMI xx TERREMOTI
+      show_empty: false
+      sort:
+        {attribute: publication_date, method: attribute, reverse: true, count: 3, first: 1}
+      filter:
+        include:
+          - entity_id: geo_location.*
+            attributes:
+              source: ingv_centro_nazionale_terremoti
+            # options:
+      card:
+        type: markdown
+        entity_id: this.entity_id
+        style: |
+          ha-card {background: none; border-radius: 0px; box-shadow: none;}
+        content: >
+          <center>LISTA ULTIMI TERREMOTI</center>
+          {% set url = "http://shakemap.rm.ingv.it/shake/{}/download/{}.jpg" %}
+          {% set url2 = "https://e.hsit.it/{}/{}_{}.jpg" %}
+          {% set code = {1:'White', 2:'Green', 3:'Yellow', 4:'Orange', 5:'Red'} %}
+          {% for e in config.entities %} {% set id = state_attr(e.entity, 'event_id') %}<br>
+          <font color= var(--primary-text-color)>
+          <font color = var(--disabled-text-color)>{{state_attr(e.entity, 'publication_date').strftime("%d/%m %H:%M") }}</font>
+          <font color = {{code[state_attr(e.entity, 'magnitude')|int]}}>
+          <ha-icon icon="{{state_attr(e.entity, 'icon')}}"></ha-icon></font> {{state_attr(e.entity, 'friendly_name')}} 🏡➡ {{states(e.entity)}} Km
+          </font>
+          {% if state_attr(e.entity, 'magnitude') >= 3 %}
+          <center> 
+          <a href="{{state_attr(e.entity, 'image_url')}}"> <img src="{{state_attr(e.entity, 'image_url')}}" height="50"></a>
+          <a href="{{url.format(id,'pga')}}"> <img src="{{url.format(id,'pga')}}" height="50" ></a>
+          <a href="{{url.format(id,'pgv')}}"> <img src="{{url.format(id,'pgv')}}" height="50" ></a>
+          <a href="{{url.format(id,'tvmap')}}"> <img src="{{url.format(id,'tvmap')}}" height="50" ></a>
+          <a href="{{url2.format(id,id,'mcs')}}"> <img src="{{url2.format(id,id,'mcs')}}" height="50" ></a>
+          <a href="{{url2.format(id,id,'filledMCS')}}"> <img src="{{url2.format(id,id,'filledMCS')}}" height="50" ></a>
+          <a href="{{url2.format(id,id,'emailMap')}}"> <img src="{{url2.format(id,id,'emailMap')}}" height="50" ></a>
+          </center> 
+          {% endif %}
+          {%- endfor %}
 #################################################################
 ## GDACS
 #################################################################
