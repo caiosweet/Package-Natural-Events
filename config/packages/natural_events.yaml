@@ -691,9 +691,9 @@ automation:
             {%- for s  in ['today', 'tomorrow'] %}
             {%- set v = state_attr('sensor.meteoalarm_custom', s) %}
             {%- if v %}
-            {{'____________________'}}
+            {{'‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗'}}
             {{day[s]|upper}}
-            {{'¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯'}}
+            {{'¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯'}}
             {%- for d  in v %}
             {{color[d['code']][0] + dict_type[d['event']][0] + dict_type[d['event']][1]}} allerta {{color[d['code']][1]}}
             Descrizione: {{d['italiano']}}
