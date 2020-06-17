@@ -25,15 +25,15 @@ homeassistant:
 
     ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
       setting:
-        SCRIPT centro notifiche: &script script.my_notify #script.natural_events_notifications
-        SERVIZIO Notify: &notify ''
-        MEDIA PLAYER Google: &media_player_google ''
+        SCRIPT centro notifiche: &script script.natural_events_notifications #script.my_notify 
+        SERVIZIO Notify: &notify 'notify.telegram'
+        MEDIA PLAYER Google: &media_player_google 'media_player.red'
         MEDIA PLAYER Alexa: &media_player_alexa ''
       filter:
         RAGGIO ZONA MeteoAlert metri: &radius_meteoalert 25000
         RAGGIO ZONA GeoAlert metri: &radius_geoalert 1000000
         RAGGIO TERREMOTO km: &radius_quake 1000
-        MAGNITUDO minimo: &magnitude 2
+        MAGNITUDO minimo: &magnitude 3
         RAGGIO BURZE km: &radius_burze 25
       secret: # Oppure inserire i dati direttamente al posto di !secret etcetc
         LATITUDINE per le zone: &latitude !secret latitude_home
@@ -206,6 +206,7 @@ input_select:
       - Burze Nord Est
       - Burze Sud Ovest
       - Burze Sud Est
+      - WWLLN
       - Nessuna
   meteo_iframe:
     options:
@@ -722,12 +723,15 @@ automation:
             {{-'' if 'Nessun Avviso' in risk['italiano'] else risk['italiano']}}
             {% endfor %}
             {% endif %}
-            {% if tomorrow %}e per domani: 
+            {% if tomorrow %}Per domani: 
             {% for risk in tomorrow -%}
             {{dict_type[risk['event']]}} con allerta {{color[risk['code']]}}, 
             {{-'' if 'Nessun Avviso' in risk['italiano'] else risk['italiano']}}.
             {% endfor %}
             {% endif %}
+          media_player_google: *media_player_google
+          media_player_alexa: *media_player_alexa
+          notify: *notify
 #----------------------------------------------------------------------------------------------------#
 # GEO LOCATION - Notifica Terremoti
 #----------------------------------------------------------------------------------------------------#
@@ -818,7 +822,7 @@ script:
           title: >
             {{ title }}
           message: >
-            {{message|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
+            {{message}}
 
       # URL IMAGE + TESTO
       - service_template: >-
@@ -831,14 +835,14 @@ script:
           title: >
             {{ title }}
           message: >
-            {{message|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
+            {{message}}
           data:
             photo:
               - url: >-
                  {{url}}
                 caption: |
                   {{title}}
-                  {{message|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
+                  {{message}}
 
       # FILE IMAGE + TESTO
       - service_template: >-
@@ -851,14 +855,14 @@ script:
           title: >
             {{ title }}
           message: >
-            {{message|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
+            {{message}}
           data:
             photo:
               - file: >-
                   {{file}}
                 caption: |
                   {{title}}
-                  {{message|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
+                  {{message}}
 
       # AUDIO
       - condition: time
@@ -897,6 +901,8 @@ script:
   no_service:
     alias: NO Service 
     sequence:
+      - service: script.turn_off
+        entity_id: script.no_service
       - delay: 00:00:00
 #######################################-#######################################
 ##                                  LEGEND
@@ -922,7 +928,7 @@ script:
     # | 13   | Rain-Flooding             | Pioggia-Alluvione
 
     #### Awareness Levels
-    # | Code | Level             |
+    # | Code | Level             | 
     # |------|-------------------|-------------------|
     # | 0    | White/Unknown     | Bianco/Sconosciuto
     # | 1    | Green/No Warnings | Verde/Nessun Avviso
