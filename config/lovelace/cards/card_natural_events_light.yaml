@@ -4,10 +4,10 @@
 type: custom:vertical-stack-in-card 
 style: |
   ha-card {
-      {# background: rgb(63,94,251); #}
-      {# background: radial-gradient(circle, rgba(63,94,251,1) 0%, rgba(210,210,210,1) 100%); #}
-      {# background-color: trasparent; #}
-      border: 1px solid {% if is_state('binary_sensor.global', 'on') %} {{state_attr('binary_sensor.global','level')}} {% else %} Green {% endif %};
+      {# imposta colore sfondo e bordo di tutta la scheda #} 
+      background-color: var(--paper-card-background-color); {# trasparent; #} 
+      border: 1px solid {% if is_state('binary_sensor.global', 'on') %} 
+      {{state_attr('binary_sensor.global','level')}} {% else %} Green {% endif %};
   }
 cards:
 #################################################################
@@ -148,7 +148,7 @@ cards:
       type: entities
       show_empty: false
       style: |
-        ha-card { background: none; border-radius: 0px; box-shadow: none; #background-color: var(--primary-background-color);}
+        ha-card { background: none; border-radius: 0px; box-shadow: none; }
         # .card-content {padding: 0px}
       header:
         type: custom:paper-buttons-row
@@ -196,6 +196,7 @@ cards:
               Burze Nord Est: Burze NE
               Burze Sud Ovest: Burze SO
               Burze Sud Est: Burze SE
+              WWLLN: WWLLN
             tap_action:
               action: call-service
               service: input_select.select_next
@@ -444,85 +445,87 @@ cards:
         - entity: binary_sensor.lastquake
           state: 'on'
       card:
-        type: markdown
-        style: |
-          ha-card {background: none; border-radius: 0px; box-shadow: none; color: var(--secondary-text-color);}
-          .card-content {padding: 0}
-        content: >-
-          ___
+        type: vertical-stack
+        cards:
+        - type: markdown
+          style: |
+            ha-card {background: none; border-radius: 0px; box-shadow: none; color: var(--secondary-text-color);}
+            .card-content {padding: 0}
+          content: >-
+            ___
 
-          #### TERREMOTI - ULTIME 24h
+            #### TERREMOTI - ULTIME 24h
 
-          <!-- Setting -->
-            {%- set person = 'person.claudio' -%}
-            {%- set url = "http://shakemap.rm.ingv.it/shake/{}/download/{}.jpg" -%}
-            {%- set entityid = 'binary_sensor.lastquake' -%}
-            {%- set id = state_attr(entityid, 'event_id') -%}
-            {%- set data_utc = state_attr(entityid, 'publication_date') -%}
-            {%- set magnitudo = (state_attr(entityid, 'magnitude')|float) if not none else '0' -%}
-            {%- set code = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} -%}
-            {%- set color = code[state_attr('binary_sensor.lastquake', 'level')|int] -%}
-            {%- set lat = state_attr(entityid, 'lat') -%}
-            {%- set long = state_attr(entityid, 'long') -%}
-          <font color= var(--primary-text-color)>
+            <!-- Setting -->
+              {%- set person = 'person.claudio' -%}
+              {%- set url = "http://shakemap.rm.ingv.it/shake/{}/download/{}.jpg" -%}
+              {%- set entityid = 'binary_sensor.lastquake' -%}
+              {%- set id = state_attr(entityid, 'event_id') -%}
+              {%- set data_utc = state_attr(entityid, 'publication_date') -%}
+              {%- set magnitudo = (state_attr(entityid, 'magnitude')|float) if not none else '0' -%}
+              {%- set code = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} -%}
+              {%- set color = code[state_attr('binary_sensor.lastquake', 'level')|int] -%}
+              {%- set lat = state_attr(entityid, 'lat') -%}
+              {%- set long = state_attr(entityid, 'long') -%}
+            <font color= var(--primary-text-color)>
 
-          **<font color={{color}}>{{as_timestamp(data_utc)|timestamp_custom ('%H:%M:%S del %d/%m/%Y')}}</font>**<br><br>
-          Un terremoto di magnitudo **<font color={{color}}>{{magnitudo}}</font>**<br>
-          è avvenuto nella zona: [{{state_attr(entityid, 'region')}}](http://maps.google.com/maps?z=8&q=loc:{{lat}}+{{long}})<br>
-          a <font color={{color}}>**{{state_attr(entityid, 'distance')}}**</font> km da casa,<br>
-          con coordinate geografiche (lat, long) {{lat}},{{long}}.<br>
-          {{("Tu ti trovi a " ~ distance(lat, long, person)) ~ " km dall'epicentro." if is_state(person, 'not_home') else ''}}
-          </font><br>
-          {% if magnitudo >= 3 %}
-          [Shakemap]({{url.format(id,'intensity')}}) ~ 
-          [PGA]({{url.format(id,'pga')}}) ~ [PGV]({{url.format(id,'pgv')}}) ~ [TvMap]({{url.format(id,'tvmap')}}) ~ [TvMap2]({{url.format(id,'tvmap_bare')}}) ~ 
-          [HaiSentitoIlTerremoto](http://eventi.haisentitoilterremoto.it/{{id}}/{{id}}_mcs.jpg)
+            **<font color={{color}}>{{as_timestamp(data_utc)|timestamp_custom ('%H:%M:%S del %d/%m/%Y')}}</font>**<br><br>
+            Un terremoto di magnitudo **<font color={{color}}>{{magnitudo}}</font>**<br>
+            è avvenuto nella zona: [{{state_attr(entityid, 'region')}}](http://maps.google.com/maps?z=8&q=loc:{{lat}}+{{long}})<br>
+            a <font color={{color}}>**{{state_attr(entityid, 'distance')}}**</font> km da casa,<br>
+            con coordinate geografiche (lat, long) {{lat}},{{long}}.<br>
+            {{("Tu ti trovi a " ~ distance(lat, long, person)) ~ " km dall'epicentro." if is_state(person, 'not_home') else ''}}
+            </font><br>
+            {% if magnitudo >= 3 %}
+            [Shakemap]({{url.format(id,'intensity')}}) ~ 
+            [PGA]({{url.format(id,'pga')}}) ~ [PGV]({{url.format(id,'pgv')}}) ~ [TvMap]({{url.format(id,'tvmap')}}) ~ [TvMap2]({{url.format(id,'tvmap_bare')}}) ~ 
+            [HaiSentitoIlTerremoto](http://eventi.haisentitoilterremoto.it/{{id}}/{{id}}_mcs.jpg)
 
-          <!-- Scegli il titpo di immagine da visualizzare [intensity,pga,pgv,tvmap,tvmap_bare] -->
-            <img src="{{url.format(id,'intensity')}}"/>
-            <!-- <img src="{{url.format(id,'pga')}}"/> -->
-          {% endif %}
+            <!-- Scegli il titpo di immagine da visualizzare [intensity,pga,pgv,tvmap,tvmap_bare] -->
+              <img src="{{url.format(id,'intensity')}}"/>
+              <!-- <img src="{{url.format(id,'pga')}}"/> -->
+            {% endif %}
 
-          [INGV](http://terremoti.ingv.it/) ~ [HaiSentitoIlTerremoto Web](http://www.haisentitoilterremoto.it/)
+            [INGV](http://terremoti.ingv.it/) ~ [HaiSentitoIlTerremoto Web](http://www.haisentitoilterremoto.it/)
 
-    - type: custom:auto-entities # CONDITIONAL ULTIMI xx TERREMOTI
-      show_empty: false
-      sort:
-        {attribute: publication_date, method: attribute, reverse: true, count: 3, first: 1}
-      filter:
-        include:
-          - entity_id: geo_location.*
-            attributes:
-              source: ingv_centro_nazionale_terremoti
-            # options:
-      card:
-        type: markdown
-        entity_id: this.entity_id
-        style: |
-          ha-card {background: none; border-radius: 0px; box-shadow: none;}
-        content: >
-          <center>LISTA ULTIMI TERREMOTI</center>
-          {% set url = "http://shakemap.rm.ingv.it/shake/{}/download/{}.jpg" %}
-          {% set url2 = "https://e.hsit.it/{}/{}_{}.jpg" %}
-          {% set code = {1:'White', 2:'Green', 3:'Yellow', 4:'Orange', 5:'Red'} %}
-          {% for e in config.entities %} {% set id = state_attr(e.entity, 'event_id') %}<br>
-          <font color= var(--primary-text-color)>
-          <font color = var(--disabled-text-color)>{{state_attr(e.entity, 'publication_date').strftime("%d/%m %H:%M") }}</font>
-          <font color = {{code[state_attr(e.entity, 'magnitude')|int]}}>
-          <ha-icon icon="{{state_attr(e.entity, 'icon')}}"></ha-icon></font> {{state_attr(e.entity, 'friendly_name')}} 🏡➡ {{states(e.entity)}} Km
-          </font>
-          {% if state_attr(e.entity, 'magnitude') >= 3 %}
-          <center> 
-          <a href="{{state_attr(e.entity, 'image_url')}}"> <img src="{{state_attr(e.entity, 'image_url')}}" height="50"></a>
-          <a href="{{url.format(id,'pga')}}"> <img src="{{url.format(id,'pga')}}" height="50" ></a>
-          <a href="{{url.format(id,'pgv')}}"> <img src="{{url.format(id,'pgv')}}" height="50" ></a>
-          <a href="{{url.format(id,'tvmap')}}"> <img src="{{url.format(id,'tvmap')}}" height="50" ></a>
-          <a href="{{url2.format(id,id,'mcs')}}"> <img src="{{url2.format(id,id,'mcs')}}" height="50" ></a>
-          <a href="{{url2.format(id,id,'filledMCS')}}"> <img src="{{url2.format(id,id,'filledMCS')}}" height="50" ></a>
-          <a href="{{url2.format(id,id,'emailMap')}}"> <img src="{{url2.format(id,id,'emailMap')}}" height="50" ></a>
-          </center> 
-          {% endif %}
-          {%- endfor %}
+        - type: custom:auto-entities # CONDITIONAL ULTIMI xx TERREMOTI
+          show_empty: false
+          sort:
+            {attribute: publication_date, method: attribute, reverse: true, count: 3, first: 1}
+          filter:
+            include:
+              - entity_id: geo_location.*
+                attributes:
+                  source: ingv_centro_nazionale_terremoti
+                # options:
+          card:
+            type: markdown
+            entity_id: this.entity_id
+            style: |
+              ha-card {background: none; border-radius: 0px; box-shadow: none;}
+            content: >
+              <center>LISTA ULTIMI TERREMOTI</center>
+              {% set url = "http://shakemap.rm.ingv.it/shake/{}/download/{}.jpg" %}
+              {% set url2 = "https://e.hsit.it/{}/{}_{}.jpg" %}
+              {% set code = {1:'White', 2:'Green', 3:'Yellow', 4:'Orange', 5:'Red'} %}
+              {% for e in config.entities %} {% set id = state_attr(e.entity, 'event_id') %}<br>
+              <font color= var(--primary-text-color)>
+              <font color = var(--disabled-text-color)>{{state_attr(e.entity, 'publication_date').strftime("%d/%m %H:%M") }}</font>
+              <font color = {{code[state_attr(e.entity, 'magnitude')|int]}}>
+              <ha-icon icon="{{state_attr(e.entity, 'icon')}}"></ha-icon></font> {{state_attr(e.entity, 'friendly_name')}} 🏡➡ {{states(e.entity)}} Km
+              </font>
+              {% if state_attr(e.entity, 'magnitude') >= 3 %}
+              <center> 
+              <a href="{{state_attr(e.entity, 'image_url')}}"> <img src="{{state_attr(e.entity, 'image_url')}}" height="50"></a>
+              <a href="{{url.format(id,'pga')}}"> <img src="{{url.format(id,'pga')}}" height="50" ></a>
+              <a href="{{url.format(id,'pgv')}}"> <img src="{{url.format(id,'pgv')}}" height="50" ></a>
+              <a href="{{url.format(id,'tvmap')}}"> <img src="{{url.format(id,'tvmap')}}" height="50" ></a>
+              <a href="{{url2.format(id,id,'mcs')}}"> <img src="{{url2.format(id,id,'mcs')}}" height="50" ></a>
+              <a href="{{url2.format(id,id,'filledMCS')}}"> <img src="{{url2.format(id,id,'filledMCS')}}" height="50" ></a>
+              <a href="{{url2.format(id,id,'emailMap')}}"> <img src="{{url2.format(id,id,'emailMap')}}" height="50" ></a>
+              </center> 
+              {% endif %}
+              {%- endfor %}
 #################################################################
 ## GDACS
 #################################################################
@@ -610,8 +613,8 @@ cards:
         box-shadow: none;
         margin: 16px;
       }
-    entities:
-      - entity: person.claudio
+    # entities:
+    #   - entity: person.claudio
     geo_location_sources:
       - all
     dark_mode: true
