@@ -793,7 +793,7 @@ automation:
           message: |-
             {% set event = {'Earthquakes':'Terremoti','Tropical cyclones':'Cicloni tropicali','Floods':'Inondazioni','Volcanoes':'Vulcani','Drought':'Siccità'}%}
             Avviso di disastro globale: {{ event[trigger.to_state.attributes.event_type] }}
-            Descrizione: {{ state.attributes.description }}
+            Descrizione: {{ trigger.to_state.attributes.description }}
             Rilasciato: {{ trigger.to_state.attributes.from_date.strftime("%d.%m.%Y %H:%M") }}
             Fine: {{ trigger.to_state.attributes.to_date.strftime("%d.%m.%Y %H:%M") }}
           message_tts: >-
