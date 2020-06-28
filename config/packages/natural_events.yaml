@@ -4,7 +4,7 @@
   #   @package        :   Natural_events
   #   @description    :   Information provided by MeteoAlarm, Burze, GDACS, DPC and INGV Italy
   ##########################################################################
-  # DPC per trovare codice ISTAT: https://www.paginebianche.it/codice-istat
+  # DPC per trovare codice ISTAT: https://www.paginebianche.it/codice-istat 
   # METEOALARM Cerca il nome della tua Regione o ID: http://meteoalarm.eu/it_IT/0/0/IT-Italia.html 
 
 homeassistant:
@@ -17,7 +17,7 @@ homeassistant:
         package: 'Natural_events'
         author: 'Caio & Gianpi'
         webpage: 'www.hassiohelp.eu'
-        version: '3.0'
+        version: '3.1'
       expose: &expose
         <<: *customize
         haaska_hidden: false
@@ -45,7 +45,7 @@ homeassistant:
     ##--------------------- FINE IMPOSTAZIONI PACKAGE ---------------------##
 
 ############################################################################
-##                               CUSTOMIZE                               
+##                               CUSTOMIZE
 ############################################################################
   ## Automation
     automation.natural_events_burze_notifications:
@@ -136,9 +136,9 @@ homeassistant:
       <<: *customize
       friendly_name: Zona Allerta Meteo
       icon: mdi:flash-circle
-############################################################################
-##                             CUSTOMIZE GLOB                              
-############################################################################
+#######################################-#######################################
+##                              CUSTOMIZE GLOB
+#######################################-#######################################
   customize_glob:
     binary_sensor.dpc_*:
       <<: *customize
@@ -149,7 +149,8 @@ homeassistant:
       <<: *customize
     sensor.gdacs*:
       <<: *customize
-      friendly_name: gdacs
+      friendly_name: GDACS
+      unit_of_measurement: eventi
 
 #######################################-#######################################
 ##                                 COMPONENT
@@ -411,7 +412,7 @@ binary_sensor:
             {% set code = state_attr('binary_sensor.meteoalarm','awareness_level') %}
             {{'mdi:numeric-0-box' if code == none else 'mdi:numeric-'~code.split(';')[0]~'-box'}}
           level: >-
-            {% set dict_color = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
+            {% set dict_color = {'0':'White', '1':'Green', '2':'Yellow', '3':'Orange', '4':'Red'} %}
             {% set dict_code={'White':'0','Green':'1','Yellow':'2','Orange':'3','Red':'4'} %}
             {% set ma_level = state_attr('binary_sensor.meteoalarm','awareness_level') %}
             {% set lev1 = '0' if ma_level == none else ma_level.split(';')[0] %}
@@ -429,8 +430,8 @@ binary_sensor:
               {%- endfor -%}
             {% endmacro -%}
             {% set lev3 = '0' if not custom_code() else custom_code() -%}
-            {% set lev_color = (lev1|max,lev2|max,lev3|max)|default(0, true)|max|int %}
-            {{ dict_color.get(lev_color) }}
+            {% set lev_color = [lev1,lev2,lev3]|max %}
+            {{ dict_color.get(lev_color|max) }}
           code: >-
             {% set dict_code={'White':'0','Green':'1','Yellow':'2','Orange':'3','Red':'4'} %}
             {% set ma_level = state_attr('binary_sensor.meteoalarm','awareness_level') %}
@@ -449,8 +450,8 @@ binary_sensor:
               {%- endfor -%}
             {% endmacro -%}
             {% set lev3 = '0' if not custom_code() else custom_code() -%}
-            {% set lev_color = (lev1|max,lev2|max,lev3|max)|default(0, true)|max|int %}
-            {{ lev_color }}
+            {% set lev_color = [lev1,lev2,lev3]|max %}
+            {{ lev_color|max }}
           icon: >-
             {% set dict_code={'White':'0','Green':'1','Yellow':'2','Orange':'3','Red':'4'} %}
             {% set ma_level = state_attr('binary_sensor.meteoalarm','awareness_level') %}
@@ -469,8 +470,8 @@ binary_sensor:
               {%- endfor -%}
             {% endmacro -%}
             {% set lev3 = '0' if not custom_code() else custom_code() -%}
-            {% set lev_color = (lev1|max,lev2|max,lev3|max)|default(0, true)|max|int %}
-            mdi:numeric-{{ lev_color }}-box
+            {% set lev_color = [lev1,lev2,lev3]|max %}
+            mdi:numeric-{{ lev_color|max }}-box
 
 #######################################-#######################################
 ##                                  SENSOR
@@ -523,6 +524,11 @@ automation:
         to: 'on'
     action:
       - delay: 00:00:15
+      - service: group.set
+        data_template:
+          object_id: geoalert
+          add_entities: >
+            {{states.sensor|selectattr('name','==','GDACS')|join(',','entity_id')|lower}}
       - service: homeassistant.update_entity
         entity_id: binary_sensor.lastquake
       - service: system_log.write
@@ -553,14 +559,24 @@ automation:
             {{ trigger.to_state.attributes.friendly_name }}.
             {% else %} AGGIORNAMENTO TEMPORALE. {% endif %}
           message: >-
+            {% set num={'0':'0️⃣','1':'1️⃣','2':'2️⃣','3':'3️⃣','4':'4️⃣','5':'5️⃣','6':'6️⃣','7':'7️⃣','8':'8️⃣','9':'9️⃣'} %}
+            {% set n = state_attr('binary_sensor.burze_storms_nearby', 'number') %}
             {% set d = state_attr('binary_sensor.burze_storms_nearby', 'distance')|default(20,'0') %}
             {% if d <= 1 %}🔴 {% elif 1 < d <= 5 %}🟠 {% elif 5 < d <= 10 %}🟡 {% else %}🟢 {% endif -%}
             Negli ultimi {{state_attr('binary_sensor.burze_storms_nearby', 'period')}} minuti
-            {{state_attr('binary_sensor.burze_storms_nearby', 'number')}}⚡
-            {% if state_attr('binary_sensor.burze_storms_nearby', 'number') != 1 %}
-            scariche di fulmini {% else %} fulmine scaricato {% endif %} entro il raggio selezionato.
+            {% for x in n|string -%}{{num[x]|default(x) -}}{% endfor %}⚡
+            {% if n != 1 %}scariche di fulmini {% else %} fulmine scaricato {% endif %} entro il raggio selezionato.
             La scarica più vicina è avvenuta a {{state_attr('binary_sensor.burze_storms_nearby', 'distance')}} km 
             a {{state_attr('binary_sensor.global','burze_direction')}} da casa.
+          # message: >-
+          #   {% set d = state_attr('binary_sensor.burze_storms_nearby', 'distance')|default(20,'0') %}
+          #   {% if d <= 1 %}🔴 {% elif 1 < d <= 5 %}🟠 {% elif 5 < d <= 10 %}🟡 {% else %}🟢 {% endif -%}
+          #   Negli ultimi {{state_attr('binary_sensor.burze_storms_nearby', 'period')}} minuti
+          #   {{state_attr('binary_sensor.burze_storms_nearby', 'number')}}⚡
+          #   {% if state_attr('binary_sensor.burze_storms_nearby', 'number') != 1 %}
+          #   scariche di fulmini {% else %} fulmine scaricato {% endif %} entro il raggio selezionato.
+          #   La scarica più vicina è avvenuta a {{state_attr('binary_sensor.burze_storms_nearby', 'distance')}} km 
+          #   a {{state_attr('binary_sensor.global','burze_direction')}} da casa.
           message_tts: >-
             {% if trigger.from_state.state == 'off' %} Probabile arrivo di un temporale da {{state_attr('binary_sensor.global','burze_direction')}}. 
             {% else %} 
@@ -789,7 +805,7 @@ automation:
         data_template:
           title: >-
             {% set event = {'Earthquakes':'Terremoti','Tropical cyclones':'Cicloni tropicali','Floods':'Inondazioni','Volcanoes':'Vulcani','Drought':'Siccità'}%}
-            Avviso di disastro globale: {{ event[trigger.to_state.attributes.event_type] }}
+            GDACS: {{ event[trigger.to_state.attributes.event_type] }}
           message: |-
             {% set event = {'Earthquakes':'Terremoti','Tropical cyclones':'Cicloni tropicali','Floods':'Inondazioni','Volcanoes':'Vulcani','Drought':'Siccità'}%}
             Avviso di disastro globale: {{ event[trigger.to_state.attributes.event_type] }}
@@ -799,8 +815,6 @@ automation:
           message_tts: >-
             {% set event = {'Earthquakes':'Terremoti','Tropical cyclones':'Cicloni tropicali','Floods':'Inondazioni','Volcanoes':'Vulcani','Drought':'Siccità'}%}
             Avviso di disastro globale: {{ event[trigger.to_state.attributes.event_type] }}
-          # url: >-
-          #   {{trigger.to_state.attributes.image_url}}
           media_player_google: *media_player_google
           media_player_alexa: *media_player_alexa
           notify: *notify
