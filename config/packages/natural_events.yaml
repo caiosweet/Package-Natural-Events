@@ -17,7 +17,8 @@ homeassistant:
         package: 'Natural_events'
         author: 'Caio & Gianpi'
         webpage: 'www.hassiohelp.eu'
-        version: '3.1'
+        version: '3.2'
+
       expose: &expose
         <<: *customize
         haaska_hidden: false
@@ -25,15 +26,16 @@ homeassistant:
 
     ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
       setting:
-        SCRIPT centro notifiche: &script script.natural_events_notifications #script.my_notify 
-        SERVIZIO Notify: &notify 'notify.telegram'
-        MEDIA PLAYER Google: &media_player_google 'media_player.red'
+        # SCRIPT centro notifiche: &script script.natural_events_notifications 
+        SCRIPT centro notifiche: &script script.my_notify 
+        SERVIZIO Notify: &notify ''
+        MEDIA PLAYER Google: &media_player_google ''
         MEDIA PLAYER Alexa: &media_player_alexa ''
       filter:
         RAGGIO ZONA MeteoAlert metri: &radius_meteoalert 25000
         RAGGIO ZONA GeoAlert metri: &radius_geoalert 1000000
         RAGGIO TERREMOTO km: &radius_quake 1000
-        MAGNITUDO minimo: &magnitude 3
+        MAGNITUDO minimo: &magnitude 2
         RAGGIO BURZE km: &radius_burze 25
       secret: # Oppure inserire i dati direttamente al posto di !secret etcetc
         LATITUDINE per le zone: &latitude !secret latitude_home
@@ -70,7 +72,7 @@ homeassistant:
       <<: *customize
       friendly_name: "StartUp Natural events"
   ## Binary Sensor
-    binary_sensor.global:
+    binary_sensor.global_natural_alert:
       <<: *customize
     binary_sensor.burze_storms_nearby:
       <<: *customize
@@ -278,6 +280,13 @@ binary_sensor:
   #-------------------------------------
   # LAST QUAKE
   #-------------------------------------
+  - platform: command_line # check URL
+    name: shakemap
+    device_class: connectivity
+    command: response=$(curl -LIk -m 3 "{{state_attr('binary_sensor.lastquake', 'image_url')}}" -o /dev/null -w "%{http_code}\n" -s); test "$response" -eq 200 && echo "ON" || echo "OFF"
+    scan_interval: 864000 # 10 gg
+    value_template: '{{ value }}'
+
   - platform: template
     sensors:
       lastquake:
@@ -337,7 +346,7 @@ binary_sensor:
   #-------------------------------------
   - platform: template
     sensors:
-      global: #negs natural events global sensor
+      global_natural_alert:
         # availability_template: False
         friendly_name: Eventi Naturali
         entity_id: 
@@ -418,7 +427,7 @@ binary_sensor:
             {% set lev1 = '0' if ma_level == none else ma_level.split(';')[0] %}
             {% set lev2 = expand('group.natural_events')
               | selectattr("attributes.level", 'defined')
-              | join(', ', attribute='attributes.level') %}
+              | join(', ', attribute='attributes.level') | max %}
             {% macro custom_code() %}
               {%- for s  in ['today', 'tomorrow'] if not is_state('sensor.meteoalarm_custom', '0') -%}
                 {% set v = state_attr('sensor.meteoalarm_custom', s) -%}
@@ -438,7 +447,7 @@ binary_sensor:
             {% set lev1 = '0' if ma_level == none else ma_level.split(';')[0] %}
             {% set lev2 = expand('group.natural_events')
               | selectattr("attributes.level", 'defined')
-              | join(', ', attribute='attributes.level') %}
+              | join(', ', attribute='attributes.level') | max %}
             {% macro custom_code() %}
               {%- for s  in ['today', 'tomorrow'] if not is_state('sensor.meteoalarm_custom', '0') -%}
                 {% set v = state_attr('sensor.meteoalarm_custom', s) -%}
@@ -458,7 +467,7 @@ binary_sensor:
             {% set lev1 = '0' if ma_level == none else ma_level.split(';')[0] %}
             {% set lev2 = expand('group.natural_events')
               | selectattr("attributes.level", 'defined')
-              | join(', ', attribute='attributes.level') %}
+              | join(', ', attribute='attributes.level') | max %}
             {% macro custom_code() %}
               {%- for s  in ['today', 'tomorrow'] if not is_state('sensor.meteoalarm_custom', '0') -%}
                 {% set v = state_attr('sensor.meteoalarm_custom', s) -%}
@@ -493,19 +502,19 @@ sensor:
       ## METEOALARM TEMPLATE TYPE SENSOR
       meteoalarm_type:
         friendly_name: Meteoalarm type
-        entity_id: binary_sensor.global
+        entity_id: binary_sensor.global_natural_alert
         value_template: >
-          {{state_attr('binary_sensor.global', 'meteoalarm_type')}}
+          {{state_attr('binary_sensor.global_natural_alert', 'meteoalarm_type')}}
         icon_template: >
-          {{state_attr('binary_sensor.global', 'meteoalarm_type_icon')}}
+          {{state_attr('binary_sensor.global_natural_alert', 'meteoalarm_type_icon')}}
       ## METEOALARM TEMPLATE LEVEL SENSOR
       meteoalarm_level:
         friendly_name: Meteoalarm level
         entity_id: binary_sensor.meteoalarm
         value_template: >
-          {{state_attr('binary_sensor.global', 'meteoalarm_level')}}
+          {{state_attr('binary_sensor.global_natural_alert', 'meteoalarm_level')}}
         icon_template: >
-          {{state_attr('binary_sensor.global', 'meteoalarm_level_icon')}}
+          {{state_attr('binary_sensor.global_natural_alert', 'meteoalarm_level_icon')}}
 #######################################-#######################################
 ##                                 AUTOMATION
 #######################################-#######################################
@@ -567,7 +576,7 @@ automation:
             {% for x in n|string -%}{{num[x]|default(x) -}}{% endfor %}⚡
             {% if n != 1 %}scariche di fulmini {% else %} fulmine scaricato {% endif %} entro il raggio selezionato.
             La scarica più vicina è avvenuta a {{state_attr('binary_sensor.burze_storms_nearby', 'distance')}} km 
-            a {{state_attr('binary_sensor.global','burze_direction')}} da casa.
+            a {{state_attr('binary_sensor.global_natural_alert','burze_direction')}} da casa.
           # message: >-
           #   {% set d = state_attr('binary_sensor.burze_storms_nearby', 'distance')|default(20,'0') %}
           #   {% if d <= 1 %}🔴 {% elif 1 < d <= 5 %}🟠 {% elif 5 < d <= 10 %}🟡 {% else %}🟢 {% endif -%}
@@ -576,13 +585,13 @@ automation:
           #   {% if state_attr('binary_sensor.burze_storms_nearby', 'number') != 1 %}
           #   scariche di fulmini {% else %} fulmine scaricato {% endif %} entro il raggio selezionato.
           #   La scarica più vicina è avvenuta a {{state_attr('binary_sensor.burze_storms_nearby', 'distance')}} km 
-          #   a {{state_attr('binary_sensor.global','burze_direction')}} da casa.
+          #   a {{state_attr('binary_sensor.global_natural_alert','burze_direction')}} da casa.
           message_tts: >-
-            {% if trigger.from_state.state == 'off' %} Probabile arrivo di un temporale da {{state_attr('binary_sensor.global','burze_direction')}}. 
+            {% if trigger.from_state.state == 'off' %} Probabile arrivo di un temporale da {{state_attr('binary_sensor.global_natural_alert','burze_direction')}}. 
             {% else %} 
             Aggiornamento Temporale. Il fulmine più vicino è stato rilevato 
             a {{state_attr('binary_sensor.burze_storms_nearby', 'distance')}} km 
-            a {{state_attr('binary_sensor.global','burze_direction')}} da casa.
+            a {{state_attr('binary_sensor.global_natural_alert','burze_direction')}} da casa.
             {% endif %}
           file: >-
             {% if trigger.from_state.state == 'off' and is_state('input_boolean.natural_events_send_image', 'on') %}
@@ -658,8 +667,8 @@ automation:
             {% set start = state_attr('binary_sensor.meteoalarm', 'effective') %}
             {% set end = state_attr('binary_sensor.meteoalarm', 'expires') %}
             {% set color = {'Green':['🟢','Verde'], 'Yellow':['🟡','Gialla'], 'Orange':['🟠','Arancione'], 'Red':['🔴','Rossa']} %}
-            {% set level = state_attr('binary_sensor.global','meteoalarm_level') %}
-            {{color[level][0]}}{{state_attr('binary_sensor.global','meteoalarm_type')|upper}}. Allerta {{color[level][1]}}
+            {% set level = state_attr('binary_sensor.global_natural_alert','meteoalarm_level') %}
+            {{color[level][0]}}{{state_attr('binary_sensor.global_natural_alert','meteoalarm_type')|upper}}. Allerta {{color[level][1]}}
             Descrizione: {{state_attr('binary_sensor.meteoalarm', 'description')}}
             {{as_timestamp(start)|timestamp_custom('Valido dalle ore %H:%M del %d/%m')}}
             {{as_timestamp(end)|timestamp_custom(' alle ore %H:%M del %d/%m')}}
@@ -764,6 +773,8 @@ automation:
         value_template: >
           {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.publication_date))/3600*60)|int < 60 }}
     action:
+      - service: homeassistant.update_entity
+        entity_id: binary_sensor.shakemap
       - service: *script
         data_template:
           call_no_annuncio: 1
@@ -775,12 +786,17 @@ automation:
             a una distanza di {{ trigger.to_state.state }} Km da casa. 
             Epicentro: {{ trigger.to_state.attributes.region }}
             {{as_timestamp(data_utc)|timestamp_custom ('Data %d/%m/%Y Ore %H:%M:%S')}}
+            {% if trigger.to_state.attributes.image_url %}
+            [Immagine]({{trigger.to_state.attributes.image_url}})
+            {% endif %}
           message_tts: >-
             Rilevato terremoto a {{trigger.to_state.state}} km.
             Epicentro, {{trigger.to_state.attributes.region}}.
             Magnitudo, {{trigger.to_state.attributes.magnitude}}.
           url: >-
+            {% if is_state('binary_sensor.shakemap', 'on') %}
             {{trigger.to_state.attributes.image_url}}
+            {% endif %}
           media_player_google: *media_player_google
           media_player_alexa: *media_player_alexa
           notify: *notify
@@ -803,6 +819,7 @@ automation:
     action:
       - service: *script
         data_template:
+          call_no_annuncio: 1
           title: >-
             {% set event = {'Earthquakes':'Terremoti','Tropical cyclones':'Cicloni tropicali','Floods':'Inondazioni','Volcanoes':'Vulcani','Drought':'Siccità'}%}
             GDACS: {{ event[trigger.to_state.attributes.event_type] }}
