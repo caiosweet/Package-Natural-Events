@@ -342,7 +342,7 @@ binary_sensor:
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
             |sort(attribute='attributes.publication_date')|map(attribute='attributes.external_id')|list|last|replace('smi:','')}}
   #-------------------------------------
-  # GLOBAL PACKAGE
+  # GLOBAL NATURAL ALERT PACKAGE
   #-------------------------------------
   - platform: template
     sensors:
@@ -422,12 +422,12 @@ binary_sensor:
             {{'mdi:numeric-0-box' if code == none else 'mdi:numeric-'~code.split(';')[0]~'-box'}}
           level: >-
             {% set dict_color = {'0':'White', '1':'Green', '2':'Yellow', '3':'Orange', '4':'Red'} %}
-            {% set dict_code={'White':'0','Green':'1','Yellow':'2','Orange':'3','Red':'4'} %}
+            {% set dict_code = {'White':'0','Green':'1','Yellow':'2','Orange':'3','Red':'4'} %}
             {% set ma_level = state_attr('binary_sensor.meteoalarm','awareness_level') %}
-            {% set lev1 = '0' if ma_level == none else ma_level.split(';')[0] %}
+            {% set lev1 = '0' if not ma_level else ma_level.split(';')[0] %}
             {% set lev2 = expand('group.natural_events')
               | selectattr("attributes.level", 'defined')
-              | join(', ', attribute='attributes.level') | max %}
+              | join(', ', attribute='attributes.level')|default('0', True)|max %}
             {% macro custom_code() %}
               {%- for s  in ['today', 'tomorrow'] if not is_state('sensor.meteoalarm_custom', '0') -%}
                 {% set v = state_attr('sensor.meteoalarm_custom', s) -%}
@@ -442,12 +442,12 @@ binary_sensor:
             {% set lev_color = [lev1,lev2,lev3]|max %}
             {{ dict_color.get(lev_color|max) }}
           code: >-
-            {% set dict_code={'White':'0','Green':'1','Yellow':'2','Orange':'3','Red':'4'} %}
+            {% set dict_code = {'White':'0','Green':'1','Yellow':'2','Orange':'3','Red':'4'} %}
             {% set ma_level = state_attr('binary_sensor.meteoalarm','awareness_level') %}
-            {% set lev1 = '0' if ma_level == none else ma_level.split(';')[0] %}
+            {% set lev1 = '0' if not ma_level else ma_level.split(';')[0] %}
             {% set lev2 = expand('group.natural_events')
               | selectattr("attributes.level", 'defined')
-              | join(', ', attribute='attributes.level') | max %}
+              | join(', ', attribute='attributes.level')|default('0', True)|max %}
             {% macro custom_code() %}
               {%- for s  in ['today', 'tomorrow'] if not is_state('sensor.meteoalarm_custom', '0') -%}
                 {% set v = state_attr('sensor.meteoalarm_custom', s) -%}
@@ -462,12 +462,12 @@ binary_sensor:
             {% set lev_color = [lev1,lev2,lev3]|max %}
             {{ lev_color|max }}
           icon: >-
-            {% set dict_code={'White':'0','Green':'1','Yellow':'2','Orange':'3','Red':'4'} %}
+            {% set dict_code = {'White':'0','Green':'1','Yellow':'2','Orange':'3','Red':'4'} %}
             {% set ma_level = state_attr('binary_sensor.meteoalarm','awareness_level') %}
-            {% set lev1 = '0' if ma_level == none else ma_level.split(';')[0] %}
+            {% set lev1 = '0' if not ma_level else ma_level.split(';')[0] %}
             {% set lev2 = expand('group.natural_events')
               | selectattr("attributes.level", 'defined')
-              | join(', ', attribute='attributes.level') | max %}
+              | join(', ', attribute='attributes.level')|default('0', True)|max %}
             {% macro custom_code() %}
               {%- for s  in ['today', 'tomorrow'] if not is_state('sensor.meteoalarm_custom', '0') -%}
                 {% set v = state_attr('sensor.meteoalarm_custom', s) -%}
@@ -574,7 +574,8 @@ automation:
             {% if d <= 1 %}🔴 {% elif 1 < d <= 5 %}🟠 {% elif 5 < d <= 10 %}🟡 {% else %}🟢 {% endif -%}
             Negli ultimi {{state_attr('binary_sensor.burze_storms_nearby', 'period')}} minuti
             {% for x in n|string -%}{{num[x]|default(x) -}}{% endfor %}⚡
-            {% if n != 1 %}scariche di fulmini {% else %} fulmine scaricato {% endif %} entro il raggio selezionato.
+            {% if n != 1 %}scariche di fulmini {% else %} fulmine scaricato {% endif %} 
+            nel raggio di {{(state_attr('zone.meteoalert','radius') //1000)|int}} km.
             La scarica più vicina è avvenuta a {{state_attr('binary_sensor.burze_storms_nearby', 'distance')}} km 
             a {{state_attr('binary_sensor.global_natural_alert','burze_direction')}} da casa.
           # message: >-
@@ -720,7 +721,7 @@ automation:
             {{'‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗'}}
             {{day[s]|upper}}
             {{'¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯'}}
-            {%- for d  in v %}
+            {%- for d in v %}
             {{color[d['code']][0] + dict_type[d['event']][0] + dict_type[d['event']][1]}} allerta {{color[d['code']][1]}}
             Descrizione: {{d['italiano']}}
             Data: {{d['start']|trim("CEST")|replace('.','/')}} - {{d['end']|trim("CEST")|replace('.','/')}}
@@ -827,8 +828,8 @@ automation:
             {% set event = {'Earthquakes':'Terremoti','Tropical cyclones':'Cicloni tropicali','Floods':'Inondazioni','Volcanoes':'Vulcani','Drought':'Siccità'}%}
             Avviso di disastro globale: {{ event[trigger.to_state.attributes.event_type] }}
             Descrizione: {{ trigger.to_state.attributes.description }}
-            Rilasciato: {{ trigger.to_state.attributes.from_date.strftime("%d.%m.%Y %H:%M") }}
-            Fine: {{ trigger.to_state.attributes.to_date.strftime("%d.%m.%Y %H:%M") }}
+            Rilasciato: {{ '-' if not trigger.to_state.attributes.from_date else trigger.to_state.attributes.from_date.strftime("%d.%m.%Y %H:%M") }}
+            Fine: {{ '-' if not trigger.to_state.attributes.to_date else trigger.to_state.attributes.to_date.strftime("%d.%m.%Y %H:%M") }}
           message_tts: >-
             {% set event = {'Earthquakes':'Terremoti','Tropical cyclones':'Cicloni tropicali','Floods':'Inondazioni','Volcanoes':'Vulcani','Drought':'Siccità'}%}
             Avviso di disastro globale: {{ event[trigger.to_state.attributes.event_type] }}
