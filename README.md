@@ -19,6 +19,11 @@ Guide [Natural Events](https://hassiohelp.eu/2019/10/06/package-eventi-naturali/
 <br><br>
 </p>
 
+<p align="center">
+<img src="./card_natural_events_light_quake.png">
+<br><br>
+</p>
+
 ## [Card Picture Element](./config/lovelace/cards/card_natural_events.yaml)
 <p align="center">
 <img src="./card_natural_events_picture.png">
