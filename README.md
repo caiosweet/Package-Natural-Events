@@ -19,14 +19,14 @@ Guide [Natural Events](https://hassiohelp.eu/2019/10/06/package-eventi-naturali/
 <br><br>
 </p>
 
-## [My Lovelace Card](./config/lovelace/cards/card_natural_events.yaml)
+## [Card Picture Element](./config/lovelace/cards/card_natural_events.yaml)
 <p align="center">
-<img src="./card_natural_events.png">
+<img src="./card_natural_events_picture.png">
 <br><br>
 </p>
 
-## [My Lovelace Card Picture Element Menu](./config/lovelace/cards/card_natural_events_picture_menu.yaml)
+## [Card Picture Element Menu](./config/lovelace/cards/card_natural_events_picture_menu.yaml)
 <p align="center">
-<img src="./card_natural_events_picture.png">
+<img src="./card_natural_events_menu.png">
 <br><br>
 </p>
