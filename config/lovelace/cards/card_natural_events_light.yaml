@@ -382,12 +382,12 @@ cards:
           #### METEOALARM
 
           {% set global = 'binary_sensor.global_natural_alert' %}
-          {% set l = state_attr('binary_sensor.meteoalarm', 'awareness_level').split(';')[0]%}
-          {% set t = state_attr('binary_sensor.meteoalarm', 'awareness_type').split(';')[0]%}
+          {% set l = state_attr('binary_sensor.meteoalarm', 'awareness_level')%}
+          {% set t = state_attr('binary_sensor.meteoalarm', 'awareness_type')%}
           <font color= {{state_attr(global,'meteoalarm_level')}}> <ha-icon icon="{{state_attr(global, 'meteoalarm_level_icon')}}"></ha-icon></font>
           <font color= {{state_attr(global,'meteoalarm_level')}}> <ha-icon icon="{{state_attr(global, 'meteoalarm_type_icon')}}"></ha-icon></font>
           <font color= {{state_attr(global,'meteoalarm_level')}}> {{state_attr('binary_sensor.meteoalarm', 'event')}}
-          <img src="https://www.meteoalarm.eu/documents/rss/wflag-l{{'0' if l == none else l.split(';')[0]}}-t{{'0' if t == none else t.split(';')[0]}}.jpg"></font>
+          <img src="https://www.meteoalarm.eu/documents/rss/wflag-l{{'0' if not l else l.split(';')[0]}}-t{{'0' if not t else t.split(';')[0]}}.jpg"></font>
           <font color= var(--primary-text-color)> **{{state_attr('binary_sensor.meteoalarm', 'urgency')|upper}}**</font><br>
           {% set days = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"] %}
           {% set start = as_timestamp(state_attr('binary_sensor.meteoalarm', 'effective')) %}
@@ -440,7 +440,7 @@ cards:
                   {%- for d  in v %}
                   {% set l = dict_code[d['code']] %}
                   {% set t = type[d['event']] %}
-          **{{day[s]}}:** <img src="https://www.meteoalarm.eu/documents/rss/wflag-l{{'0' if l == none else l.split(';')[0]}}-t{{'0' if t == none else t.split(';')[0]}}.jpg"> <font color= {{d['code']}}>**{{dict_type[d['event']]}}** </font>
+          **{{day[s]}}:** <img src="https://www.meteoalarm.eu/documents/rss/wflag-l{{'0' if not l else l.split(';')[0]}}-t{{'0' if not t else t.split(';')[0]}}.jpg"> <font color= {{d['code']}}>**{{dict_type[d['event']]}}** </font>
           **Allerta:** <font color= {{d['code']}}><ha-icon icon="{{'mdi:numeric-'~dict_code[d['code']]~'-box'}}" style="width: 36px; height: 36px;"></ha-icon>{{color[d['code']]}}</font><br>
           Descrizione: <font color= var(--primary-text-color)>{{d['italiano']}}</font><br>
           Data: <font color= var(--primary-text-color)>{{d['start']|trim("CEST")|replace('.','/')}} - {{d['end']|trim("CEST")|replace('.','/')}}</font><br>
@@ -463,7 +463,6 @@ cards:
         - type: markdown
           style: |
             ha-card {background: none; border-radius: 0px; box-shadow: none; color: var(--secondary-text-color);}
-            .card-content {padding: 0}
           content: >-
             ___
 
@@ -490,7 +489,7 @@ cards:
             con coordinate geografiche (lat, long) {{lat}},{{long}}.<br>
             {{("Tu ti trovi a " ~ distance(lat, long, person)) ~ " km dall'epicentro." if is_state(person, 'not_home') else ''}}
             </font>
-            {% if magnitudo >= 3 %}
+            {% if magnitudo >= 3 %}<br>
             [Shakemap]({{url.format(id,'intensity')}}) ~ 
             [PGA]({{url.format(id,'pga')}}) ~ [PGV]({{url.format(id,'pgv')}}) ~ [TvMap]({{url.format(id,'tvmap')}}) ~ [TvMap2]({{url.format(id,'tvmap_bare')}}) ~ 
             [HaiSentitoIlTerremoto](http://eventi.haisentitoilterremoto.it/{{id}}/{{id}}_mcs.jpg)
@@ -514,7 +513,7 @@ cards:
             type: markdown
             entity_id: this.entity_id
             style: |
-              ha-card {background: none; border-radius: 0px; box-shadow: none;}
+              ha-card {background: none; border-radius: 0px; box-shadow: none; color: var(--secondary-text-color);}
             content: >-
               <center>
               <img src="http://terremoti.ingv.it/favicon.ico" width="16"/> 
