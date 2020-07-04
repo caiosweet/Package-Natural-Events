@@ -41,7 +41,7 @@ cards:
   elements:
     - type: conditional # Nessun Evento
       conditions:
-        - entity: group.natural_events
+        - entity: binary_sensor.global_natural_alert
           state: 'off'
       elements:
         - type: state-label
@@ -71,9 +71,10 @@ cards:
             top: 95%
             transform: 'translate(0%,-50%)'
             z-index: 98
-    - type: conditional # Eventi Meteo
+
+    - type: conditional # MeteoAlarm
       conditions:
-        - entity: group.meteoalert
+        - entity: sensor.meteoalarm
           state: 'on'
       elements:
         - type: state-icon
@@ -83,7 +84,6 @@ cards:
             left: 'var(--meteoalarm-level-left)'
             top: 20%
             z-index: 99
-
         - type: state-icon
           entity: sensor.meteoalarm_type
           style: 
@@ -92,6 +92,11 @@ cards:
             top: 20%
             z-index: 99
 
+    - type: conditional # Eventi Meteo
+      conditions:
+        - entity: group.meteoalert
+          state: 'on'
+      elements:
         - type: state-label
           entity: group.meteoalert
           prefix: 'Meteo '
@@ -505,12 +510,12 @@ cards:
           #### METEOALARM
 
           {% set global = 'binary_sensor.global_natural_alert' %}
-          {% set l = state_attr('binary_sensor.meteoalarm', 'awareness_level').split(';')[0]%}
-          {% set t = state_attr('binary_sensor.meteoalarm', 'awareness_type').split(';')[0]%}
+          {% set l = state_attr('binary_sensor.meteoalarm', 'awareness_level')%}
+          {% set t = state_attr('binary_sensor.meteoalarm', 'awareness_type')%}
           <font color= {{state_attr(global,'meteoalarm_level')}}> <ha-icon icon="{{state_attr(global, 'meteoalarm_level_icon')}}"></ha-icon></font>
           <font color= {{state_attr(global,'meteoalarm_level')}}> <ha-icon icon="{{state_attr(global, 'meteoalarm_type_icon')}}"></ha-icon></font>
           <font color= {{state_attr(global,'meteoalarm_level')}}> {{state_attr('binary_sensor.meteoalarm', 'event')}}
-          <img src="https://www.meteoalarm.eu/documents/rss/wflag-l{{'0' if l == none else l.split(';')[0]}}-t{{'0' if t == none else t.split(';')[0]}}.jpg"></font>
+          <img src="https://www.meteoalarm.eu/documents/rss/wflag-l{{'0' if not l else l.split(';')[0]}}-t{{'0' if not t else t.split(';')[0]}}.jpg"></font>
           <font color= var(--primary-text-color)> **{{state_attr('binary_sensor.meteoalarm', 'urgency')|upper}}**</font><br>
           {% set days = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"] %}
           {% set start = as_timestamp(state_attr('binary_sensor.meteoalarm', 'effective')) %}
@@ -563,7 +568,7 @@ cards:
                   {%- for d  in v %}
                   {% set l = dict_code[d['code']] %}
                   {% set t = type[d['event']] %}
-          **{{day[s]}}:** <img src="https://www.meteoalarm.eu/documents/rss/wflag-l{{'0' if l == none else l.split(';')[0]}}-t{{'0' if t == none else t.split(';')[0]}}.jpg"> <font color= {{d['code']}}>**{{dict_type[d['event']]}}** </font>
+          **{{day[s]}}:** <img src="https://www.meteoalarm.eu/documents/rss/wflag-l{{'0' if not l else l.split(';')[0]}}-t{{'0' if not t else t.split(';')[0]}}.jpg"> <font color= {{d['code']}}>**{{dict_type[d['event']]}}** </font>
           **Allerta:** <font color= {{d['code']}}><ha-icon icon="{{'mdi:numeric-'~dict_code[d['code']]~'-box'}}" style="width: 36px; height: 36px;"></ha-icon>{{color[d['code']]}}</font><br>
           Descrizione: <font color= var(--primary-text-color)>{{d['italiano']}}</font><br>
           Data: <font color= var(--primary-text-color)>{{d['start']|trim("CEST")|replace('.','/')}} - {{d['end']|trim("CEST")|replace('.','/')}}</font><br>
@@ -612,7 +617,7 @@ cards:
             con coordinate geografiche (lat, long) {{lat}},{{long}}.<br>
             {{("Tu ti trovi a " ~ distance(lat, long, person)) ~ " km dall'epicentro." if is_state(person, 'not_home') else ''}}
             </font>
-            {% if magnitudo >= 3 %}
+            {% if magnitudo >= 3 %}<br>
             [Shakemap]({{url.format(id,'intensity')}}) ~ 
             [PGA]({{url.format(id,'pga')}}) ~ [PGV]({{url.format(id,'pgv')}}) ~ [TvMap]({{url.format(id,'tvmap')}}) ~ [TvMap2]({{url.format(id,'tvmap_bare')}}) ~ 
             [HaiSentitoIlTerremoto](http://eventi.haisentitoilterremoto.it/{{id}}/{{id}}_mcs.jpg)
@@ -799,4 +804,4 @@ cards:
       }
     aspect_ratio: 100%
     url: 'http://map.blitzortung.org/#5.11/42.5/12.51' # Il Centro geografico d'Italia
-#             <img src="http://terremoti.ingv.it/images/ingv_logo_colore.png" background="white"/><br>
+
