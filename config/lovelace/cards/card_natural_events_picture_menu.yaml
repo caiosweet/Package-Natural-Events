@@ -586,7 +586,6 @@ cards:
         - type: markdown
           style: |
             ha-card {background: none; border-radius: 0px; box-shadow: none; color: var(--secondary-text-color);}
-            .card-content {padding: 0}
           content: >-
             ___
 
@@ -637,7 +636,7 @@ cards:
             type: markdown
             entity_id: this.entity_id
             style: |
-              ha-card {background: none; border-radius: 0px; box-shadow: none;}
+              ha-card {background: none; border-radius: 0px; box-shadow: none; color: var(--secondary-text-color);}
             content: >-
               <center>
               <img src="http://terremoti.ingv.it/favicon.ico" width="16"/> 
