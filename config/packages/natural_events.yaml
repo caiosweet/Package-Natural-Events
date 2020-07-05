@@ -26,16 +26,15 @@ homeassistant:
 
     ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
       setting:
-        # SCRIPT centro notifiche: &script script.natural_events_notifications 
-        SCRIPT centro notifiche: &script script.my_notify 
-        SERVIZIO Notify: &notify ''
-        MEDIA PLAYER Google: &media_player_google ''
+        SCRIPT centro notifiche: &script script.natural_events_notifications #script.my_notify 
+        SERVIZIO Notify: &notify 'notify.telegram' # or 'telegram'
+        MEDIA PLAYER Google: &media_player_google 'media_player.red'
         MEDIA PLAYER Alexa: &media_player_alexa ''
       filter:
         RAGGIO ZONA MeteoAlert metri: &radius_meteoalert 25000
         RAGGIO ZONA GeoAlert metri: &radius_geoalert 1000000
         RAGGIO TERREMOTO km: &radius_quake 1000
-        MAGNITUDO minimo: &magnitude 2
+        MAGNITUDO minimo: &magnitude 3
         RAGGIO BURZE km: &radius_burze 25
       secret: # Oppure inserire i dati direttamente al posto di !secret etcetc
         LATITUDINE per le zone: &latitude !secret latitude_home
