@@ -85,6 +85,11 @@ homeassistant:
       <<: *customize
       friendly_name: Scossa Terremoto
       icon: mdi:pulse
+    binary_sensor.shakemap:
+      <<: *customize
+      friendly_name: Check Shakemap
+      icon: mdi:link
+
   ## Group
     group.natural_events:
       <<: *customize
@@ -787,7 +792,7 @@ automation:
             a una distanza di {{ trigger.to_state.state }} Km da casa. 
             Epicentro: {{ trigger.to_state.attributes.region }}
             {{as_timestamp(data_utc)|timestamp_custom ('Data %d/%m/%Y Ore %H:%M:%S')}}
-            {% if trigger.to_state.attributes.image_url %}
+            {% if trigger.to_state.attributes.image_url and is_state('binary_sensor.shakemap', 'off') %}
             [Immagine]({{trigger.to_state.attributes.image_url}})
             {% endif %}
           message_tts: >-
@@ -828,8 +833,8 @@ automation:
             {% set event = {'Earthquakes':'Terremoti','Tropical cyclones':'Cicloni tropicali','Floods':'Inondazioni','Volcanoes':'Vulcani','Drought':'Siccità'}%}
             Avviso di disastro globale: {{ event[trigger.to_state.attributes.event_type] }}
             Descrizione: {{ trigger.to_state.attributes.description }}
-            Rilasciato: {{ '-' if not trigger.to_state.attributes.from_date else trigger.to_state.attributes.from_date.strftime("%d.%m.%Y %H:%M") }}
-            Fine: {{ '-' if not trigger.to_state.attributes.to_date else trigger.to_state.attributes.to_date.strftime("%d.%m.%Y %H:%M") }}
+            Rilasciato: {{ '-' if not trigger.to_state.attributes.from_date else as_timestamp(trigger.to_state.attributes.from_date)|timestamp_custom("%d.%m.%Y %H:%M") }}
+            Fine: {{ '-' if not trigger.to_state.attributes.to_date else as_timestamp(trigger.to_state.attributes.to_date)|timestamp_custom("%d.%m.%Y %H:%M") }}
           message_tts: >-
             {% set event = {'Earthquakes':'Terremoti','Tropical cyclones':'Cicloni tropicali','Floods':'Inondazioni','Volcanoes':'Vulcani','Drought':'Siccità'}%}
             Avviso di disastro globale: {{ event[trigger.to_state.attributes.event_type] }}
