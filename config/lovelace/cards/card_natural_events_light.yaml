@@ -295,6 +295,7 @@ cards:
                 color: var(--color);
                 --paper-item-icon-color: var(--paper-item-icon-active-color);
               }
+
 #################################################################
 ## INFO  
 #################################################################
@@ -676,4 +677,3 @@ cards:
       }
     aspect_ratio: 100%
     url: 'http://map.blitzortung.org/#5.11/42.5/12.51' # Il Centro geografico d'Italia
-#             <img src="http://terremoti.ingv.it/images/ingv_logo_colore.png" background="white"/><br>
