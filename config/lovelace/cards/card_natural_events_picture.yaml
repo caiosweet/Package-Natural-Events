@@ -1,7 +1,6 @@
-
-  type: picture-elements
+- type: picture-elements
   style: |
-    {% set global = 'binary_sensor.global' %}
+    {% set global = 'binary_sensor.global_natural_alert' %}
     @keyframes blink {
       30% {
         background: {% if is_state(global, 'on') %} gray; {% endif %}
@@ -36,7 +35,7 @@
   elements:
     - type: conditional # Nessun Evento
       conditions:
-        - entity: group.natural_events
+        - entity: binary_sensor.global_natural_alert
           state: 'off'
       elements:
         - type: state-label
@@ -66,9 +65,10 @@
             top: 95%
             transform: 'translate(0%,-50%)'
             z-index: 98
-    - type: conditional # Eventi Meteo
+
+    - type: conditional # MeteoAlarm
       conditions:
-        - entity: group.meteoalert
+        - entity: sensor.meteoalarm
           state: 'on'
       elements:
         - type: state-icon
@@ -78,7 +78,6 @@
             left: 'var(--meteoalarm-level-left)'
             top: 20%
             z-index: 99
-
         - type: state-icon
           entity: sensor.meteoalarm_type
           style: 
@@ -87,6 +86,11 @@
             top: 20%
             z-index: 99
 
+    - type: conditional # Eventi Meteo
+      conditions:
+        - entity: group.meteoalert
+          state: 'on'
+      elements:
         - type: state-label
           entity: group.meteoalert
           prefix: 'Meteo '
@@ -232,3 +236,4 @@
             width: 100%
             z-index: 0
           type: image
+

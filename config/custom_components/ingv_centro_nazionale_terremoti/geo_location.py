@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 from typing import Optional
 
-from .georss_ingv_centro_nazionale_terremoti_client import (
+from georss_ingv_centro_nazionale_terremoti_client import (
     IngvCentroNazionaleTerremotiFeedManager,
 )
 import voluptuous as vol
