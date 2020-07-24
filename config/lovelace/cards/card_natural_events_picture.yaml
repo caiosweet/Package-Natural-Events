@@ -1,3 +1,9 @@
+type: custom:vertical-stack-in-card # type: vertical-stack 
+style: |
+  ha-card {
+      border: 1px solid {% if is_state('binary_sensor.global_natural_alert', 'on') %} {{state_attr('binary_sensor.global_natural_alert','level')}} {% else %} Green {% endif %};
+  }
+cards:
 - type: picture-elements
   style: |
     {% set global = 'binary_sensor.global_natural_alert' %}
