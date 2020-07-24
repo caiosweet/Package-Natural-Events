@@ -6,6 +6,7 @@
   ##########################################################################
   # DPC per trovare codice ISTAT: https://www.paginebianche.it/codice-istat 
   # METEOALARM Cerca il nome della tua Regione o ID: http://meteoalarm.eu/it_IT/0/0/IT-Italia.html 
+  # Strumento per visualizzare il raggio delle zone https://www.mapdevelopers.com/draw-circle-tool.php
 
 homeassistant:
   customize:
@@ -17,7 +18,7 @@ homeassistant:
         package: 'Natural_events'
         author: 'Caio & Gianpi'
         webpage: 'www.hassiohelp.eu'
-        version: '3.2'
+        version: '3.3'
 
       expose: &expose
         <<: *customize
@@ -106,7 +107,7 @@ homeassistant:
     input_boolean.natural_events: 
       <<: *customize
       friendly_name: "Info e Impostazioni"
-      icon: mdi:settings
+      icon: mdi:cogs
     input_boolean.natural_events_send_image:
       <<: *customize
       friendly_name: "Invia Immagini"
@@ -582,15 +583,6 @@ automation:
             nel raggio di {{(state_attr('zone.meteoalert','radius') //1000)|int}} km.
             La scarica più vicina è avvenuta a {{state_attr('binary_sensor.burze_storms_nearby', 'distance')}} km 
             a {{state_attr('binary_sensor.global_natural_alert','burze_direction')}} da casa.
-          # message: >-
-          #   {% set d = state_attr('binary_sensor.burze_storms_nearby', 'distance')|default(20,'0') %}
-          #   {% if d <= 1 %}🔴 {% elif 1 < d <= 5 %}🟠 {% elif 5 < d <= 10 %}🟡 {% else %}🟢 {% endif -%}
-          #   Negli ultimi {{state_attr('binary_sensor.burze_storms_nearby', 'period')}} minuti
-          #   {{state_attr('binary_sensor.burze_storms_nearby', 'number')}}⚡
-          #   {% if state_attr('binary_sensor.burze_storms_nearby', 'number') != 1 %}
-          #   scariche di fulmini {% else %} fulmine scaricato {% endif %} entro il raggio selezionato.
-          #   La scarica più vicina è avvenuta a {{state_attr('binary_sensor.burze_storms_nearby', 'distance')}} km 
-          #   a {{state_attr('binary_sensor.global_natural_alert','burze_direction')}} da casa.
           message_tts: >-
             {% if trigger.from_state.state == 'off' %} Probabile arrivo di un temporale da {{state_attr('binary_sensor.global_natural_alert','burze_direction')}}. 
             {% else %} 
@@ -611,6 +603,7 @@ automation:
 #----------------------------------------------------------------------------------------------------#
   - id: natural_events_protezione_civile_notifications
     alias: natural_events_protezione_civile_notifications
+    mode: queued
     initial_state: true
     trigger:
       platform: state
@@ -695,6 +688,7 @@ automation:
 #----------------------------------------------------------------------------------------------------#
   - id: natural_events_meteoalarm_custom_notifications
     alias: natural_events_meteoalarm_custom_notifications
+    mode: queued
     initial_state: true
     trigger:
       platform: state
@@ -767,6 +761,7 @@ automation:
 #----------------------------------------------------------------------------------------------------#
   - id: natural_events_quake_notifications
     alias: natural_events_quake_notifications
+    mode: queued
     initial_state: true
     trigger:
       - platform: geo_location
@@ -811,31 +806,32 @@ automation:
 #----------------------------------------------------------------------------------------------------#
   - id: natural_events_gdacs_notifications
     alias: natural_events_gdacs_notifications
+    mode: queued
     initial_state: true
     trigger:
       - platform: geo_location
         source: 'gdacs'
         zone: zone.geoalert
         event: enter
-    # condition:
-    #   - condition: template
-    #     value_template: >
-    #       {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.to_date))/3600*60)|int < 60 }}
+    condition:
+      - condition: template
+        value_template: >
+          {{as_timestamp(trigger.to_state.attributes.to_date) > as_timestamp(utcnow()) or trigger.to_state.attributes.alert_level != 'Green' }}
     action:
       - service: *script
         data_template:
           call_no_annuncio: 1
           title: >-
-            {% set event = {'Earthquakes':'Terremoti','Tropical cyclones':'Cicloni tropicali','Floods':'Inondazioni','Volcanoes':'Vulcani','Drought':'Siccità'}%}
+            {% set event = {'Earthquake':'Terremoto','Tropical cyclone':'Ciclone tropicale','Flood':'Inondazione','Volcano':'Vulcano','Drought':'Siccità'}%}
             GDACS: {{ event[trigger.to_state.attributes.event_type] }}
           message: |-
-            {% set event = {'Earthquakes':'Terremoti','Tropical cyclones':'Cicloni tropicali','Floods':'Inondazioni','Volcanoes':'Vulcani','Drought':'Siccità'}%}
+            {% set event = {'Earthquake':'Terremoto','Tropical cyclone':'Ciclone tropicale','Flood':'Inondazione','Volcano':'Vulcano','Drought':'Siccità'}%}
             Avviso di disastro globale: {{ event[trigger.to_state.attributes.event_type] }}
             Descrizione: {{ trigger.to_state.attributes.description }}
             Rilasciato: {{ '-' if not trigger.to_state.attributes.from_date else as_timestamp(trigger.to_state.attributes.from_date)|timestamp_custom("%d.%m.%Y %H:%M") }}
             Fine: {{ '-' if not trigger.to_state.attributes.to_date else as_timestamp(trigger.to_state.attributes.to_date)|timestamp_custom("%d.%m.%Y %H:%M") }}
           message_tts: >-
-            {% set event = {'Earthquakes':'Terremoti','Tropical cyclones':'Cicloni tropicali','Floods':'Inondazioni','Volcanoes':'Vulcani','Drought':'Siccità'}%}
+            {% set event = {'Earthquake':'Terremoto','Tropical cyclone':'Ciclone tropicale','Flood':'Inondazione','Volcano':'Vulcano','Drought':'Siccità'}%}
             Avviso di disastro globale: {{ event[trigger.to_state.attributes.event_type] }}
           media_player_google: *media_player_google
           media_player_alexa: *media_player_alexa
@@ -846,100 +842,99 @@ automation:
 script:
   natural_events_notifications:
     alias: Notifiche Geo Meteo Alert 
+    mode: queued
     sequence:
-      # SOLO TESTO
-      - service_template: >-
-          {% if (url|length == 0 and file|length == 0) and notify|length > 1%}
-            {{'' if '.' in notify else 'notify.'}}{{notify.replace(' ','_')}}
-          {% else %}
-            script.no_service
-          {% endif %}
-        data_template:
-          title: >
-            {{ title }}
-          message: >
-            {{message}}
+    - choose:
+        - conditions: # URL IMAGE + TESTO
+            - condition: template
+              value_template: "{{ url|length > 1 and notify|length > 1 }}"
+          sequence:
+          - service_template: >-
+              {{'' if '.' in notify else 'notify.'}}{{notify|replace(' ','_')}}
+            data_template:
+              title: >
+                {{ title }}
+              message: >
+                {{message}}
+              data:
+                photo:
+                  - url: >-
+                      {{url}}
+                    caption: |
+                      {{title}}
+                      {{message}}
+        - conditions: # FILE IMAGE + TESTO
+            - condition: template
+              value_template: "{{ file|length > 1 and notify|length > 1 }}"
+          sequence:
+          - service_template: >-
+                {{'' if '.' in notify else 'notify.'}}{{notify|replace(' ','_')}}
+            data_template:
+              title: >
+                {{ title }}
+              message: >
+                {{message}}
+              data:
+                photo:
+                  - file: >-
+                      {{file}}
+                    caption: |
+                      {{title}}
+                      {{message}}
+      default: # SOLO TESTO
+        - service_template: >-
+              {{'' if '.' in notify else 'notify.'}}{{notify|replace(' ','_')}}
+          data_template:
+            title: >
+              {{ title }}
+            message: >
+              {{message}}
 
-      # URL IMAGE + TESTO
-      - service_template: >-
-          {% if url|length > 1 %}
-            {{'' if '.' in notify else 'notify.'}}{{notify.replace(' ','_')}}
-          {% else %}
-            script.no_service
-          {% endif %}
-        data_template:
-          title: >
-            {{ title }}
-          message: >
-            {{message}}
-          data:
-            photo:
-              - url: >-
-                 {{url}}
-                caption: |
-                  {{title}}
-                  {{message}}
+    # AUDIO
+    - condition: time
+      after: '07:00:00'
+      before: '23:00:00'
+    - condition: template
+      value_template: >
+        {{message_tts | length > 1}}
 
-      # FILE IMAGE + TESTO
-      - service_template: >-
-          {% if file|length > 1 %}
-            {{'' if '.' in notify else 'notify.'}}{{notify.replace(' ','_')}}
-          {% else %}
-            script.no_service
-          {% endif %}
-        data_template:
-          title: >
-            {{ title }}
-          message: >
-            {{message}}
-          data:
-            photo:
-              - file: >-
-                  {{file}}
-                caption: |
-                  {{title}}
-                  {{message}}
+    - service_template: >-
+        {% if media_player_google | length > 1 %}
+          tts.google_translate_say
+        {% else %}
+          script.no_service
+        {% endif %}
+      data_template:
+        entity_id: >-
+          {{media_player_google}}
+        message: >
+          {{message_tts|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
 
-      # AUDIO
-      - condition: time
-        after: '07:00:00'
-        before: '23:00:00'
-      - condition: template
-        value_template: >
-          {{message_tts | length > 1}}
-
-      - service_template: >-
-          {% if media_player_google | length > 1 %}
-            tts.google_translate_say
-          {% else %}
-            script.no_service
-          {% endif %}
-        data_template:
-          entity_id: >-
-            {{media_player_google}}
-          message: >
-            {{message_tts|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
-
-      - service_template: >-
-          {% if media_player_alexa | length > 1  %}
-            notify.alexa_media
-          {% else %}
-            script.no_service
-          {% endif %}
-        data_template:
-          target: >-
-            {{media_player_alexa}}
-          message: >
-            {{message_tts|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
-          data:
-            type: tts
+    - service_template: >-
+        {% if media_player_alexa | length > 1  %}
+          notify.alexa_media
+        {% else %}
+          script.no_service
+        {% endif %}
+      data_template:
+        target: >-
+          {{media_player_alexa}}
+        message: >
+          {{message_tts|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
+        data:
+          type: tts
+    # Calcolo semplice e approssimativo del tempo di riproduzione TTS tra un messaggio ed il successivo
+    - delay:
+          # Per google si può utilizzare anche l'attributo media_duration
+          # per evitare un delay, si può utilizzare un'altra tecnica (timer)
+            # vedi https://github.com/caiosweet/notification-hub/blob/master/package/centro_notifiche/hub_alexa.yaml#L347
+        seconds: "{{ message_tts|wordcount // 2+2 }}"
 
   no_service:
     alias: NO Service 
-    sequence:
-      - service: script.turn_off
-        entity_id: script.no_service
-      - delay: 00:00:00
+    # mode: restart
+    sequence: []
+
 #######################################-#######################################
 ##                                  LEGEND
 #######################################-#######################################
