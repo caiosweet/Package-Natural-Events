@@ -74,7 +74,7 @@ cards:
 
     - type: conditional # MeteoAlarm
       conditions:
-        - entity: sensor.meteoalarm
+        - entity: binary_sensor.meteoalarm
           state: 'on'
       elements:
         - type: state-icon

@@ -5,8 +5,8 @@ type: custom:vertical-stack-in-card
 style: |
   ha-card {
       {# imposta colore sfondo e bordo di tutta la scheda #} 
-      background-color: var(--paper-card-background-color); {# trasparent; #}
-      {# oppure background: --ha-card-background: var(--paper-card-background-color); #}
+      background-color: var(--ha-card-background); {# oppure trasparent; #}
+      {# oppure background: --ha-card-background: var(--ha-card-background); #}
       border: 
         1px solid {% if is_state('binary_sensor.global_natural_alert', 'on') %} 
         {{state_attr('binary_sensor.global_natural_alert','level')}} {% else %} Green {% endif %};
@@ -245,6 +245,7 @@ cards:
     filter:
       exclude: 
         - entity_id: 'binary_sensor.global_natural_alert'
+        - entity_id: 'binary_sensor.shakemap'
       include:
         - entity_id: 'binary_sensor.*'
           state: 'on'
@@ -677,3 +678,4 @@ cards:
       }
     aspect_ratio: 100%
     url: 'http://map.blitzortung.org/#5.11/42.5/12.51' # Il Centro geografico d'Italia
+#             <img src="http://terremoti.ingv.it/images/ingv_logo_colore.png" background="white"/><br>
