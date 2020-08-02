@@ -13,7 +13,7 @@ style: |
   }
 cards:
 #################################################################
-## HEADER 
+## HEADER var(--disabled-text-color)
 #################################################################
 - type: markdown
   entity_id:  binary_sensor.global_natural_alert
@@ -21,18 +21,20 @@ cards:
     {% set global = 'binary_sensor.global_natural_alert' %}
     @keyframes blink {
       30% {
-        background: {% if is_state(global, 'on') %} gray {% endif %};
+        background: {% if is_state(global, 'on') %} var(--ha-card-background) {% endif %};
       }
     }
     ha-card {
+      {# test con stroke -webkit-text-stroke-color: black; #}
+      {# test con stroke -webkit-text-stroke-width: 0.3px; #}
       border-radius: var(--ha-card-border-radius) var(--ha-card-border-radius) 0px 0px;
-      box-shadow: none;
+      box-shadow: none; 
       {% if is_state(global, 'on') %}
       animation: blink 2s linear 3;
       background: {{state_attr(global,'level')}};
-      color: {% if state_attr(global,'level') in ['White','Yellow','Orange'] %} var(--disabled-text-color) {% endif %};
+      color: {% if state_attr(global,'level') in ['White','Yellow','Orange'] %} var(--dark-primary-color) {% else %} var(--light-primary-color) {% endif %};
       {% else %}
-      background: Green; border-color: Green;
+      background: Green; border-color: Green; color: var(--primary-text-color)
       {% endif %}
       }
     }
@@ -193,6 +195,7 @@ cards:
           - entity: input_select.meteo_map
             name: Meteo
             state_text:
+              Temperatura Nuvole Infrared: Infrared
               Nuvole Infrared: Notte
               Nuvole e Sole: Giorno
               Pioggia: Pioggia
@@ -222,6 +225,8 @@ cards:
               Windy Alert: Alert
               Protezione Civile: DPC
               Blitzortung: Blitz
+              Radareu: Radareu
+              Volcanodiscovery: Vulcani
             tap_action:
               action: call-service
               service: input_select.select_next
@@ -319,15 +324,17 @@ cards:
         style: |
           ha-card {background: none; border-radius: 0px; box-shadow: none;}
         content: >-
+          {%- set mycolor = 'var(--error-color)' -%}
+          {%- set color2 = 'Yellow' -%}
           ___
           
           #### TEMPORALI
 
-          <font color= var(--error-color)>{{state_attr('binary_sensor.burze_storms_nearby', 'number')}}</font>
-          <font color= yellow><ha-icon icon="mdi:flash" style="width: 24px; height: 24px; transform: rotate(35deg);"></ha-icon></font> 
-          in <font color= var(--error-color)> {{state_attr('binary_sensor.burze_storms_nearby', 'period')}}</font> minuti.
-          Il più vicino è caduto a <font color= var(--error-color)> {{state_attr('binary_sensor.burze_storms_nearby', 'distance')}} Km </font> 
-          a <font color= var(--error-color)> {{state_attr('binary_sensor.global_natural_alert','burze_direction')}} </font>
+          <font color="{{mycolor}}">{{state_attr('binary_sensor.burze_storms_nearby', 'number')}}</font>
+          <font color="{{color2}}"><ha-icon icon="mdi:flash" style="width: 24px; height: 24px; transform: rotate(35deg);"></ha-icon></font> 
+          in <font color="{{mycolor}}"> {{state_attr('binary_sensor.burze_storms_nearby', 'period')}}</font> minuti.
+          Il più vicino è caduto a <font color="{{mycolor}}"> {{state_attr('binary_sensor.burze_storms_nearby', 'distance')}} Km </font> 
+          a <font color="{{mycolor}}"> {{state_attr('binary_sensor.global_natural_alert','burze_direction')}} </font>
           </font> da casa.
 
 
@@ -358,7 +365,7 @@ cards:
           {% for e in config.entities %}
 
 
-          <font color= {{color[state_attr(e.entity, 'level')|int]}}>
+          <font color="{{color[state_attr(e.entity, 'level')|int]}}">
           <ha-icon icon="{{ 'mdi:numeric-' ~ state_attr(e.entity, 'level')|int ~ '-box'}}" style="width: 36px; height: 36px;"></ha-icon> 
           <ha-icon icon="{{ state_attr(e.entity, 'icon')}}" style="width: 36px; height: 36px;"></ha-icon> 
           {{state_attr(e.entity, 'friendly_name')}} - {{state_attr(e.entity, 'allerta')}} {{state_attr(e.entity, 'info')}}</font>
@@ -383,25 +390,27 @@ cards:
 
           #### METEOALARM
 
+          {% set mycolor = 'var(--primary-text-color)' %}
+
           {% set global = 'binary_sensor.global_natural_alert' %}
           {% set l = state_attr('binary_sensor.meteoalarm', 'awareness_level')%}
           {% set t = state_attr('binary_sensor.meteoalarm', 'awareness_type')%}
-          <font color= {{state_attr(global,'meteoalarm_level')}}> <ha-icon icon="{{state_attr(global, 'meteoalarm_level_icon')}}"></ha-icon></font>
-          <font color= {{state_attr(global,'meteoalarm_level')}}> <ha-icon icon="{{state_attr(global, 'meteoalarm_type_icon')}}"></ha-icon></font>
-          <font color= {{state_attr(global,'meteoalarm_level')}}> {{state_attr('binary_sensor.meteoalarm', 'event')}}
+          <font color="{{state_attr(global,'meteoalarm_level')}}"> <ha-icon icon="{{state_attr(global, 'meteoalarm_level_icon')}}"></ha-icon></font>
+          <font color="{{state_attr(global,'meteoalarm_level')}}"> <ha-icon icon="{{state_attr(global, 'meteoalarm_type_icon')}}"></ha-icon></font>
+          <font color="{{state_attr(global,'meteoalarm_level')}}"> {{state_attr('binary_sensor.meteoalarm', 'event')}}
           <img src="https://www.meteoalarm.eu/documents/rss/wflag-l{{'0' if not l else l.split(';')[0]}}-t{{'0' if not t else t.split(';')[0]}}.jpg"></font>
-          <font color= var(--primary-text-color)> **{{state_attr('binary_sensor.meteoalarm', 'urgency')|upper}}**</font><br>
+          <font color="{{mycolor}}"> **{{state_attr('binary_sensor.meteoalarm', 'urgency')|upper}}**</font><br>
           {% set days = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"] %}
           {% set start = as_timestamp(state_attr('binary_sensor.meteoalarm', 'effective')) %}
           {% set end = as_timestamp(state_attr('binary_sensor.meteoalarm', 'expires')) %}
           <font>Da {{days[start|timestamp_custom('%w')|int]}}{{start|timestamp_custom(' %d alle %H:%M')}}</font>
           a {{days[end|timestamp_custom('%w')|int]}}{{end|timestamp_custom(' %d alle %H:%M')}}</font><br><br>
           **Titolo**<br>
-          <font color= var(--primary-text-color)> {{state_attr('binary_sensor.meteoalarm', 'headline')}} </font><br><br>
+          <font color="{{mycolor}}"> {{state_attr('binary_sensor.meteoalarm', 'headline')}} </font><br><br>
           **Descrizione**<br>
-          <font color= var(--primary-text-color)> {{state_attr('binary_sensor.meteoalarm', 'description')}} </font><br><br>
+          <font color="{{mycolor}}"> {{state_attr('binary_sensor.meteoalarm', 'description')}} </font><br><br>
           **Istruzioni**<br>
-          <font color= var(--primary-text-color)> {{state_attr('binary_sensor.meteoalarm', 'instruction')}} </font><br><br>
+          <font color="{{mycolor}}"> {{state_attr('binary_sensor.meteoalarm', 'instruction')}} </font><br><br>
           [MeteoAlarm]({{state_attr('binary_sensor.meteoalarm', 'web')}}) 
     - type: conditional
       conditions:
@@ -416,25 +425,27 @@ cards:
 
           #### METEOALARM CUSTOM
 
+          {% set mycolor = 'var(--primary-text-color)' %}
+
           {%set day = {'today':'Oggi', 'tomorrow':'Domani'} %}
           {%set color = {'Green':'Verde', 'Yellow':'Gialla', 'Orange':'Arancione', 'Red':'Rossa'} %}
           {%set dict_code={'Green':'1','Yellow':'2','Orange':'3','Red':'4'}%}
-          {%set dict_type={'No-warnings': 'Nessun Avviso','Wind': 'Vento',
-          'Snow/ice': 'Neve-Ghiaccio','Thunderstorms': 'Temporali',
-          'Fog': 'Nebbia','High/temperature': 'Caldo intenso',
-          'Low-temperature': 'Freddo intenso',
-          'Costal-event': 'Eventi Costieri','Forest/fire': 'Incendi bischivi',
-          'Avalanche': 'Valanghe','Rain': 'Pioggia',
-          'Unavailable': 'Non disponibile','Flooding': 'Alluvione',
-          'Rain/flooding': 'Pioggia/Alluvione'}%}
+          {% set dict_type={'No-warnings': 'Nessun Avviso','Wind': 'Vento',
+          'Snow/Ice': 'Neve-Ghiaccio','Thunderstorms': 'Temporali',
+          'Fog': 'Nebbia','Extreme high temperature': 'Caldo intenso',
+          'Extreme low temperature': 'Freddo intenso',
+          'Coastal Event': 'Eventi Costieri','Forestfire': 'Incendi bischivi',
+          'Avalanches': 'Valanghe','Rain': 'Pioggia',
+          'Unavailable': 'Non disponibile','Flood': 'Alluvione',
+          'Rain-Flood': 'Pioggia-Alluvione'} %}
           {%set type={'No-warnings': '0','Wind': '1',
           'Snow/ice': '2','Thunderstorms': '3',
-          'Fog': '4','High/temperature': '5',
-          'Low-temperature': '6',
-          'Costal-event': '7','Forest/fire': '8',
-          'Avalanche': '9','Rain': '10',
-          'Unavailable': '11','Flooding': '12',
-          'Rain/flooding': '13'}%}
+          'Fog': '4','Extreme high temperature': '5',
+          'Extreme low temperature': '6',
+          'Coastal Event': '7','Forestfire': '8',
+          'Avalanches': '9','Rain': '10',
+          'Unavailable': '11','Flood': '12',
+          'Rain-Flood': '13'}%}
           {%- if not is_state('sensor.meteoalarm_custom', '0') -%}
             {%- for s  in ['today', 'tomorrow'] -%}
               {%- set v = state_attr('sensor.meteoalarm_custom', s) -%}
@@ -442,10 +453,10 @@ cards:
                   {%- for d  in v %}
                   {% set l = dict_code[d['code']] %}
                   {% set t = type[d['event']] %}
-          **{{day[s]}}:** <img src="https://www.meteoalarm.eu/documents/rss/wflag-l{{'0' if not l else l.split(';')[0]}}-t{{'0' if not t else t.split(';')[0]}}.jpg"> <font color= {{d['code']}}>**{{dict_type[d['event']]}}** </font>
-          **Allerta:** <font color= {{d['code']}}><ha-icon icon="{{'mdi:numeric-'~dict_code[d['code']]~'-box'}}" style="width: 36px; height: 36px;"></ha-icon>{{color[d['code']]}}</font><br>
-          Descrizione: <font color= var(--primary-text-color)>{{d['italiano']}}</font><br>
-          Data: <font color= var(--primary-text-color)>{{d['start']|trim("CEST")|replace('.','/')}} - {{d['end']|trim("CEST")|replace('.','/')}}</font><br>
+          **{{day[s]}}:** <img src="https://www.meteoalarm.eu/documents/rss/wflag-l{{'0' if not l else l.split(';')[0]}}-t{{'0' if not t else t.split(';')[0]}}.jpg"> <font color="{{d['code']}}">**{{dict_type[d['event']]}}** </font>
+          **Allerta:** <font color="{{d['code']}}"><ha-icon icon="{{'mdi:numeric-'~dict_code[d['code']]~'-box'}}" style="width: 36px; height: 36px;"></ha-icon>{{color[d['code']]}}</font><br>
+          Descrizione: <font color="{{mycolor}}">{{d['italiano']}}</font><br>
+          Data: <font color="{{mycolor}}">{{d['start']|trim("CEST")|replace('.','/')}} - {{d['end']|trim("CEST")|replace('.','/')}}</font><br>
                   {%- endfor -%}
                 {%- endif -%}
             {%- endfor -%}
@@ -464,7 +475,7 @@ cards:
         cards:
         - type: markdown
           style: |
-            ha-card {background: none; border-radius: 0px; box-shadow: none; color: var(--secondary-text-color);}
+            ha-card {background: none; border-radius: 0px; box-shadow: none;}
           content: >-
             ___
 
@@ -482,12 +493,12 @@ cards:
               {%- set color = code[state_attr('binary_sensor.lastquake', 'level')|int] -%}
               {%- set lat = state_attr(entityid, 'lat') -%}
               {%- set long = state_attr(entityid, 'long') -%}
-            <font color= var(--primary-text-color)>
+            <font>
 
-            **<font color={{color}}>{{as_timestamp(data_utc)|timestamp_custom ('%H:%M:%S del %d/%m/%Y')}}</font>**<br><br>
-            Un terremoto di magnitudo **<font color={{color}}>{{magnitudo}}</font>**<br>
+            **<font color="{{color}}">{{as_timestamp(data_utc)|timestamp_custom ('%H:%M:%S del %d/%m/%Y')}}</font>**<br><br>
+            Un terremoto di magnitudo **<font color="{{color}}">{{magnitudo}}</font>**<br>
             è avvenuto nella zona: [{{state_attr(entityid, 'region')}}](http://maps.google.com/maps?z=8&q=loc:{{lat}}+{{long}})<br>
-            a <font color={{color}}>**{{state_attr(entityid, 'distance')}}**</font> km da casa,<br>
+            a <font color="{{color}}">**{{state_attr(entityid, 'distance')}}**</font> km da casa,<br>
             con coordinate geografiche (lat, long) {{lat}},{{long}}.<br>
             {{("Tu ti trovi a " ~ distance(lat, long, person)) ~ " km dall'epicentro." if is_state(person, 'not_home') else ''}}
             </font>
@@ -515,7 +526,7 @@ cards:
             type: markdown
             entity_id: this.entity_id
             style: |
-              ha-card {background: none; border-radius: 0px; box-shadow: none; color: var(--secondary-text-color);}
+              ha-card {background: none; border-radius: 0px; box-shadow: none;}
             content: >-
               <center>
               <img src="http://terremoti.ingv.it/favicon.ico" width="16"/> 
@@ -524,11 +535,11 @@ cards:
               {% set url2 = "https://e.hsit.it/{}/{}_{}.jpg" %}
               {% set code = {1:'White', 2:'Green', 3:'Yellow', 4:'Orange', 5:'Red'} %}
               {% for e in config.entities %} {% set id = state_attr(e.entity, 'event_id') %}<br>
-              <font color= var(--primary-text-color)>
-              <font color = var(--disabled-text-color)>{{state_attr(e.entity, 'publication_date').strftime("%d/%m %H:%M") }}</font>
-              <font color = {{code[state_attr(e.entity, 'magnitude')|int]}}>
+
+              <font color="var(--disabled-text-color)">{{state_attr(e.entity, 'publication_date').strftime("%d/%m %H:%M") }}</font>
+              <font color="{{code[state_attr(e.entity, 'magnitude')|int]}}">
               <ha-icon icon="{{state_attr(e.entity, 'icon')}}"></ha-icon></font> {{state_attr(e.entity, 'friendly_name')}} 🏡➡ {{states(e.entity)}} Km
-              </font>
+
               {% if state_attr(e.entity, 'magnitude') >= 3 %}
               <center> 
               <a href="{{state_attr(e.entity, 'image_url')}}"> <img src="{{state_attr(e.entity, 'image_url')}}" height="50"></a>
@@ -563,14 +574,16 @@ cards:
 
           #### GDACS
 
+          {% set mycolor = 'var(--primary-text-color)' %}
+
           {% for state in states.geo_location %}
           {% if state.attributes.source=="gdacs" %}
           <font color="{{ state.attributes.alert_level }}"><ha-icon icon="{{ state.attributes.icon }}"></ha-icon> **{{ state.name }}</font>**
 
-          Descrizione: <font color= var(--primary-text-color)>{{ state.attributes.description }}</font>
+          Descrizione: <font color="{{mycolor}}">{{ state.attributes.description }}</font>
 
-          *Rilasciato: <font color= var(--primary-text-color)>{{ state.attributes.from_date.strftime("%d.%m.%Y %H:%M") }}*</font>
-          *Fine: <font color= var(--primary-text-color)>{{ state.attributes.to_date.strftime("%d.%m.%Y %H:%M") }}*</font>
+          *Rilasciato: <font color="{{mycolor}}">{{ state.attributes.from_date.strftime("%d.%m.%Y %H:%M") }}*</font>
+          *Fine: <font color="{{mycolor}}">{{ state.attributes.to_date.strftime("%d.%m.%Y %H:%M") }}*</font>
           {% endif %}
           {% endfor %}
 #################################################################
@@ -604,6 +617,7 @@ cards:
     state_image:
       "Nuvole e Sole": https://api.sat24.com/animated/IT/visual/3/
       "Nuvole Infrared": https://api.sat24.com/animated/IT/infraPolair/3/ 
+      "Temperatura Nuvole Infrared": https://www.meteo60.fr/satellites/animation-satellite-ir-france.gif
       "Pioggia": https://api.sat24.com/animated/IT/rainTMC/3/
       "Neve": https://api.sat24.com/animated/EU/snow/3/
       "Il Meteo": http://cdn-radar.ilmeteo.it/italy.gif
@@ -679,3 +693,31 @@ cards:
     aspect_ratio: 100%
     url: 'http://map.blitzortung.org/#5.11/42.5/12.51' # Il Centro geografico d'Italia
 #             <img src="http://terremoti.ingv.it/images/ingv_logo_colore.png" background="white"/><br>
+- type: conditional # Radareu
+  conditions:
+    - entity: input_select.meteo_iframe
+      state: 'Radareu'
+  card: 
+    type: iframe
+    style: |
+      ha-card {
+        border-radius: var(--ha-card-border-radius);
+        border: solid 1px var(--accent-color); 
+        margin: 16px;
+      }
+    aspect_ratio: 100%
+    url: 'http://www.radareu.cz/?lng=uk&core'
+- type: conditional # Volcanodiscovery
+  conditions:
+    - entity: input_select.meteo_iframe
+      state: 'Volcanodiscovery'
+  card: 
+    type: iframe
+    style: |
+      ha-card {
+        border-radius: var(--ha-card-border-radius);
+        border: solid 1px var(--accent-color); 
+        margin: 16px;
+      }
+    aspect_ratio: 100%
+    url: 'https://earthquakes.volcanodiscovery.com/?L=12&zoom=6&lat=41&lon=13&minMag=3'
