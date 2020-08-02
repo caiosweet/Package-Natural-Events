@@ -14,41 +14,41 @@ homeassistant:
     ## CUSTOMIZE NODE ANCHORS
     ########################################################################
     package.node_anchors:
+    ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
+    setting:
+      SCRIPT centro notifiche: &script script.natural_events_notifications #script.my_notify 
+      SERVIZIO Notify: &notify 'notify.telegram' # or 'telegram'
+      MEDIA PLAYER Google: &media_player_google 'media_player.red'
+      MEDIA PLAYER Alexa: &media_player_alexa ''
+    filter:
+      RAGGIO ZONA MeteoAlert metri: &radius_meteoalert 25000
+      RAGGIO ZONA GeoAlert metri: &radius_geoalert 1000000
+      RAGGIO TERREMOTO km: &radius_quake 1000
+      MAGNITUDO minimo: &magnitude 3
+      RAGGIO BURZE km: &radius_burze 25
+    secret: # Oppure inserire i dati direttamente al posto di !secret etcetc
+      LATITUDINE per le zone: &latitude !secret latitude_home
+      LONGITUDINE per le zone: &longitude !secret longitude_home
+      REGIONE MeteoAlaram: &province !secret regione 
+      ID Meteoalarm Custom: &meteoalarm_custom_id !secret meteoalarm_custom_id
+      ISTAT DPC: &istat !secret istat
+      API KEY Burze: &burze_api_key !secret burze_api_key
+  ##--------------------- FINE IMPOSTAZIONI PACKAGE ---------------------##
+
+############################################################################
+##                               CUSTOMIZE
+############################################################################
       customize: &customize
         package: 'Natural_events'
         author: 'Caio & Gianpi'
         webpage: 'www.hassiohelp.eu'
-        version: '3.3'
+        version: '3.4'
 
       expose: &expose
         <<: *customize
         haaska_hidden: false
         homebridge_hidden: false
 
-    ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
-      setting:
-        SCRIPT centro notifiche: &script script.natural_events_notifications #script.my_notify 
-        SERVIZIO Notify: &notify 'notify.telegram' # or 'telegram'
-        MEDIA PLAYER Google: &media_player_google 'media_player.red'
-        MEDIA PLAYER Alexa: &media_player_alexa ''
-      filter:
-        RAGGIO ZONA MeteoAlert metri: &radius_meteoalert 25000
-        RAGGIO ZONA GeoAlert metri: &radius_geoalert 1000000
-        RAGGIO TERREMOTO km: &radius_quake 1000
-        MAGNITUDO minimo: &magnitude 3
-        RAGGIO BURZE km: &radius_burze 25
-      secret: # Oppure inserire i dati direttamente al posto di !secret etcetc
-        LATITUDINE per le zone: &latitude !secret latitude_home
-        LONGITUDINE per le zone: &longitude !secret longitude_home
-        REGIONE MeteoAlaram: &province !secret regione 
-        ID Meteoalarm Custom: &meteoalarm_custom_id !secret meteoalarm_custom_id
-        ISTAT DPC: &istat !secret istat
-        API KEY Burze: &burze_api_key !secret burze_api_key
-    ##--------------------- FINE IMPOSTAZIONI PACKAGE ---------------------##
-
-############################################################################
-##                               CUSTOMIZE
-############################################################################
   ## Automation
     automation.natural_events_burze_notifications:
       <<: *customize
@@ -179,6 +179,13 @@ geo_location:
   - platform: ingv_centro_nazionale_terremoti
     radius: *radius_quake
     minimum_magnitude: *magnitude
+
+  - platform: usgs_earthquakes_feed
+    feed_type: 'past_day_all_earthquakes'
+    radius: *radius_quake
+    minimum_magnitude: *magnitude
+    # latitude: *latitude
+    # longitude: *longitude
 #-------------------------------------
 # ZONE 
 #-------------------------------------
@@ -204,6 +211,7 @@ input_select:
       - Nessuna
   meteo_map:
     options:
+      - Temperatura Nuvole Infrared
       - Nuvole Infrared
       - Nuvole e Sole
       - Pioggia
@@ -221,6 +229,8 @@ input_select:
       - Windy Alert
       - Protezione Civile
       - Blitzortung
+      - Radareu
+      - Volcanodiscovery
       - Nessuna
 input_boolean:
   natural_events:
@@ -568,7 +578,7 @@ automation:
         data_template:
           call_no_annuncio: 1
           title: >-
-            Burze -
+            Burze ↯
             {% if trigger.from_state.state == 'off' %}
             {{ trigger.to_state.attributes.friendly_name }}.
             {% else %} AGGIORNAMENTO TEMPORALE. {% endif %}
@@ -695,7 +705,7 @@ automation:
       entity_id: sensor.meteoalarm_custom
     condition:
       - condition: template
-        value_template: "{{ not is_state('sensor.meteoalarm_custom', '0') }}" #TODO camnbio data
+        value_template: "{{ not is_state('sensor.meteoalarm_custom', '0') }}"
     action:
       - service: *script
         data_template:
@@ -707,12 +717,12 @@ automation:
             {% set color = {'Green':['🟢','Verde'], 'Yellow':['🟡','Gialla'], 'Orange':['🟠','Arancione'], 'Red':['🔴','Rossa']} %}
             {% set dict_type={
               'No-warnings': ['❌','Nessun Avviso'],'Wind': ['🌬','Vento'],
-              'Snow-ice': ['🌨','Neve-Ghiaccio'],'Thunderstorms': ['⚡','Temporali'],
-              'Fog': ['🌫','Nebbia'],'High-temperature': ['🌡','Caldo intenso'],
-              'Low-temperature': ['❄','Freddo intenso'], 'Costal-event': ['🏖','Eventi Costieri'],
-              'Forest-fire': ['🔥🌲','Incendi bischivi'], 'Avalanche': ['🏔','Valanghe'],
+              'Snow/Ice': ['🌨','Neve-Ghiaccio'],'Thunderstorms': ['⚡','Temporali'],
+              'Fog': ['🌫','Nebbia'],'Extreme high temperature': ['🌡','Caldo intenso'],
+              'Extreme low temperature': ['❄','Freddo intenso'], 'Coastal Event': ['⚓','Eventi Costieri'],
+              'Forestfire': ['🔥🌲','Incendi bischivi'], 'Avalanches': ['🏔','Valanghe'],
               'Rain': ['🌧','Pioggia'], 'Unavailable': ['❌','Non disponibile'],
-              'Flooding': ['🌊','Alluvione'], 'Rain-flooding': ['💧🌊','Pioggia-Alluvione']} %}
+              'Flood': ['🌊','Alluvione'], 'Rain-Flood': ['💧🌊','Pioggia-Alluvione']} %}
             {%- for s  in ['today', 'tomorrow'] %}
             {%- set v = state_attr('sensor.meteoalarm_custom', s) %}
             {%- if v %}
@@ -731,13 +741,13 @@ automation:
             {% set day = {'today':'Oggi', 'tomorrow':'Domani'} %}
             {% set color = {'Green':'Verde', 'Yellow':'Gialla', 'Orange':'Arancione', 'Red':'Rossa'} %}
             {% set dict_type={'No-warnings': 'Nessun Avviso','Wind': 'Vento',
-              'Snow-ice': 'Neve-Ghiaccio','Thunderstorms': 'Temporali',
-              'Fog': 'Nebbia','High-temperature': 'Caldo intenso',
-              'Low-temperature': 'Freddo intenso',
-              'Costal-event': 'Eventi Costieri','Forest-fire': 'Incendi bischivi',
-              'Avalanche': 'Valanghe','Rain': 'Pioggia',
-              'Unavailable': 'Non disponibile','Flooding': 'Alluvione',
-              'Rain-flooding': 'Pioggia-Alluvione'} %}
+              'Snow/Ice': 'Neve-Ghiaccio','Thunderstorms': 'Temporali',
+              'Fog': 'Nebbia','Extreme high temperature': 'Caldo intenso',
+              'Extreme low temperature': 'Freddo intenso',
+              'Coastal Event': 'Eventi Costieri','Forestfire': 'Incendi bischivi',
+              'Avalanches': 'Valanghe','Rain': 'Pioggia',
+              'Unavailable': 'Non disponibile','Flood': 'Alluvione',
+              'Rain-Flood': 'Pioggia-Alluvione'} %}
             {% set today = state_attr('sensor.meteoalarm_custom', 'today')|list %}
             {% set tomorrow = state_attr('sensor.meteoalarm_custom', 'tomorrow')|list %}
             ATTENZIONE.
@@ -759,6 +769,7 @@ automation:
 #----------------------------------------------------------------------------------------------------#
 # GEO LOCATION - Notifica Terremoti
 #----------------------------------------------------------------------------------------------------#
+  # INGV
   - id: natural_events_quake_notifications
     alias: natural_events_quake_notifications
     mode: queued
@@ -772,6 +783,12 @@ automation:
       - condition: template
         value_template: >
           {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.publication_date))/3600*60)|int < 60 }}
+      # - condition: template # Not trigger on home assistant startup
+      #   value_template: >
+      #     {{(as_timestamp(now()) - as_timestamp(states.automation.natural_events_startup.attributes.last_triggered | default(0))) | int > 15}}
+      # - condition: numeric_state
+      #   entity_id: sensor.ha_uptime # https://www.home-assistant.io/integrations/uptime/
+      #   above: 1
     action:
       - service: homeassistant.update_entity
         entity_id: binary_sensor.shakemap
@@ -791,8 +808,8 @@ automation:
             {% endif %}
           message_tts: >-
             Rilevato terremoto a {{trigger.to_state.state}} km.
-            Epicentro, {{trigger.to_state.attributes.region}}.
-            Magnitudo, {{trigger.to_state.attributes.magnitude}}.
+            Epicentro {{trigger.to_state.attributes.region}}.
+            Magnitudo {{trigger.to_state.attributes.magnitude}}.
           url: >-
             {% if is_state('binary_sensor.shakemap', 'on') %}
             {{trigger.to_state.attributes.image_url}}
@@ -800,6 +817,49 @@ automation:
           media_player_google: *media_player_google
           media_player_alexa: *media_player_alexa
           notify: *notify
+  # USGS
+  - id: natural_events_quake_notifications_usgs
+    alias: natural_events_quake_notifications_usgs
+    mode: queued
+    initial_state: true
+    trigger:
+      - platform: geo_location
+        source: usgs_earthquakes_feed
+        zone: zone.geoalert
+        event: enter
+    condition:
+      - condition: template
+        value_template: >
+          {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.time))/3600*60)|int < 60 }}
+      # - condition: template # Not trigger on home assistant startup
+      #   value_template: >
+      #     {{(as_timestamp(now()) - as_timestamp(states.automation.natural_events_startup.attributes.last_triggered | default(0))) | int > 15}}
+      # - condition:
+      #   value_template: >
+      #     {{ trigger.to_state.attributes.type == 'earthquake' }}
+    action:
+      - service: *script
+        data_template:
+          call_no_annuncio: 1
+          title: >-
+            USGS - Rilevato terremoto. Epicentro: {{ trigger.to_state.attributes.place }}
+          message: >-
+            {% set data_utc = trigger.to_state.attributes.time %}
+            Rilevato terremoto di magnitudo: {{trigger.to_state.attributes.magnitude}} 
+            a una distanza di {{ trigger.to_state.state }} Km da casa. 
+            Epicentro: {{ trigger.to_state.attributes.place }}
+            {{as_timestamp(data_utc)|timestamp_custom ('Data %d/%m/%Y Ore %H:%M:%S')}}
+            [LINK MAPPE](https://earthquake.usgs.gov/earthquakes/eventpage/{{trigger.to_state.attributes.external_id}}/executive)
+          message_tts: >-
+            Evento sismico a {{trigger.to_state.state}} km.
+            Epicentro {{trigger.to_state.attributes.place}}.
+            Magnitudo {{trigger.to_state.attributes.magnitude}}.
+          # url: >-
+          #   https://earthquake.usgs.gov/realtime/product/dyfi/{{trigger.to_state.attributes.external_id}}/us/NUMERO IGNOTO/{{trigger.to_state.attributes.external_id}}_ciim_geo.jpg
+          media_player_google: *media_player_google
+          media_player_alexa: *media_player_alexa
+          notify: *notify
+
 #----------------------------------------------------------------------------------------------------#
 # GEO LOCATION - Notifica GDACS # Global Disaster Alert and Coordination System
 #                               # Sistema di allarme e coordinamento globale per le catastrofi
