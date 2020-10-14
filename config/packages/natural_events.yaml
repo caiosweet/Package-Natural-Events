@@ -1,6 +1,6 @@
 ### INFO
   #   @author         :   Caio & Gianpi - www.hassiohelp.eu
-  #   @date           :   01/08/2019
+  #   @date           :   01/08/2019 - update 09/10/2020
   #   @package        :   Natural_events
   #   @description    :   Information provided by MeteoAlarm, Burze, GDACS, DPC and INGV Italy
   ##########################################################################
@@ -16,23 +16,27 @@ homeassistant:
     package.node_anchors:
     ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
       setting:
-        SCRIPT centro notifiche: &script script.natural_events_notifications #script.my_notify 
-        SERVIZIO Notify: &notify 'notify.telegram' # or 'telegram'
-        MEDIA PLAYER Google: &media_player_google 'media_player.red'
-        MEDIA PLAYER Alexa: &media_player_alexa ''
+        # ⚓ SCRIPT centro notifiche: &script script.natural_events_notifications 
+        ⚓SCRIPT centro notifiche: &script script.my_notify 
+        ⚓SERVIZIO Notify: &notify 'telegram'
+        ⚓MEDIA PLAYER Google: &media_player_google 'media_player.red'
+        ⚓MEDIA PLAYER Alexa: &media_player_alexa 'media_player.studio'
+        # Orario di riproduzione messaggi TTS (script.natural_events_notifications)
+        ⚓DOPO LE: &after '07:00:00'
+        ⚓PRIMA DELLE: &before '23:00:00'
       filter:
-        RAGGIO ZONA MeteoAlert metri: &radius_meteoalert 25000
-        RAGGIO ZONA GeoAlert metri: &radius_geoalert 1000000
-        RAGGIO TERREMOTO km: &radius_quake 1000
-        MAGNITUDO minimo: &magnitude 3
-        RAGGIO BURZE km: &radius_burze 25
+        ⚓RAGGIO ZONA MeteoAlert metri: &radius_meteoalert 25000
+        ⚓RAGGIO ZONA GeoAlert metri: &radius_geoalert 1000000
+        ⚓RAGGIO TERREMOTO km: &radius_quake 1000
+        ⚓MAGNITUDO minimo: &magnitude 2
+        ⚓RAGGIO BURZE km: &radius_burze 25
       secret: # Oppure inserire i dati direttamente al posto di !secret etcetc
-        LATITUDINE per le zone: &latitude !secret latitude_home
-        LONGITUDINE per le zone: &longitude !secret longitude_home
-        REGIONE MeteoAlaram: &province !secret regione 
-        ID Meteoalarm Custom: &meteoalarm_custom_id !secret meteoalarm_custom_id
-        ISTAT DPC: &istat !secret istat
-        API KEY Burze: &burze_api_key !secret burze_api_key
+        ⚓LATITUDINE per le zone: &latitude !secret latitude_home
+        ⚓LONGITUDINE per le zone: &longitude !secret longitude_home
+        ⚓REGIONE MeteoAlaram: &province !secret regione 
+        ⚓ID Meteoalarm Custom: &meteoalarm_custom_id !secret meteoalarm_custom_id
+        ⚓ISTAT DPC: &istat !secret istat
+        ⚓API KEY Burze: &burze_api_key !secret burze_api_key
     ##--------------------- FINE IMPOSTAZIONI PACKAGE ---------------------##
 
 ############################################################################
@@ -42,7 +46,7 @@ homeassistant:
         package: 'Natural_events'
         author: 'Caio & Gianpi'
         webpage: 'www.hassiohelp.eu'
-        version: '3.5'
+        version: '3.6'
 
       expose: &expose
         <<: *customize
@@ -89,7 +93,6 @@ homeassistant:
       <<: *customize
       friendly_name: Check Shakemap
       icon: mdi:link
-
   ## Group
     group.natural_events:
       <<: *customize
@@ -124,6 +127,9 @@ homeassistant:
       <<: *customize
       friendly_name: Meteo Map
       icon: mdi:tooltip-image
+    input_text.blitzortung:
+      friendly_name: Fulmine più vicino
+      icon: mdi:flash
   ## Sensor
     sensor.meteoalarm_custom:
       <<: *customize
@@ -235,6 +241,8 @@ input_select:
 input_boolean:
   natural_events:
   natural_events_send_image:
+input_text:
+  blitzortung:
 #######################################-#######################################
 ##                                   GROUP
 #######################################-#######################################
@@ -306,12 +314,10 @@ binary_sensor:
     sensors:
       lastquake:
         friendly_name: Evento terremoto
-        entity_id: 
-          - automation.natural_events_quake_notifications
-          - sensor.date
         device_class: vibration
         # availability_template: False
         value_template: >-
+          {% set x = states('sensor.time') %}
           {% set last_date = states.geo_location
             | selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
             | sort(attribute='attributes.publication_date')
@@ -364,18 +370,6 @@ binary_sensor:
       global_natural_alert:
         # availability_template: False
         friendly_name: Eventi Naturali
-        entity_id: 
-          - binary_sensor.burze_storms_nearby
-          - binary_sensor.dpc_temporali_oggi
-          - binary_sensor.dpc_idraulico_oggi
-          - binary_sensor.dpc_idrogeologico_oggi
-          - binary_sensor.dpc_temporali_domani
-          - binary_sensor.dpc_idraulico_domani
-          - binary_sensor.dpc_idrogeologico_domani
-          - binary_sensor.lastquake
-          - binary_sensor.meteoalarm
-          - group.natural_events
-          - sensor.meteoalarm_custom
         device_class: safety
         value_template: >
           {{ is_state('group.natural_events', 'on') 
@@ -517,7 +511,6 @@ sensor:
       ## METEOALARM TEMPLATE TYPE SENSOR
       meteoalarm_type:
         friendly_name: Meteoalarm type
-        entity_id: binary_sensor.global_natural_alert
         value_template: >
           {{state_attr('binary_sensor.global_natural_alert', 'meteoalarm_type')}}
         icon_template: >
@@ -525,7 +518,6 @@ sensor:
       ## METEOALARM TEMPLATE LEVEL SENSOR
       meteoalarm_level:
         friendly_name: Meteoalarm level
-        entity_id: binary_sensor.meteoalarm
         value_template: >
           {{state_attr('binary_sensor.global_natural_alert', 'meteoalarm_level')}}
         icon_template: >
@@ -535,7 +527,7 @@ sensor:
 #######################################-#######################################
 automation:
 #----------------------------------------------------------------------------------------------------#
-# START-UP - natural_events (Crea gruppo di tutti i binary sensor e aggiorna alcuni sensori)
+# START-UP - natural_events (Crea gruppo di tutti i binary sensor e aggiorna alcuni sensori all'avvio)
 #----------------------------------------------------------------------------------------------------#
   - id: natural_events_startup
     alias: natural_events_startup
@@ -549,7 +541,7 @@ automation:
     action:
       - delay: 00:00:15
       - service: group.set
-        data_template:
+        data:
           object_id: geoalert
           add_entities: >
             {{states.sensor|selectattr('name','==','GDACS')|join(',','entity_id')|lower}}
@@ -567,15 +559,15 @@ automation:
     initial_state: true
     trigger:
       platform: state
-      entity_id: 
-        - binary_sensor.burze_storms_nearby
-    condition:
-        - condition: template
-          value_template: "{{ trigger.to_state.state == 'on' and (trigger.from_state.state == 'off' 
-            or trigger.to_state.attributes.distance < trigger.from_state.attributes.distance )}}"
+      entity_id: binary_sensor.burze_storms_nearby
+    condition: >
+      {{ trigger.to_state.state == 'on' and (trigger.from_state.state == 'off' 
+      or trigger.to_state.attributes.distance < trigger.from_state.attributes.distance )}}
+    variables:
+      distance: " {{state_attr('binary_sensor.burze_storms_nearby', 'distance')|default(20,'0')}} "
     action:
       - service: *script
-        data_template:
+        data:
           call_no_annuncio: 1
           title: >-
             Burze ↯
@@ -593,27 +585,32 @@ automation:
             nel raggio di {{(state_attr('zone.meteoalert','radius') //1000)|int}} km.
             La scarica più vicina è avvenuta a {{state_attr('binary_sensor.burze_storms_nearby', 'distance')}} km 
             a {{state_attr('binary_sensor.global_natural_alert','burze_direction')}} da casa.
-          message_tts: >-
+          message_tts: &tts_brurze >-
             {% if trigger.from_state.state == 'off' %} Probabile arrivo di un temporale da {{state_attr('binary_sensor.global_natural_alert','burze_direction')}}. 
             {% else %} 
             Aggiornamento Temporale. Il fulmine più vicino è stato rilevato 
             a {{state_attr('binary_sensor.burze_storms_nearby', 'distance')}} km 
             a {{state_attr('binary_sensor.global_natural_alert','burze_direction')}} da casa.
             {% endif %}
+          alexa: 
+            message_tts: *tts_brurze
+            media_player: *media_player_alexa
+          google:
+            message_tts: *tts_brurze
+            media_player: *media_player_google
           file: >-
             {% if trigger.from_state.state == 'off' and is_state('input_boolean.natural_events_send_image', 'on') %}
             /config/www/hassiohelp/pkg_natural_events/burze.png
             {% else %}
             {% endif %}
-          media_player_google: *media_player_google
-          media_player_alexa: *media_player_alexa
-          notify: *notify
+
 #----------------------------------------------------------------------------------------------------#
 # D. PROTEZIONE CIVILE - Notifica criticità meteo-idro nella provincia impostata - Vedi tabella a fine package
 #----------------------------------------------------------------------------------------------------#
   - id: natural_events_protezione_civile_notifications
     alias: natural_events_protezione_civile_notifications
     mode: queued
+    max_exceeded: silent
     initial_state: true
     trigger:
       platform: state
@@ -624,13 +621,12 @@ automation:
         - binary_sensor.dpc_idrogeologico_domani
         - binary_sensor.dpc_idraulico_domani
         - binary_sensor.dpc_temporali_domani
-    condition:
-      - condition: template
-        value_template: "{{ trigger.to_state.state == 'on' and (trigger.from_state.state == 'off' 
-          or (trigger.to_state.attributes != trigger.from_state.attributes))}}"
+    condition: >-
+      {{ trigger.to_state.state == 'on' and (trigger.from_state.state == 'off' 
+      or (trigger.to_state.attributes != trigger.from_state.attributes))}}
     action:
       - service: *script
-        data_template:
+        data:
           call_no_annuncio: 1
           title: >-
             Protezione Civile - {{trigger.to_state.attributes.rischio}}.
@@ -642,13 +638,20 @@ automation:
             {% set risk = {'Temporali':'⚡', 'idraulico':'💧', 'Idrogeologico':'🌊'} %}
             {{risk[trigger.to_state.attributes.rischio]}} {{ trigger.to_state.attributes.friendly_name }}. 
             {{color[trigger.to_state.attributes.allerta]}} Allerta {{trigger.to_state.attributes.allerta}} {{trigger.to_state.attributes.info}}.
-          message_tts: >-
+          message_tts: &tts_dpc >-
             Attenzione. {{ trigger.to_state.attributes.friendly_name }}. Allerta {{trigger.to_state.attributes.allerta}} {{trigger.to_state.attributes.info}}.
+          alexa: 
+            message_tts: *tts_dpc
+            media_player: *media_player_alexa
+            # audio: >
+            #  <audio src="soundbank://soundlibrary/weather/thunder/thunder_01"/>
+            audio: soundbank://soundlibrary/weather/thunder/thunder_11
+          google: 
+            message_tts: *tts_dpc
+            media_player: *media_player_google
           link: >-
             [Bollettino di criticità]({{trigger.to_state.attributes.link}})
-          media_player_google: *media_player_google
-          media_player_alexa: *media_player_alexa
-          notify: *notify
+
 #----------------------------------------------------------------------------------------------------#
 # METEOALARM - Notifica criticità meteo nella regione impostata - Vedi tabella a fine package
 #----------------------------------------------------------------------------------------------------#
@@ -658,18 +661,17 @@ automation:
     trigger:
       platform: state
       entity_id: binary_sensor.meteoalarm
-    condition:
-      - condition: template
-        value_template: "{{ trigger.to_state.state == 'on' and (trigger.from_state.state == 'off' 
-          or trigger.to_state.attributes != trigger.from_state.attributes)}}"
+    condition: >-
+      {{ trigger.to_state.state == 'on' and (trigger.from_state.state == 'off' 
+      or trigger.to_state.attributes != trigger.from_state.attributes)}}
     action:
       - service: *script
-        data_template:
+        data:
           call_no_annuncio: 1
           title: >-
             MeteoAlarm -
             {% if trigger.from_state.state == 'off' %}
-            {{ trigger.to_state.attributes.urgency }}. 
+            {{ trigger.to_state.attributes.urgency}}. 
             {% else %}AGGIORNAMENTO.{% endif %}
           message: |
             {% set start = state_attr('binary_sensor.meteoalarm', 'effective') %}
@@ -680,13 +682,16 @@ automation:
             Descrizione: {{state_attr('binary_sensor.meteoalarm', 'description')}}
             {{as_timestamp(start)|timestamp_custom('Valido dalle ore %H:%M del %d/%m')}}
             {{as_timestamp(end)|timestamp_custom(' alle ore %H:%M del %d/%m')}}
-          message_tts: >
+          message_tts: &tts_meteoalarm >
             {% set days = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"] %}
-            Attenzione, per {{days[as_timestamp(state_attr('binary_sensor.meteoalarm', 'onset'))|timestamp_custom('%w', true)|int]}}, 
+            oh no! per {{days[as_timestamp(state_attr('binary_sensor.meteoalarm', 'onset'))|timestamp_custom('%w', true)|int]}}, 
             {{state_attr('binary_sensor.meteoalarm', 'headline')}}, {{state_attr('binary_sensor.meteoalarm', 'description')}}
-          media_player_google: *media_player_google
-          media_player_alexa: *media_player_alexa
-          notify: *notify
+          alexa:
+            message_tts: *tts_meteoalarm
+            media_player: *media_player_alexa
+          google:
+            message_tts: *tts_meteoalarm
+            media_player: *media_player_google
           file: >-
             {% if is_state('input_boolean.natural_events_send_image', 'on') %}
             {% set type = state_attr('binary_sensor.meteoalarm', 'awareness_type') %}
@@ -699,16 +704,15 @@ automation:
   - id: natural_events_meteoalarm_custom_notifications
     alias: natural_events_meteoalarm_custom_notifications
     mode: queued
+    max_exceeded: silent
     initial_state: true
     trigger:
       platform: state
       entity_id: sensor.meteoalarm_custom
-    condition:
-      - condition: template
-        value_template: "{{ not is_state('sensor.meteoalarm_custom', '0') }}"
+    condition: "{{ not is_state('sensor.meteoalarm_custom', '0') }}"
     action:
       - service: *script
-        data_template:
+        data:
           call_no_annuncio: 1
           title: >-
             MeteoAlarm Custom
@@ -723,12 +727,12 @@ automation:
               'Forestfire': ['🔥🌲','Incendi bischivi'], 'Avalanches': ['🏔','Valanghe'],
               'Rain': ['🌧','Pioggia'], 'Unavailable': ['❌','Non disponibile'],
               'Flood': ['🌊','Alluvione'], 'Rain-Flood': ['💧🌊','Pioggia-Alluvione']} %}
-            {%- for s  in ['today', 'tomorrow'] %}
+            {%- for s in ['today', 'tomorrow'] %}
             {%- set v = state_attr('sensor.meteoalarm_custom', s) %}
             {%- if v %}
             {{'‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗'}}
             {{day[s]|upper}}
-            {{'¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯'}}
+            {{'¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯'}}
             {%- for d in v %}
             {{color[d['code']][0] + dict_type[d['event']][0] + dict_type[d['event']][1]}} allerta {{color[d['code']][1]}}
             Descrizione: {{d['italiano']}}
@@ -737,7 +741,7 @@ automation:
             {%- endif %}
             {%- endfor %}
           #Orario: {{d['start'].split(' ')[1]}} - {{d['end'].split(' ')[1]}}
-          message_tts: >-
+          message_tts: &tts_meteoalarm_custom >-
             {% set day = {'today':'Oggi', 'tomorrow':'Domani'} %}
             {% set color = {'Green':'Verde', 'Yellow':'Gialla', 'Orange':'Arancione', 'Red':'Rossa'} %}
             {% set dict_type={'No-warnings': 'Nessun Avviso','Wind': 'Vento',
@@ -763,9 +767,13 @@ automation:
             {{-'' if 'Nessun Avviso' in risk['italiano'] else risk['italiano']}}.
             {% endfor %}
             {% endif %}
-          media_player_google: *media_player_google
-          media_player_alexa: *media_player_alexa
-          notify: *notify
+          alexa:
+            message_tts: *tts_meteoalarm_custom 
+            media_player: *media_player_alexa
+          google:
+            message_tts: *tts_meteoalarm_custom
+            media_player: *media_player_google
+
 #----------------------------------------------------------------------------------------------------#
 # GEO LOCATION - Notifica Terremoti
 #----------------------------------------------------------------------------------------------------#
@@ -773,27 +781,20 @@ automation:
   - id: natural_events_quake_notifications
     alias: natural_events_quake_notifications
     mode: queued
+    max_exceeded: silent
     initial_state: true
     trigger:
       - platform: geo_location
         source: 'ingv_centro_nazionale_terremoti'
         zone: zone.geoalert
         event: enter
-    condition:
-      - condition: template
-        value_template: >
-          {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.publication_date))/3600*60)|int < 60 }}
-      # - condition: template # Not trigger on home assistant startup
-      #   value_template: >
-      #     {{(as_timestamp(now()) - as_timestamp(states.automation.natural_events_startup.attributes.last_triggered | default(0))) | int > 15}}
-      # - condition: numeric_state
-      #   entity_id: sensor.ha_uptime # https://www.home-assistant.io/integrations/uptime/
-      #   above: 1
+    condition: >-
+      {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.publication_date))/3600*60)|int < 60}}
     action:
       - service: homeassistant.update_entity
         entity_id: binary_sensor.shakemap
       - service: *script
-        data_template:
+        data:
           call_no_annuncio: 1
           title: >-
             Rilevato terremoto. Epicentro: {{ trigger.to_state.attributes.region }}
@@ -806,40 +807,37 @@ automation:
             {% if trigger.to_state.attributes.image_url and is_state('binary_sensor.shakemap', 'off') %}
             [Immagine]({{trigger.to_state.attributes.image_url}})
             {% endif %}
-          message_tts: >-
+          message_tts: &tts_quake >-
             Rilevato terremoto a {{trigger.to_state.state}} km.
             Epicentro {{trigger.to_state.attributes.region}}.
             Magnitudo {{trigger.to_state.attributes.magnitude}}.
+          alexa:
+            message_tts: *tts_quake
+            media_player: *media_player_alexa
+          google: 
+            message_tts: *tts_quake
+            media_player: *media_player_google
           url: >-
             {% if is_state('binary_sensor.shakemap', 'on') %}
             {{trigger.to_state.attributes.image_url}}
             {% endif %}
-          media_player_google: *media_player_google
-          media_player_alexa: *media_player_alexa
-          notify: *notify
+
   # USGS
   - id: natural_events_quake_notifications_usgs
     alias: natural_events_quake_notifications_usgs
     mode: queued
+    max_exceeded: silent
     initial_state: true
     trigger:
       - platform: geo_location
         source: usgs_earthquakes_feed
         zone: zone.geoalert
         event: enter
-    condition:
-      - condition: template
-        value_template: >
-          {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.time))/3600*60)|int < 60 }}
-      # - condition: template # Not trigger on home assistant startup
-      #   value_template: >
-      #     {{(as_timestamp(now()) - as_timestamp(states.automation.natural_events_startup.attributes.last_triggered | default(0))) | int > 15}}
-      # - condition:
-      #   value_template: >
-      #     {{ trigger.to_state.attributes.type == 'earthquake' }}
+    condition: >
+      {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.time))/3600*60)|int < 60}}
     action:
       - service: *script
-        data_template:
+        data:
           call_no_annuncio: 1
           title: >-
             USGS - Rilevato terremoto. Epicentro: {{ trigger.to_state.attributes.place }}
@@ -850,15 +848,16 @@ automation:
             Epicentro: {{ trigger.to_state.attributes.place }}
             {{as_timestamp(data_utc)|timestamp_custom ('Data %d/%m/%Y Ore %H:%M:%S')}}
             [LINK MAPPE](https://earthquake.usgs.gov/earthquakes/eventpage/{{trigger.to_state.attributes.external_id}}/executive)
-          message_tts: >-
+          message_tts: &tts_usgs >-
             Evento sismico a {{trigger.to_state.state}} km.
             Epicentro {{trigger.to_state.attributes.place}}.
             Magnitudo {{trigger.to_state.attributes.magnitude}}.
-          # url: >-
-          #   https://earthquake.usgs.gov/realtime/product/dyfi/{{trigger.to_state.attributes.external_id}}/us/NUMERO IGNOTO/{{trigger.to_state.attributes.external_id}}_ciim_geo.jpg
-          media_player_google: *media_player_google
-          media_player_alexa: *media_player_alexa
-          notify: *notify
+          alexa:
+            message_tts: *tts_usgs
+            media_player: *media_player_alexa
+          google:
+            message_tts: *tts_usgs
+            media_player: *media_player_google
 
 #----------------------------------------------------------------------------------------------------#
 # GEO LOCATION - Notifica GDACS # Global Disaster Alert and Coordination System
@@ -867,19 +866,18 @@ automation:
   - id: natural_events_gdacs_notifications
     alias: natural_events_gdacs_notifications
     mode: queued
+    max_exceeded: silent
     initial_state: true
     trigger:
       - platform: geo_location
         source: 'gdacs'
         zone: zone.geoalert
         event: enter
-    condition:
-      - condition: template
-        value_template: >
-          {{as_timestamp(trigger.to_state.attributes.to_date) > as_timestamp(utcnow()) or trigger.to_state.attributes.alert_level != 'Green' }}
+    condition: >
+      {{as_timestamp(trigger.to_state.attributes.to_date) > as_timestamp(utcnow()) or trigger.to_state.attributes.alert_level != 'Green' }}
     action:
       - service: *script
-        data_template:
+        data:
           call_no_annuncio: 1
           title: >-
             {% set event = {'Earthquake':'Terremoto','Tropical cyclone':'Ciclone tropicale','Flood':'Inondazione','Volcano':'Vulcano','Drought':'Siccità'}%}
@@ -890,12 +888,16 @@ automation:
             Descrizione: {{ trigger.to_state.attributes.description }}
             Rilasciato: {{ '-' if not trigger.to_state.attributes.from_date else as_timestamp(trigger.to_state.attributes.from_date)|timestamp_custom("%d.%m.%Y %H:%M") }}
             Fine: {{ '-' if not trigger.to_state.attributes.to_date else as_timestamp(trigger.to_state.attributes.to_date)|timestamp_custom("%d.%m.%Y %H:%M") }}
-          message_tts: >-
+          message_tts: &tts_gdacs >-
             {% set event = {'Earthquake':'Terremoto','Tropical cyclone':'Ciclone tropicale','Flood':'Inondazione','Volcano':'Vulcano','Drought':'Siccità'}%}
             Avviso di disastro globale: {{ event[trigger.to_state.attributes.event_type] }}
-          media_player_google: *media_player_google
-          media_player_alexa: *media_player_alexa
-          notify: *notify
+          alexa:
+            message_tts: *tts_gdacs
+            media_player: *media_player_alexa
+          google:
+            message_tts: *tts_gdacs
+            media_player: *media_player_google
+
 #######################################-#######################################
 ##                                  SCRIPT
 #######################################-#######################################
@@ -903,97 +905,62 @@ script:
   natural_events_notifications:
     alias: Notifiche Geo Meteo Alert 
     mode: queued
+    max_exceeded: silent
     sequence:
-    - choose:
-        - conditions: # URL IMAGE + TESTO
-            - condition: template
-              value_template: "{{ url|length > 1 and notify|length > 1 }}"
+    - variables:
+        google: *media_player_google
+        alexa: *media_player_alexa
+        notify: *notify
+        message_tts: "{{message_tts|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}"
+        notify_service: "{{'' if '.' in notify else 'notify.'}}{{notify|replace(' ','_')}}"
+    - choose: # URL/FILE IMAGE + TEXT
+        - conditions:
+            - "{{(file|length > 1 or url|length > 1) and notify|length > 1}}"
           sequence:
-          - service_template: >-
-              {{'' if '.' in notify else 'notify.'}}{{notify|replace(' ','_')}}
-            data_template:
-              title: >
-                {{ title }}
-              message: >
-                {{message}}
+          - service: "{{notify_service}}"
+            data: 
+              title: "{{title}}"
+              message: "{{message}}"
               data:
                 photo:
-                  - url: >-
-                      {{url}}
+                  - "{{'url' if url else 'file'}}": "{{url if url else file}}"
                     caption: |
                       {{title}}
                       {{message}}
-        - conditions: # FILE IMAGE + TESTO
-            - condition: template
-              value_template: "{{ file|length > 1 and notify|length > 1 }}"
-          sequence:
-          - service_template: >-
-                {{'' if '.' in notify else 'notify.'}}{{notify|replace(' ','_')}}
-            data_template:
-              title: >
-                {{ title }}
-              message: >
-                {{message}}
+      default: # TEXT
+        - service: "{{notify_service}}"
+          data:
+            title: "{{title}}"
+            message: "{{message}}"
+    - choose: # AUDIO (DND)
+      - conditions:
+        - condition: time
+          after: *after
+          before: *before
+        - "{{message_tts|length > 1}}"
+        sequence:
+        - choose: # GOOGLE
+          - conditions: "{{google|length > 1}}"
+            sequence:
+            - service: tts.google_translate_say
               data:
-                photo:
-                  - file: >-
-                      {{file}}
-                    caption: |
-                      {{title}}
-                      {{message}}
-      default: # SOLO TESTO
-        - service_template: >-
-              {{'' if '.' in notify else 'notify.'}}{{notify|replace(' ','_')}}
-          data_template:
-            title: >
-              {{ title }}
-            message: >
-              {{message}}
-
-    # AUDIO
-    - condition: time
-      after: '07:00:00'
-      before: '23:00:00'
-    - condition: template
-      value_template: >
-        {{message_tts | length > 1}}
-
-    - service_template: >-
-        {% if media_player_google | length > 1 %}
-          tts.google_translate_say
-        {% else %}
-          script.no_service
-        {% endif %}
-      data_template:
-        entity_id: >-
-          {{media_player_google}}
-        message: >
-          {{message_tts|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
-
-    - service_template: >-
-        {% if media_player_alexa | length > 1  %}
-          notify.alexa_media
-        {% else %}
-          script.no_service
-        {% endif %}
-      data_template:
-        target: >-
-          {{media_player_alexa}}
-        message: >
-          {{message_tts|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}
-        data:
-          type: tts
-    # Calcolo semplice e approssimativo del tempo di riproduzione TTS tra un messaggio ed il successivo
-    - delay:
-          # Per google si può utilizzare anche l'attributo media_duration
-          # per evitare un delay, si può utilizzare un'altra tecnica (timer)
+                entity_id: "{{google}}"
+                message: "{{message_tts}}"
+        - choose: # ALEXA
+          - conditions: "{{alexa|length > 1}}"
+            sequence:
+            - service: notify.alexa_media
+              data:
+                target: "{{alexa}}"
+                message: "{{message_tts}}"
+                data:
+                  type: tts
+        - delay:
+            seconds: "{{message_tts|wordcount // 2+2}}"
+          # Calcolo semplice e approssimativo del tempo di riproduzione TTS tra un messaggio ed il successivo
+            # Per google si può utilizzare anche l'attributo media_duration
+            # per evitare un delay, si può utilizzare un'altra tecnica (timer)
             # vedi https://github.com/caiosweet/notification-hub/blob/master/package/centro_notifiche/hub_alexa.yaml#L347
-        seconds: "{{ message_tts|wordcount // 2+2 }}"
-
-  no_service:
-    alias: NO Service 
-    # mode: restart
-    sequence: []
 
 #######################################-#######################################
 ##                                  LEGEND
