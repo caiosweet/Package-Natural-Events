@@ -21,7 +21,7 @@ homeassistant:
         ⚓SERVIZIO Notify: &notify 'telegram'
         ⚓MEDIA PLAYER Google: &media_player_google 'media_player.red'
         ⚓MEDIA PLAYER Alexa: &media_player_alexa 'media_player.studio'
-        # Orario di riproduzione messaggi TTS (script.natural_events_notifications)
+        # Orario di riproduzione messaggi TTS (Per script.natural_events_notifications)
         ⚓DOPO LE: &after '07:00:00'
         ⚓PRIMA DELLE: &before '23:00:00'
       filter:
@@ -47,7 +47,6 @@ homeassistant:
         author: 'Caio & Gianpi'
         webpage: 'www.hassiohelp.eu'
         version: '3.6'
-
       expose: &expose
         <<: *customize
         haaska_hidden: false
@@ -127,9 +126,6 @@ homeassistant:
       <<: *customize
       friendly_name: Meteo Map
       icon: mdi:tooltip-image
-    input_text.blitzortung:
-      friendly_name: Fulmine più vicino
-      icon: mdi:flash
   ## Sensor
     sensor.meteoalarm_custom:
       <<: *customize
@@ -164,7 +160,6 @@ homeassistant:
       <<: *customize
       friendly_name: GDACS
       unit_of_measurement: eventi
-
 #######################################-#######################################
 ##                                 COMPONENT
 #######################################-#######################################
@@ -206,7 +201,6 @@ zone:
     longitude: *longitude
     radius: *radius_meteoalert
     passive: true
-
 #######################################-#######################################
 ##                                   INPUT
 #######################################-#######################################
@@ -241,8 +235,6 @@ input_select:
 input_boolean:
   natural_events:
   natural_events_send_image:
-input_text:
-  blitzortung:
 #######################################-#######################################
 ##                                   GROUP
 #######################################-#######################################
@@ -490,7 +482,6 @@ binary_sensor:
             {% set lev3 = '0' if not custom_code() else custom_code() -%}
             {% set lev_color = [lev1,lev2,lev3]|max %}
             mdi:numeric-{{ lev_color|max }}-box
-
 #######################################-#######################################
 ##                                  SENSOR
 #######################################-#######################################
@@ -551,6 +542,7 @@ automation:
         data:
           message: "Successfully start Natural events package."
           level: info
+
 #----------------------------------------------------------------------------------------------------#
 # BURZE.NET Notifica caduti fulmini nel raggio impostato in radius_meteoalert 
 #----------------------------------------------------------------------------------------------------#
@@ -586,7 +578,8 @@ automation:
             La scarica più vicina è avvenuta a {{state_attr('binary_sensor.burze_storms_nearby', 'distance')}} km 
             a {{state_attr('binary_sensor.global_natural_alert','burze_direction')}} da casa.
           message_tts: &tts_brurze >-
-            {% if trigger.from_state.state == 'off' %} Probabile arrivo di un temporale da {{state_attr('binary_sensor.global_natural_alert','burze_direction')}}. 
+            {% if trigger.from_state.state == 'off' %} 
+            Probabile arrivo di un temporale da {{state_attr('binary_sensor.global_natural_alert','burze_direction')}}. 
             {% else %} 
             Aggiornamento Temporale. Il fulmine più vicino è stato rilevato 
             a {{state_attr('binary_sensor.burze_storms_nearby', 'distance')}} km 
@@ -625,21 +618,26 @@ automation:
       {{ trigger.to_state.state == 'on' and (trigger.from_state.state == 'off' 
       or (trigger.to_state.attributes != trigger.from_state.attributes))}}
     action:
+      - variables:
+          name: "{{trigger.to_state.attributes.friendly_name}}"
+          rischio: "{{trigger.to_state.attributes.rischio}}"
+          allerta: "{{trigger.to_state.attributes.allerta}}"
+          info: "{{trigger.to_state.attributes.info}}"
       - service: *script
         data:
           call_no_annuncio: 1
           title: >-
-            Protezione Civile - {{trigger.to_state.attributes.rischio}}.
+            Protezione Civile - {{rischio}}
             {% if trigger.from_state.state == 'on' %}
-            AGGIORNAMENTO.
+            AGGIORNAMENTO
             {% endif %}
           message: |
             {% set color = {'VERDE':'🟢', 'GIALLA':'🟡', 'ARANCIONE':'🟠', 'ROSSA':'🔴'} %}
-            {% set risk = {'Temporali':'⚡', 'idraulico':'💧', 'Idrogeologico':'🌊'} %}
-            {{risk[trigger.to_state.attributes.rischio]}} {{ trigger.to_state.attributes.friendly_name }}. 
-            {{color[trigger.to_state.attributes.allerta]}} Allerta {{trigger.to_state.attributes.allerta}} {{trigger.to_state.attributes.info}}.
+            {% set risk = {'Temporali':'⚡', 'Idraulico':'💧', 'Idrogeologico':'🌊'} %}
+            {{risk[rischio]}} {{name}}. 
+            {{color[allerta]}} Allerta {{allerta}} {{info}}.
           message_tts: &tts_dpc >-
-            Attenzione. {{ trigger.to_state.attributes.friendly_name }}. Allerta {{trigger.to_state.attributes.allerta}} {{trigger.to_state.attributes.info}}.
+            Attenzione. {{name}}. Allerta {{allerta}} {{info}}.
           alexa: 
             message_tts: *tts_dpc
             media_player: *media_player_alexa
@@ -676,9 +674,11 @@ automation:
           message: |
             {% set start = state_attr('binary_sensor.meteoalarm', 'effective') %}
             {% set end = state_attr('binary_sensor.meteoalarm', 'expires') %}
-            {% set color = {'Green':['🟢','Verde'], 'Yellow':['🟡','Gialla'], 'Orange':['🟠','Arancione'], 'Red':['🔴','Rossa']} %}
             {% set level = state_attr('binary_sensor.global_natural_alert','meteoalarm_level') %}
-            {{color[level][0]}}{{state_attr('binary_sensor.global_natural_alert','meteoalarm_type')|upper}}. Allerta {{color[level][1]}}
+            {% set type = state_attr('binary_sensor.global_natural_alert','meteoalarm_type')|upper %}
+            {% set color = {'White':['⚪', 'Bianca'],'Green':['🟢','Verde'], 
+              'Yellow':['🟡','Gialla'], 'Orange':['🟠','Arancione'], 'Red':['🔴','Rossa']} %}
+            {{color[level][0]}}{{type}}. Allerta {{color[level][1]}}
             Descrizione: {{state_attr('binary_sensor.meteoalarm', 'description')}}
             {{as_timestamp(start)|timestamp_custom('Valido dalle ore %H:%M del %d/%m')}}
             {{as_timestamp(end)|timestamp_custom(' alle ore %H:%M del %d/%m')}}
@@ -698,6 +698,7 @@ automation:
             /config/www/hassiohelp/pkg_natural_events/{{'meteoalarm_11' if type == none else 'meteoalarm_'~type.split(';')[0]}}.png
             {% else %}
             {% endif %}
+
 #----------------------------------------------------------------------------------------------------#
 # METEOALARM CUSTOM - Notifica criticità meteo nella regione impostata - Vedi tabella a fine package
 #----------------------------------------------------------------------------------------------------#
@@ -718,7 +719,7 @@ automation:
             MeteoAlarm Custom
           message: |-
             {% set day = {'today':'Oggi', 'tomorrow':'Domani'} %}
-            {% set color = {'Green':['🟢','Verde'], 'Yellow':['🟡','Gialla'], 'Orange':['🟠','Arancione'], 'Red':['🔴','Rossa']} %}
+            {% set color = {'White':['⚪', 'Bianca'],'Green':['🟢','Verde'], 'Yellow':['🟡','Gialla'], 'Orange':['🟠','Arancione'], 'Red':['🔴','Rossa']} %}
             {% set dict_type={
               'No-warnings': ['❌','Nessun Avviso'],'Wind': ['🌬','Vento'],
               'Snow/Ice': ['🌨','Neve-Ghiaccio'],'Thunderstorms': ['⚡','Temporali'],
@@ -740,10 +741,9 @@ automation:
             {%- endfor %}
             {%- endif %}
             {%- endfor %}
-          #Orario: {{d['start'].split(' ')[1]}} - {{d['end'].split(' ')[1]}}
           message_tts: &tts_meteoalarm_custom >-
             {% set day = {'today':'Oggi', 'tomorrow':'Domani'} %}
-            {% set color = {'Green':'Verde', 'Yellow':'Gialla', 'Orange':'Arancione', 'Red':'Rossa'} %}
+            {% set color = {'White':'Bianca','Green':'Verde', 'Yellow':'Gialla', 'Orange':'Arancione', 'Red':'Rossa'} %}
             {% set dict_type={'No-warnings': 'Nessun Avviso','Wind': 'Vento',
               'Snow/Ice': 'Neve-Ghiaccio','Thunderstorms': 'Temporali',
               'Fog': 'Nebbia','Extreme high temperature': 'Caldo intenso',
@@ -874,30 +874,37 @@ automation:
         zone: zone.geoalert
         event: enter
     condition: >
-      {{as_timestamp(trigger.to_state.attributes.to_date) > as_timestamp(utcnow()) or trigger.to_state.attributes.alert_level != 'Green' }}
+      {{as_timestamp(trigger.to_state.attributes.to_date) > as_timestamp(utcnow()) 
+        or trigger.to_state.attributes.alert_level != 'Green'}}
     action:
+      - variables:
+          from_data: "{{trigger.to_state.attributes.from_date}}"
+          to_data: "{{trigger.to_state.attributes.to_date}}"
+          event_type: "{{trigger.to_state.attributes.event_type}}"
+          event:
+            Earthquake: 'Terremoto'
+            Tropical cyclone: 'Ciclone tropicale'
+            Flood: 'Inondazione'
+            Volcano: 'Vulcano'
+            Drought: 'Siccità'
       - service: *script
         data:
           call_no_annuncio: 1
           title: >-
-            {% set event = {'Earthquake':'Terremoto','Tropical cyclone':'Ciclone tropicale','Flood':'Inondazione','Volcano':'Vulcano','Drought':'Siccità'}%}
-            GDACS: {{ event[trigger.to_state.attributes.event_type] }}
+            GDACS: {{ event[event_type] }}
           message: |-
-            {% set event = {'Earthquake':'Terremoto','Tropical cyclone':'Ciclone tropicale','Flood':'Inondazione','Volcano':'Vulcano','Drought':'Siccità'}%}
-            Avviso di disastro globale: {{ event[trigger.to_state.attributes.event_type] }}
+            Avviso di disastro globale: {{ event[event_type] }}
             Descrizione: {{ trigger.to_state.attributes.description }}
-            Rilasciato: {{ '-' if not trigger.to_state.attributes.from_date else as_timestamp(trigger.to_state.attributes.from_date)|timestamp_custom("%d.%m.%Y %H:%M") }}
-            Fine: {{ '-' if not trigger.to_state.attributes.to_date else as_timestamp(trigger.to_state.attributes.to_date)|timestamp_custom("%d.%m.%Y %H:%M") }}
+            Rilasciato: {{ '-' if not from_date else as_timestamp(from_date)|timestamp_custom("%d.%m.%Y %H:%M") }}
+            Fine: {{ '-' if not to_date else as_timestamp(to_date)|timestamp_custom("%d.%m.%Y %H:%M") }}
           message_tts: &tts_gdacs >-
-            {% set event = {'Earthquake':'Terremoto','Tropical cyclone':'Ciclone tropicale','Flood':'Inondazione','Volcano':'Vulcano','Drought':'Siccità'}%}
-            Avviso di disastro globale: {{ event[trigger.to_state.attributes.event_type] }}
+            Avviso di disastro globale: {{ event[event_type] }}
           alexa:
             message_tts: *tts_gdacs
             media_player: *media_player_alexa
           google:
             message_tts: *tts_gdacs
             media_player: *media_player_google
-
 #######################################-#######################################
 ##                                  SCRIPT
 #######################################-#######################################
@@ -911,7 +918,7 @@ script:
         google: *media_player_google
         alexa: *media_player_alexa
         notify: *notify
-        message_tts: "{{message_tts|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}"
+        message_tts: "{{message_tts|replace('\n','')|replace('   ',' ')|replace('  ',' ')}}" #|regex_replace(find="\s+|_", replace=" ")
         notify_service: "{{'' if '.' in notify else 'notify.'}}{{notify|replace(' ','_')}}"
     - choose: # URL/FILE IMAGE + TEXT
         - conditions:
@@ -1006,3 +1013,4 @@ script:
 #######################################-#######################################
 ##                                END PACKAGE
 #######################################-#######################################
+
