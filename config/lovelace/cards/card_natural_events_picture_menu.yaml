@@ -381,6 +381,7 @@ cards:
       - entity: input_select.meteo_map
         name: Meteo
         state_text:
+          Temperatura Nuvole Infrared: Infrared
           Nuvole Infrared: Notte
           Nuvole e Sole: Giorno
           Pioggia: Pioggia
@@ -410,6 +411,8 @@ cards:
           Windy Alert: Alert
           Protezione Civile: DPC
           Blitzortung: Blitz
+          Radareu: Radareu
+          Volcanodiscovery: Vulcani
         tap_action:
           action: call-service
           service: input_select.select_next
@@ -545,22 +548,22 @@ cards:
           {%set day = {'today':'Oggi', 'tomorrow':'Domani'} %}
           {%set color = {'Green':'Verde', 'Yellow':'Gialla', 'Orange':'Arancione', 'Red':'Rossa'} %}
           {%set dict_code={'Green':'1','Yellow':'2','Orange':'3','Red':'4'}%}
-          {%set dict_type={'No-warnings': 'Nessun Avviso','Wind': 'Vento',
-          'Snow/ice': 'Neve-Ghiaccio','Thunderstorms': 'Temporali',
-          'Fog': 'Nebbia','High/temperature': 'Caldo intenso',
-          'Low-temperature': 'Freddo intenso',
-          'Costal-event': 'Eventi Costieri','Forest/fire': 'Incendi bischivi',
-          'Avalanche': 'Valanghe','Rain': 'Pioggia',
-          'Unavailable': 'Non disponibile','Flooding': 'Alluvione',
-          'Rain/flooding': 'Pioggia/Alluvione'}%}
+          {% set dict_type={'No-warnings': 'Nessun Avviso','Wind': 'Vento',
+          'Snow/Ice': 'Neve-Ghiaccio','Thunderstorms': 'Temporali',
+          'Fog': 'Nebbia','Extreme high temperature': 'Caldo intenso',
+          'Extreme low temperature': 'Freddo intenso',
+          'Coastal Event': 'Eventi Costieri','Forestfire': 'Incendi bischivi',
+          'Avalanches': 'Valanghe','Rain': 'Pioggia',
+          'Unavailable': 'Non disponibile','Flood': 'Alluvione',
+          'Rain-Flood': 'Pioggia-Alluvione'} %}
           {%set type={'No-warnings': '0','Wind': '1',
-          'Snow/ice': '2','Thunderstorms': '3',
-          'Fog': '4','High/temperature': '5',
-          'Low-temperature': '6',
-          'Costal-event': '7','Forest/fire': '8',
-          'Avalanche': '9','Rain': '10',
-          'Unavailable': '11','Flooding': '12',
-          'Rain/flooding': '13'}%}
+          'Snow/Ice': '2','Thunderstorms': '3',
+          'Fog': '4','Extreme high temperature': '5',
+          'Extreme low temperature': '6',
+          'Coastal Event': '7','Forestfire': '8',
+          'Avalanches': '9','Rain': '10',
+          'Unavailable': '11','Flood': '12',
+          'Rain-Flood': '13'}%}
           {%- if not is_state('sensor.meteoalarm_custom', '0') -%}
             {%- for s  in ['today', 'tomorrow'] -%}
               {%- set v = state_attr('sensor.meteoalarm_custom', s) -%}
@@ -568,10 +571,10 @@ cards:
                   {%- for d  in v %}
                   {% set l = dict_code[d['code']] %}
                   {% set t = type[d['event']] %}
-          **{{day[s]}}:** <img src="https://www.meteoalarm.eu/documents/rss/wflag-l{{'0' if not l else l.split(';')[0]}}-t{{'0' if not t else t.split(';')[0]}}.jpg"> <font color= {{d['code']}}>**{{dict_type[d['event']]}}** </font>
-          **Allerta:** <font color= {{d['code']}}><ha-icon icon="{{'mdi:numeric-'~dict_code[d['code']]~'-box'}}" style="width: 36px; height: 36px;"></ha-icon>{{color[d['code']]}}</font><br>
-          Descrizione: <font color= var(--primary-text-color)>{{d['italiano']}}</font><br>
-          Data: <font color= var(--primary-text-color)>{{d['start']|trim("CEST")|replace('.','/')}} - {{d['end']|trim("CEST")|replace('.','/')}}</font><br>
+          **{{day[s]}}:** <img src="https://www.meteoalarm.eu/documents/rss/wflag-l{{'0' if not l else l.split(';')[0]}}-t{{'0' if not t else t.split(';')[0]}}.jpg"> <font color="{{d['code']}}">**{{dict_type[d['event']]}}** </font>
+          **Allerta:** <font color="{{d['code']}}"><ha-icon icon="{{'mdi:numeric-'~dict_code[d['code']]~'-box'}}" style="width: 36px; height: 36px;"></ha-icon>{{color[d['code']]}}</font><br>
+          Descrizione: <font color="var(--primary-text-color)">{{d['italiano']}}</font><br>
+          Data: <font color="var(--primary-text-color)">{{d['start']|trim("CEST")|replace('.','/')}} - {{d['end']|trim("CEST")|replace('.','/')}}</font><br>
                   {%- endfor -%}
                 {%- endif -%}
             {%- endfor -%}
@@ -730,6 +733,7 @@ cards:
     state_image:
       "Nuvole e Sole": https://api.sat24.com/animated/IT/visual/3/
       "Nuvole Infrared": https://api.sat24.com/animated/IT/infraPolair/3/ 
+      "Temperatura Nuvole Infrared": https://www.meteo60.fr/satellites/animation-satellite-ir-france.gif
       "Pioggia": https://api.sat24.com/animated/IT/rainTMC/3/
       "Neve": https://api.sat24.com/animated/EU/snow/3/
       "Il Meteo": http://cdn-radar.ilmeteo.it/italy.gif
@@ -804,4 +808,31 @@ cards:
       }
     aspect_ratio: 100%
     url: 'http://map.blitzortung.org/#5.11/42.5/12.51' # Il Centro geografico d'Italia
-
+- type: conditional # Radareu
+  conditions:
+    - entity: input_select.meteo_iframe
+      state: 'Radareu'
+  card: 
+    type: iframe
+    style: |
+      ha-card {
+        border-radius: var(--ha-card-border-radius);
+        border: solid 1px var(--accent-color); 
+        margin: 16px;
+      }
+    aspect_ratio: 100%
+    url: 'http://www.radareu.cz/?lng=uk&core'
+- type: conditional # Volcanodiscovery
+  conditions:
+    - entity: input_select.meteo_iframe
+      state: 'Volcanodiscovery'
+  card: 
+    type: iframe
+    style: |
+      ha-card {
+        border-radius: var(--ha-card-border-radius);
+        border: solid 1px var(--accent-color); 
+        margin: 16px;
+      }
+    aspect_ratio: 100%
+    url: 'https://earthquakes.volcanodiscovery.com/?L=12&zoom=6&lat=41&lon=13&minMag=3'
