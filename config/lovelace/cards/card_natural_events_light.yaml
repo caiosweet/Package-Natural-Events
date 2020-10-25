@@ -439,7 +439,7 @@ cards:
           'Unavailable': 'Non disponibile','Flood': 'Alluvione',
           'Rain-Flood': 'Pioggia-Alluvione'} %}
           {%set type={'No-warnings': '0','Wind': '1',
-          'Snow/ice': '2','Thunderstorms': '3',
+          'Snow/Ice': '2','Thunderstorms': '3',
           'Fog': '4','Extreme high temperature': '5',
           'Extreme low temperature': '6',
           'Coastal Event': '7','Forestfire': '8',
