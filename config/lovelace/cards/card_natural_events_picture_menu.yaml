@@ -630,6 +630,12 @@ cards:
               <!-- <img src="{{url.format(id,'pga')}}"/> -->
             {% endif %}
 
+            <!-- 
+              Map Google
+              [{{state_attr(entityid, 'region')}}](http://maps.google.com/maps?z=8&q=loc:{{lat}}+{{long}})
+              Map Open Streat Map
+              [{{state_attr(entityid, 'region')}}](https://www.openstreetmap.org/?mlat={{lat}}&mlon={{long}}#map=12/{{lat}}/{{long}})
+            -->
         - type: custom:auto-entities # CONDITIONAL ULTIMI xx TERREMOTI
           show_empty: false
           sort:

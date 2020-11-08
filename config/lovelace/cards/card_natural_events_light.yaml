@@ -497,7 +497,7 @@ cards:
 
             **<font color="{{color}}">{{as_timestamp(data_utc)|timestamp_custom ('%H:%M:%S del %d/%m/%Y')}}</font>**<br><br>
             Un terremoto di magnitudo **<font color="{{color}}">{{magnitudo}}</font>**<br>
-            è avvenuto nella zona: [{{state_attr(entityid, 'region')}}](http://maps.google.com/maps?z=8&q=loc:{{lat}}+{{long}})<br>
+            è avvenuto nella zona: [{{state_attr(entityid, 'region')}}](https://www.openstreetmap.org/?mlat={{lat}}&mlon={{long}}#map=12/{{lat}}/{{long}})<br>
             a <font color="{{color}}">**{{state_attr(entityid, 'distance')}}**</font> km da casa,<br>
             con coordinate geografiche (lat, long) {{lat}},{{long}}.<br>
             {{("Tu ti trovi a " ~ distance(lat, long, person)) ~ " km dall'epicentro." if is_state(person, 'not_home') else ''}}
@@ -511,6 +511,13 @@ cards:
               <img src="{{url.format(id,'intensity')}}"/>
               <!-- <img src="{{url.format(id,'pga')}}"/> -->
             {% endif %}
+
+            <!-- 
+              Map Google
+              [{{state_attr(entityid, 'region')}}](http://maps.google.com/maps?z=8&q=loc:{{lat}}+{{long}})
+              Map Open Streat Map
+              [{{state_attr(entityid, 'region')}}](https://www.openstreetmap.org/?mlat={{lat}}&mlon={{long}}#map=8/{{lat}}/{{long}})
+            -->
 
         - type: custom:auto-entities # CONDITIONAL ULTIMI xx TERREMOTI
           show_empty: false
@@ -692,7 +699,7 @@ cards:
       }
     aspect_ratio: 100%
     url: 'http://map.blitzortung.org/#5.11/42.5/12.51' # Il Centro geografico d'Italia
-#             <img src="http://terremoti.ingv.it/images/ingv_logo_colore.png" background="white"/><br>
+    # <img src="http://terremoti.ingv.it/images/ingv_logo_colore.png" background="white"/><br>
 - type: conditional # Radareu
   conditions:
     - entity: input_select.meteo_iframe
