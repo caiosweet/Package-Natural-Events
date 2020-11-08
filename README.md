@@ -3,7 +3,7 @@
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-no!-red.svg)](https://github.com/caiosweet/Package-Natural-Events/graphs/commit-activity)
 [![GitHub issues](https://img.shields.io/github/issues/caiosweet/Package-Natural-Events)](https://github.com/caiosweet/Package-Natural-Events/issues)
 
-[![Websitebadge]][website] [![Forum][forumbadge]][forum] [![telegrambadge]][telegram] [![facebookbadge]][facebook] 
+[![Websitebadge]][website] [![Forum][forumbadge]][forum] [![telegrambadge]][telegram] [![facebookbadge]][facebook] [![Don't buy me a coffee](https://img.shields.io/static/v1.svg?label=Don't%20buy%20me%20a%20coffee&message=🔔&color=black&logo=buy%20me%20a%20coffee&logoColor=white&labelColor=6f4e37)](https://paypal.me/hassiohelp)
 
 # Package-Natural-Events
 
