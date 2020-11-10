@@ -69,7 +69,7 @@ cards:
           filter:
             include:
               - attributes:
-                  package: Natural_events
+                  package: "Natural_events 🌍"
                 options:
                   state_color: true
             exclude:
@@ -255,7 +255,7 @@ cards:
         - entity_id: 'binary_sensor.*'
           state: 'on'
           attributes:
-              package: Natural_events
+              package: "Natural_events 🌍"
           options:
             entity: this.entity_id
             secondary_info: last-changed
@@ -279,7 +279,7 @@ cards:
         - entity_id: 'sensor.m*'
           state: '> 0'
           attributes: 
-              package: Natural_events
+              package: "Natural_events 🌍"
           options:
             entity: this.entity_id
             secondary_info: last-changed
