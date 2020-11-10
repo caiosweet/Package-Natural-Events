@@ -260,7 +260,7 @@ cards:
           filter:
             include:
               - attributes:
-                  package: Natural_events
+                  package: "Natural_events 🌍"
                 options:
                   state_color: true
             exclude:
