@@ -25,17 +25,17 @@ homeassistant:
         ⚓PRIMA DELLE: &before "23:00:00"
       filter:
         ⚓RAGGIO ZONA MeteoAlert metri: &radius_meteoalert 25000
-        ⚓RAGGIO ZONA GeoAlert metri: &radius_geoalert 1000000
-        ⚓RAGGIO TERREMOTO km: &radius_quake 1000
-        ⚓MAGNITUDO minimo: &magnitude 2
+        ⚓RAGGIO ZONA GeoAlert metri: &radius_geoalert 50000
+        ⚓RAGGIO TERREMOTO km: &radius_quake 50
+        ⚓MAGNITUDO minimo: &magnitude 3
         ⚓RAGGIO BURZE km: &radius_burze 25
       secret: # Oppure inserire i dati direttamente al posto di !secret etcetc
-        ⚓LATITUDINE per le zone: !secret &latitude latitude_home
-        ⚓LONGITUDINE per le zone: !secret &longitude longitude_home
-        ⚓REGIONE MeteoAlaram: !secret &province regione
-        ⚓ID Meteoalarm Custom: !secret &meteoalarm_custom_id meteoalarm_custom_id
-        ⚓ISTAT DPC: !secret &istat istat
-        ⚓API KEY Burze: !secret &burze_api_key burze_api_key
+        ⚓LATITUDINE per le zone: &latitude !secret latitude_home
+        ⚓LONGITUDINE per le zone: &longitude !secret longitude_home
+        ⚓REGIONE MeteoAlaram: &province !secret regione
+        ⚓ID Meteoalarm Custom: &meteoalarm_custom_id !secret meteoalarm_custom_id
+        ⚓ISTAT DPC: &istat !secret istat
+        ⚓API KEY Burze: &burze_api_key !secret burze_api_key
       ##--------------------- FINE IMPOSTAZIONI PACKAGE ---------------------##
 
       ##------------------ IMPOSTAZIONI >inizio< VARIABILI ------------------##
