@@ -1,6 +1,6 @@
 ## INFO 📦 Natural_events
 #  ✍ Caio & Gianpi [hassiohelp.eu]
-#  📅 01/08/2019 [Update 17/11/2020]
+#  📅 01/08/2019 [Update 20/11/2020]
 #  📌 Information provided by MeteoAlarm, Burze, GDACS, DPC and INGV Italy
 #--------------------------------------------------------------------------------------------------|
 # DPC: per trovare il codice ISTAT: https://www.paginebianche.it/codice-istat
@@ -15,7 +15,7 @@ homeassistant:
     package.node_anchors:
       ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
       setting:
-        # ⚓ SCRIPT centro notifiche: &script script.natural_events_notifications
+        # ⚓SCRIPT centro notifiche: &script script.natural_events_notifications
         ⚓SCRIPT centro notifiche: &script script.my_notify
         ⚓SERVIZIO Notify: &notify "telegram"
         ⚓MEDIA PLAYER Google: &media_player_google "media_player.red"
@@ -25,17 +25,17 @@ homeassistant:
         ⚓PRIMA DELLE: &before "23:00:00"
       filter:
         ⚓RAGGIO ZONA MeteoAlert metri: &radius_meteoalert 25000
-        ⚓RAGGIO ZONA GeoAlert metri: &radius_geoalert 50000
-        ⚓RAGGIO TERREMOTO km: &radius_quake 50
-        ⚓MAGNITUDO minimo: &magnitude 3
+        ⚓RAGGIO ZONA GeoAlert metri: &radius_geoalert 1000000
+        ⚓RAGGIO TERREMOTO km: &radius_quake 1000
+        ⚓MAGNITUDO minimo: &magnitude 2
         ⚓RAGGIO BURZE km: &radius_burze 25
       secret: # Oppure inserire i dati direttamente al posto di !secret etcetc
-        ⚓LATITUDINE per le zone: &latitude !secret latitude_home
-        ⚓LONGITUDINE per le zone: &longitude !secret longitude_home
-        ⚓REGIONE MeteoAlaram: &province !secret regione
-        ⚓ID Meteoalarm Custom: &meteoalarm_custom_id !secret meteoalarm_custom_id
-        ⚓ISTAT DPC: &istat !secret istat
-        ⚓API KEY Burze: &burze_api_key !secret burze_api_key
+        ⚓LATITUDINE per le zone: !secret &latitude latitude_home
+        ⚓LONGITUDINE per le zone: !secret &longitude longitude_home
+        ⚓REGIONE MeteoAlaram: !secret &province regione
+        ⚓ID Meteoalarm Custom: !secret &meteoalarm_custom_id meteoalarm_custom_id
+        ⚓ISTAT DPC: !secret &istat istat
+        ⚓API KEY Burze: !secret &burze_api_key burze_api_key
       ##--------------------- FINE IMPOSTAZIONI PACKAGE ---------------------##
 
       ##------------------ IMPOSTAZIONI >inizio< VARIABILI ------------------##
@@ -149,7 +149,7 @@ homeassistant:
         package: "Natural_events 🌍"
         site: "hassiohelp.eu 🌐"
         author: "Caio & Gianpi"
-        version: "3.6"
+        version: "3.8"
       expose: &expose
         <<: *customize
         haaska_hidden: false
@@ -668,6 +668,10 @@ automation:
       radius: "{{(state_attr('zone.meteoalert','radius') //1000)|int}}"
       direction: "{{state_attr('binary_sensor.global_natural_alert','burze_direction')}}"
       attr: "{{states.binary_sensor.burze_storms_nearby.attributes}}"
+      burze_tts_msg: >-
+        {% if trigger.from_state.state == 'off' %}Probabile arrivo di un temporale da {{direction}}. 
+        {% else %} Aggiornamento Temporale. Il fulmine più vicino è stato rilevato a {{attr.get('distance')}} km 
+        a {{direction}} da casa. {% endif %}
     action:
       - service: *script
         data:
@@ -676,22 +680,18 @@ automation:
             Burze ↯ {% if trigger.from_state.state == 'off' %} {{ trigger.to_state.attributes.friendly_name }}.
             {% else %} AGGIORNAMENTO TEMPORALE. {% endif %}
           message: >-
-            {% set n = attr.number %} {% set d = attr.distance|default(radius,'0')|float %}
+            {% set n = attr.get('number') %} {% set d = attr.get('distance')|default(radius,'0') %}
             {% macro dist() %} {% if d <= 0.5 %}5{% elif 0.5 < d <= 1 %}4{% elif 1 < d <= 5 %}3
             {% elif 5 < d <= 10 %}2{% elif 10 < d <= 20 %}1{% else %}0{% endif -%} {% endmacro %}
-            {{alert[dist()|int].color}} Negli ultimi {{attr.period}} minuti
+            {{alert.get(dist()|int).color}} Negli ultimi {{attr.get('period')}} minuti
             {% for x in n|string -%}{{num[x]|default(x) -}}{% endfor %}⚡ {% if n != 1 %}
             scariche di fulmini {% else %} fulmine scaricato {% endif %} nel raggio di {{radius}} km. 
-            La scarica più vicina è avvenuta a {{attr.distance}} km a {{direction}} da casa.
-          message_tts: &tts_brurze >-
-            {% if trigger.from_state.state == 'off' %}Probabile arrivo di un temporale da {{direction}}. 
-            {% else %} Aggiornamento Temporale. Il fulmine più vicino è stato rilevato a {{attr.distance}} km 
-            a {{direction}} da casa. {% endif %}
+            La scarica più vicina è avvenuta a {{attr.get('distance')}} km a {{direction}} da casa.
           alexa:
-            message_tts: *tts_brurze
+            message_tts: "{{burze_tts_msg}}"
             media_player: *media_player_alexa
           google:
-            message_tts: *tts_brurze
+            message_tts: "{{burze_tts_msg}}"
             media_player: *media_player_google
           file: >-
             {% if trigger.from_state.state == 'off' and is_state('input_boolean.natural_events_send_image', 'on') %}
@@ -720,23 +720,23 @@ automation:
       - variables:
           attr: "{{trigger.to_state.attributes}}"
           alert: *alert
+          dpc_tts_msg: >-
+            Attenzione. {{attr.get('friendly_name')}}. Allerta {{attr.get('allerta')}} {{attr.get('info')}}.
       - service: *script
         data:
           call_no_annuncio: 1
           title: >-
-            Protezione Civile - {{attr.rischio}}{% if trigger.from_state.state == 'on' %} - Revisione{% endif %}
+            Protezione Civile - {{attr.get('rischio')}}{% if trigger.from_state.state == 'on' %} - Revisione{% endif %}
           message: |
             {% set risk = {none: '❌', 'Temporali':'⚡', 'Idraulico':'💧', 'Idrogeologico':'🌊'} %}
-            {{risk[attr.rischio|default(none)]}} {{attr.friendly_name}}. 
-            {{alert[attr.level|default(0)].color}} Allerta {{attr.allerta}} {{attr.info}}.
-          message_tts: &tts_dpc >-
-            Attenzione. {{attr.friendly_name}}. Allerta {{attr.allerta}} {{attr.info}}.
+            {{risk[attr.get('rischio')]}} {{attr.get('friendly_name')}}. 
+            {{alert[attr.get('level', 0)].color}} Allerta {{attr.get('allerta')}} {{attr.get('info')}}.
           alexa:
-            message_tts: *tts_dpc
+            message_tts: "{{dpc_tts_msg}}"
             media_player: *media_player_alexa
             audio: soundbank://soundlibrary/weather/thunder/thunder_11
           google:
-            message_tts: *tts_dpc
+            message_tts: "{{dpc_tts_msg}}"
             media_player: *media_player_google
           link: >-
             [Bollettino di criticità]({{trigger.to_state.attributes.link}})
@@ -758,33 +758,33 @@ automation:
       type_dict: *meteoalarm_type
       alert: *alert
       days: *days
-      day: "{{as_timestamp(attr.onset|default())|timestamp_custom('%w', true)|int}}"
-      level: "{{attr.awareness_level|default()|regex_replace(find='(\\D)')|int}}" #|regex_replace(find="[^\d][^;]*")|int
-      type: "{{attr.awareness_type|default()|regex_replace(find='(\\D)')|int}}" #|regex_replace(find="[^\d][^;]*")|int
+      day: "{{as_timestamp(attr.get('onset'))|timestamp_custom('%w', true)|int}}"
+      level: "{{attr.get('awareness_level')|regex_replace(find='(\\D)')|int}}" #|regex_replace(find="[^\d][^;]*")|int
+      type: "{{attr.get('awareness_type')|regex_replace(find='(\\D)')|int}}" #|regex_replace(find="[^\d][^;]*")|int
+      meteoalarm_tts_msg: >
+        {{("oh no! ", "accipicchia! ", "accidenti! ", "attenzione! ", "come non detto! ") |random }}
+        per {{days[day]}}, {{attr.get('headline')}}, {{attr.get('description')}}
     action:
       - service: *script
         data:
           call_no_annuncio: 1
           title: >-
-            {{type_dict[type|int].icon}} MeteoAlarm - {% if trigger.from_state.state == 'off' %}
-            {{ attr.urgency}}.{% else %}Revisione.{% endif %}
-          message_tts: &tts_meteoalarm >
-            {{("oh no! ", "accipicchia! ", "accidenti! ", "attenzione! ", "come non detto! ") |random }}
-            per {{days[day|int]}}, {{attr.headline}}, {{attr.description}}
+            {{type_dict[type].icon}} MeteoAlarm - {% if trigger.from_state.state == 'off' %}
+            {{ attr.get('urgency')}}.{% else %}Revisione.{% endif %}
           message: |
-            Per {{days[day|int]}}
-            {{alert[level|int].color}} {{(type_dict[type|int].text)|upper}}. Allerta {{alert[level|int].text}}
-            Descrizione: {{attr.description}}
-            {{as_timestamp(attr.effective|default())|timestamp_custom('Valido dalle ore %H:%M del %d/%m')}}
-            {{as_timestamp(attr.expires|default())|timestamp_custom(' alle ore %H:%M del %d/%m')}}
+            Per {{days[day]}}
+            {{alert[level].color}} {{(type_dict[type].text)|upper}}. Allerta {{alert[level].text}}
+            Descrizione: {{attr.get('description')}}
+            {{as_timestamp(attr.get('effective'))|timestamp_custom('Valido dalle ore %H:%M del %d/%m')}}
+            {{as_timestamp(attr.get('expires'))|timestamp_custom(' alle ore %H:%M del %d/%m')}}
           file: >-
             {% if is_state('input_boolean.natural_events_send_image', 'on') %}
             {{'/config/www/hassiohelp/pkg_natural_events/meteoalarm_{}.png'.format(type)}}{% else %}{% endif %}
           alexa:
-            message_tts: *tts_meteoalarm
-            audio: "{{type_dict[type|int].audio}}"
+            message_tts: "{{meteoalarm_tts_msg}}"
+            audio: "{{type_dict[type].audio}}"
           google:
-            message_tts: *tts_meteoalarm
+            message_tts: "{{meteoalarm_tts_msg}}"
             media_player: *media_player_google
 
   #----------------------------------------------------------------------------------------------------#
@@ -820,6 +820,22 @@ automation:
               "Flood": 12,
               "Rain-Flood": 13,
             }
+          meteoalarm_custom_tts_msg: >-
+            {% set today = state_attr('sensor.meteoalarm_custom', 'today')|list %}
+            {% set tomorrow = state_attr('sensor.meteoalarm_custom', 'tomorrow')|list %}
+            ATTENZIONE.
+            {% if today %}Per Oggi: 
+              {% for risk in today -%}
+                {{type_dict[type_index[risk['event']]].text}} con allerta {{alert[level[risk['code']]].text}}.
+                {{-'' if 'Nessun Avviso' in risk['italiano'] else risk['italiano'] ~'.'}}
+              {% endfor %}
+            {% endif %}
+            {% if tomorrow %}Per domani: 
+              {% for risk in tomorrow -%}
+                {{type_dict[type_index[risk['event']]].text}} con allerta {{alert[level[risk['code']]].text}}, 
+                {{-'' if 'Nessun Avviso' in risk['italiano'] else risk['italiano'] ~'.'}}.
+              {% endfor %}
+            {% endif %}
       - service: *script
         data:
           call_no_annuncio: 1
@@ -840,26 +856,11 @@ automation:
             {%- endfor %}
             {%- endif %}
             {%- endfor %}
-          message_tts: &tts_meteoalarm_custom >-
-            {% set today = state_attr('sensor.meteoalarm_custom', 'today') %}
-            {% set tomorrow = state_attr('sensor.meteoalarm_custom', 'tomorrow') %}
-            {% if today %} ATTENZIONE. Per Oggi: 
-              {% for risk in today|list -%}
-                {{type_dict[type_index[risk['event']]].text}} con allerta {{alert[level[risk['code']]].text}}.
-                {{-'' if 'Nessun Avviso' in risk['italiano'] else risk['italiano'] ~'.'}}
-              {% endfor %}
-            {% endif %}
-            {% if tomorrow %}Per domani: 
-              {% for risk in tomorrow|list -%}
-                {{type_dict[type_index[risk['event']]].text}} con allerta {{alert[level[risk['code']]].text}}, 
-                {{-'' if 'Nessun Avviso' in risk['italiano'] else risk['italiano'] ~'.'}}.
-              {% endfor %}
-            {% endif %}
           alexa:
-            message_tts: *tts_meteoalarm_custom
+            message_tts: "{{meteoalarm_custom_tts_msg}}"
             media_player: *media_player_alexa
           google:
-            message_tts: *tts_meteoalarm_custom
+            message_tts: "{{meteoalarm_custom_tts_msg}}"
             media_player: *media_player_google
 
   #----------------------------------------------------------------------------------------------------#
@@ -886,6 +887,10 @@ automation:
             {% macro magnitude() %}
             {%if 0<=m<=1.9%}0{%elif 2<=m<=2.9%}1{%elif 3<=m<=3.9%}2{%elif 4<=m<=5.9%}3{%else%}4{%endif%}
             {% endmacro %} {{alert.get(magnitude()|int).color}}
+          quake_tts_msg: >-
+            Rilevato terremoto a {{trigger.to_state.state}} km.
+            Epicentro {{trigger.to_state.attributes.region}}.
+            Magnitudo {{trigger.to_state.attributes.magnitude}}.
       - choose:
           - conditions: "{{trigger.to_state.attributes.magnitude >= 3}}"
             sequence:
@@ -917,16 +922,12 @@ automation:
             {{as_timestamp(data_utc)|timestamp_custom ('Data %d/%m/%Y Ore %H:%M:%S')}}
             {% if trigger.to_state.attributes.image_url and is_state('binary_sensor.shakemap', 'off') %}
             [Immagine]({{trigger.to_state.attributes.image_url}}) {% endif %}
-          message_tts: &tts_quake >-
-            Rilevato terremoto a {{trigger.to_state.state}} km.
-            Epicentro {{trigger.to_state.attributes.region}}.
-            Magnitudo {{trigger.to_state.attributes.magnitude}}.
           alexa:
-            message_tts: *tts_quake
+            message_tts: "{{quake_tts_msg}}"
             media_player: *media_player_alexa
             audio: <audio src="soundbank://soundlibrary/nature/amzn_sfx_earthquake_rumble_02"/>
           google:
-            message_tts: *tts_quake
+            message_tts: "{{quake_tts_msg}}"
             media_player: *media_player_google
           url: >-
             {% if is_state('binary_sensor.shakemap', 'on') %}{{trigger.to_state.attributes.image_url}}{% endif %}
@@ -944,6 +945,11 @@ automation:
     condition: >
       {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.time))/3600*60)|int < 60}}
     action:
+      - variables:
+          usgs_tts_msg: >-
+              Evento sismico a {{trigger.to_state.state}} km.
+              Epicentro {{trigger.to_state.attributes.place}}.
+              Magnitudo {{trigger.to_state.attributes.magnitude}}.
       - service: *script
         data:
           call_no_annuncio: 1
@@ -957,17 +963,13 @@ automation:
             {{as_timestamp(data_utc)|timestamp_custom ('Data %d/%m/%Y Ore %H:%M:%S')}}
           link: >-
             [LINK MAPPE](https://earthquake.usgs.gov/earthquakes/eventpage/{{trigger.to_state.attributes.external_id}}/executive)
-          message_tts: &tts_usgs >-
-            Evento sismico a {{trigger.to_state.state}} km.
-            Epicentro {{trigger.to_state.attributes.place}}.
-            Magnitudo {{trigger.to_state.attributes.magnitude}}.
           alexa:
-            message_tts: *tts_usgs
+            message_tts: "{{usgs_tts_msg}}"
             media_player: *media_player_alexa
             audio: soundbank://soundlibrary/backgrounds_ambience/volcano_earthquake/volcano_earthquake_03
             wait_time: 4
           google:
-            message_tts: *tts_usgs
+            message_tts: "{{usgs_tts_msg}}"
             media_player: *media_player_google
 
   #----------------------------------------------------------------------------------------------------#
@@ -992,10 +994,12 @@ automation:
           event_type: "{{trigger.to_state.attributes.event_type}}"
           event:
             Earthquake: "Terremoto"
-            Tropical Cyclone: "Ciclone tropicale"
+            Tropical Cyclone: "Ciclone tropicale" #TODO
             Flood: "Inondazione"
             Volcano: "Vulcano"
             Drought: "Siccità"
+          gdacs_tts_msg: >-
+            Avviso di disastro globale: {{event[event_type]}}
       - service: *script
         data:
           call_no_annuncio: 1
@@ -1006,13 +1010,11 @@ automation:
             Descrizione: {{trigger.to_state.attributes.description}}
             Rilasciato: {{'-' if not from_date else as_timestamp(from_date)|timestamp_custom("%d.%m.%Y %H:%M")}}
             Fine: {{'-' if not to_date else as_timestamp(to_date)|timestamp_custom("%d.%m.%Y %H:%M")}}
-          message_tts: &tts_gdacs >-
-            Avviso di disastro globale: {{event[event_type]}}
           alexa:
-            message_tts: *tts_gdacs
+            message_tts: "{{gdacs_tts_msg}}"
             media_player: *media_player_alexa
           google:
-            message_tts: *tts_gdacs
+            message_tts: "{{gdacs_tts_msg}}"
             media_player: *media_player_google
 #######################################-#######################################
 ##                                  SCRIPT
@@ -1024,11 +1026,17 @@ script:
     max_exceeded: silent
     sequence:
       - variables:
+          tts: "{{alexa.get('message_tts', '')}}"
+          alexa_audio: "{{alexa.get('audio', '')}}"
+          alexa_audio_tag: >
+            {% if not '<audio src=' in alexa_audio %}
+            {{'<audio src="'+alexa_audio+'"/>'}}
+            {% else %}{{alexa_audio}}{% endif %}
           google: *media_player_google
           alexa: *media_player_alexa
           notify: *notify
           message_tts: >-
-            {{message_tts|regex_replace(find="\s+|_", replace=" ")}}
+            {{tts|regex_replace(find="\s+|_", replace=" ")}}
           notify_service: "{{'' if '.' in notify else 'notify.'}}{{notify|replace(' ','_')}}"
       - choose: # IF URL/FILE IMAGE + TEXT
           - conditions:
@@ -1069,11 +1077,11 @@ script:
                       - service: notify.alexa_media
                         data:
                           target: "{{alexa}}"
-                          message: "{{message_tts}}"
+                          message: "{{alexa_audio_tag + message_tts}}"
                           data:
                             type: tts
               - delay:
-                  seconds: "{{message_tts|wordcount // 2+2}}"
+                  seconds: "{{message_tts|wordcount // 2+(2 if alexa_audio_tag == '' else 9)}}"
 #######################################-#######################################
 ##                                  LEGEND
 #######################################-#######################################
