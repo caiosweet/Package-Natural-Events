@@ -32,7 +32,7 @@ homeassistant:
       secret: # Oppure inserire i dati direttamente al posto di !secret etcetc
         ⚓LATITUDINE per le zone: !secret &latitude latitude_home
         ⚓LONGITUDINE per le zone: !secret &longitude longitude_home
-        ⚓REGIONE MeteoAlaram: !secret &province regione
+        ⚓REGIONE MeteoAlarm: !secret &province regione
         ⚓ID Meteoalarm Custom: !secret &meteoalarm_custom_id meteoalarm_custom_id
         ⚓ISTAT DPC: !secret &istat istat
         ⚓API KEY Burze: !secret &burze_api_key burze_api_key
@@ -999,14 +999,14 @@ automation:
             Volcano: "Vulcano"
             Drought: "Siccità"
           gdacs_tts_msg: >-
-            Avviso di disastro globale: {{event[event_type]}}
+            Avviso di disastro globale: {{event.get(event_type, event_type)}}
       - service: *script
         data:
           call_no_annuncio: 1
           title: >-
-            GDACS: {{event[event_type]}}
+            GDACS: {{event.get(event_type, event_type)}}
           message: |-
-            Avviso di disastro globale: {{event[event_type]}}
+            Avviso di disastro globale: {{event.get(event_type, event_type)}}
             Descrizione: {{trigger.to_state.attributes.description}}
             Rilasciato: {{'-' if not from_date else as_timestamp(from_date)|timestamp_custom("%d.%m.%Y %H:%M")}}
             Fine: {{'-' if not to_date else as_timestamp(to_date)|timestamp_custom("%d.%m.%Y %H:%M")}}
@@ -1029,7 +1029,7 @@ script:
           tts: "{{alexa.get('message_tts', '')}}"
           alexa_audio: "{{alexa.get('audio', '')}}"
           alexa_audio_tag: >
-            {% if not '<audio src=' in alexa_audio %}
+            {% if not '<audio src=' in alexa_audio and alexa_audio %}
             {{'<audio src="'+alexa_audio+'"/>'}}
             {% else %}{{alexa_audio}}{% endif %}
           google: *media_player_google
@@ -1081,7 +1081,7 @@ script:
                           data:
                             type: tts
               - delay:
-                  seconds: "{{message_tts|wordcount // 2+(2 if alexa_audio_tag == '' else 9)}}"
+                  seconds: "{{message_tts|wordcount // 2+(2 if not alexa_audio_tag else 9)}}"
 #######################################-#######################################
 ##                                  LEGEND
 #######################################-#######################################
