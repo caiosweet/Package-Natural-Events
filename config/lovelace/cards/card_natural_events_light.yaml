@@ -163,8 +163,10 @@ cards:
         type: custom:paper-buttons-row
         buttons:
           - entity: input_boolean.natural_events
+            layout: icon|name
             name: Info
           - entity: group.natural_events
+            layout: icon|name
             name: Map
             icon: mdi:image-off
             style:
@@ -179,6 +181,7 @@ cards:
                 entity_id: input_select.geo_map, input_select.meteo_map, input_select.meteo_iframe
                 option: Nessuna
           - entity: input_select.geo_map
+            layout: icon|name
             name: Geo
             tap_action:
               action: call-service
@@ -189,44 +192,53 @@ cards:
               button:
                 color: var(--paper-item-icon-active-color)
             state_styles:
-              Nessuna:
+              nessuna:
                 button:
                   color: var(--paper-item-icon-color)
+
           - entity: input_select.meteo_map
-            name: Meteo
+            layout: icon|state
+            style:
+              button:
+                color: var(--paper-item-icon-active-color)
+            state:
+              case: first
+            state_styles:
+              nessuna:
+                button:
+                  color: var(--paper-item-icon-color)
             state_text:
-              Temperatura Nuvole Infrared: Infrared
-              Nuvole Infrared: Notte
-              Nuvole e Sole: Giorno
-              Pioggia: Pioggia
-              Neve: Neve
-              Il Meteo: Il meteo
-              Burze: Burze
-              Burze Nord Ovest: Burze NO
-              Burze Nord Est: Burze NE
-              Burze Sud Ovest: Burze SO
-              Burze Sud Est: Burze SE
-              WWLLN: WWLLN
+              nessuna: Meteo
+              temperatura nuvole infrared: Infrared
+              nuvole infrared: Notte
+              nuvole e sole: Giorno
+              pioggia: Pioggia
+              neve: Neve
+              il meteo: Il meteo
+              burze: Burze
+              burze nord ovest: Burze NO
+              burze nord est: Burze NE
+              burze sud ovest: Burze SO
+              burze sud est: Burze SE
+              wwwlln: WWLLN
             tap_action:
               action: call-service
               service: input_select.select_next
               service_data:
                 entity_id: input_select.meteo_map
-            style:
-              button:
-                color: var(--paper-item-icon-active-color)
-            state_styles:
-              Nessuna:
-                button:
-                  color: var(--paper-item-icon-color)
+
           - entity: input_select.meteo_iframe
+            layout: icon|state
             name: I-Frame
+            state:
+              case: first
             state_text:
-              Windy Alert: Alert
-              Protezione Civile: DPC
-              Blitzortung: Blitz
-              Radareu: Radareu
-              Volcanodiscovery: Vulcani
+              nessuna: I-Frame
+              windy alert: Alert
+              protezione civile: DPC
+              blitzortung: Blitz
+              radareu: Radareu
+              volcanodiscovery: Vulcani
             tap_action:
               action: call-service
               service: input_select.select_next
@@ -236,7 +248,7 @@ cards:
               button:
                 color: var(--paper-item-icon-active-color)
             state_styles:
-              Nessuna:
+              nessuna:
                 button:
                   color: var(--paper-item-icon-color)
     entities:
@@ -698,7 +710,7 @@ cards:
         margin: 16px;
       }
     aspect_ratio: 100%
-    url: 'http://map.blitzortung.org/#5.11/42.5/12.51' # Il Centro geografico d'Italia
+    url: 'https://map.blitzortung.org/#5.11/42.5/12.51' # Il Centro geografico d'Italia
     # <img src="http://terremoti.ingv.it/images/ingv_logo_colore.png" background="white"/><br>
 - type: conditional # Radareu
   conditions:

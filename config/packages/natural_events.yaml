@@ -1,6 +1,6 @@
 ## INFO 📦 Natural_events
 #  ✍ Caio & Gianpi [hassiohelp.eu]
-#  📅 01/08/2019 [Update 20/11/2020]
+#  📅 01/08/2019 [Update 19/02/2021]
 #  📌 Information provided by MeteoAlarm, Burze, GDACS, DPC and INGV Italy
 #--------------------------------------------------------------------------------------------------|
 # DPC: per trovare il codice ISTAT: https://www.paginebianche.it/codice-istat
@@ -149,7 +149,7 @@ homeassistant:
         package: "Natural_events 🌍"
         site: "hassiohelp.eu 🌐"
         author: "Caio & Gianpi"
-        version: "3.8"
+        version: "3.9"
       expose: &expose
         <<: *customize
         haaska_hidden: false
@@ -638,9 +638,8 @@ automation:
     trigger:
       - platform: homeassistant
         event: start
-      - platform: state
-        entity_id: automation.natural_events_startup
-        to: "on"
+      - platform: event
+        event_type: automation_reloaded
     action:
       - delay: 00:00:15
       - service: group.set
@@ -909,7 +908,7 @@ automation:
                     entity_id: binary_sensor.shakemap
                     state: "on"
                   - condition: template
-                    value_template: "{{ repeat.index <= 5 }}"
+                    value_template: "{{ repeat.index <= 10 }}"
       - service: *script
         data:
           call_no_annuncio: 1
