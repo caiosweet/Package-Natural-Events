@@ -149,7 +149,7 @@ homeassistant:
         package: "Natural_events 🌍"
         site: "hassiohelp.eu 🌐"
         author: "Caio & Gianpi"
-        version: "3.9"
+        version: "3.9.1"
       expose: &expose
         <<: *customize
         haaska_hidden: false
