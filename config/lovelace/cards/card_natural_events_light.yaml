@@ -2,42 +2,40 @@
 ## NATURAL EVENTS VERTICAL STACK
 #################################################################
 type: custom:vertical-stack-in-card 
-style: |
-  ha-card {
-      {# imposta colore sfondo e bordo di tutta la scheda #} 
-      background-color: var(--ha-card-background); {# oppure trasparent; #}
-      {# oppure background: --ha-card-background: var(--ha-card-background); #}
-      border: 
-        1px solid {% if is_state('binary_sensor.global_natural_alert', 'on') %} 
-        {{state_attr('binary_sensor.global_natural_alert','level')}} {% else %} Green {% endif %};
-  }
+card_mod:  ##background-color: var(--ha-card-background);
+  style: |
+    ha-card {
+        --ha-card-background: var(--card-background-color);
+        border: 
+          1px solid {% if is_state('binary_sensor.global_natural_alert', 'on') %} 
+          {{state_attr('binary_sensor.global_natural_alert','level')}} {% else %} Green {% endif %};
+    }
 cards:
 #################################################################
 ## HEADER var(--disabled-text-color)
 #################################################################
 - type: markdown
   entity_id:  binary_sensor.global_natural_alert
-  style: |
-    {% set global = 'binary_sensor.global_natural_alert' %}
-    @keyframes blink {
-      30% {
-        background: {% if is_state(global, 'on') %} var(--ha-card-background) {% endif %};
-      }
-    }
-    ha-card {
-      {# test con stroke -webkit-text-stroke-color: black; #}
-      {# test con stroke -webkit-text-stroke-width: 0.3px; #}
-      border-radius: var(--ha-card-border-radius) var(--ha-card-border-radius) 0px 0px;
-      box-shadow: none; 
-      {% if is_state(global, 'on') %}
-      animation: blink 2s linear 3;
-      background: {{state_attr(global,'level')}};
-      color: {% if state_attr(global,'level') in ['White','Yellow','Orange'] %} var(--dark-primary-color) {% else %} var(--light-primary-color) {% endif %};
-      {% else %}
-      background: Green; border-color: Green; color: var(--primary-text-color)
-      {% endif %}
-      }
-    }
+  card_mod:
+    style: |
+        {% set global = 'binary_sensor.global_natural_alert' %}
+        @keyframes blink {
+          30% {
+            background: {% if is_state(global, 'on') %} var(--ha-card-background) {% endif %};
+          }
+        }
+        ha-card {
+          border-radius: var(--ha-card-border-radius) var(--ha-card-border-radius) 0px 0px;
+          box-shadow: none; 
+          {% if is_state(global, 'on') %}
+          animation: blink 2s linear 2;
+          background: {{state_attr(global,'level')}};
+          color: {% if state_attr(global,'level') in ['White','Yellow','Orange'] %} var(--dark-primary-color) {% else %} var(--light-primary-color) {% endif %};
+          {% else %}
+          background: Green; border-color: Green; color: var(--primary-text-color)
+          {% endif %}
+          }
+        }
   content: |
     {% set global = 'binary_sensor.global_natural_alert' %}
     {% set summary = states('sensor.dark_sky_daily_summary') %}
@@ -60,16 +58,17 @@ cards:
     type: vertical-stack
     cards:
       - type: entities # CONTENITORE MENU Impostazioni fold
-        style: |
-          div#states.card-content {padding-block-end: 0; padding-block-start: 0;}
-          ha-card {background:none; border-radius: 0px; box-shadow: none;}
+        card_mod:
+          style: |
+              div#states.card-content {padding-block-end: 0; padding-block-start: 0;}
+              ha-card {background:none; border-radius: 0px; box-shadow: none;}
         entities:
         - type: custom:auto-entities # MENU Impostazioni fold
           show_empty: false
           filter:
             include:
               - attributes:
-                  package: "Natural_events 🌍"
+                  package: "Natural_events*" # 🌍
                 options:
                   state_color: true
             exclude:
@@ -85,19 +84,21 @@ cards:
               entity: input_boolean.natural_events
               tap_action:
                 action: toggle
-              style: |
-                :host {
-                  {% if is_state('input_boolean.natural_events', 'on') %} 
-                  --paper-item-icon-color: var(--paper-item-icon-active-color);
-                  {% endif %}
-                }
+              card_mod:
+                style: |
+                  :host {
+                    {% if is_state('input_boolean.natural_events', 'on') %} 
+                    --paper-item-icon-color: var(--paper-item-icon-active-color);
+                    {% endif %}
+                  }
         - type: custom:fold-entity-row # 1 group.meteoalert
-          style: |
-            #head { 
-              {% if is_state('group.meteoalert', 'on') %}
-              --paper-item-icon-color: var(--paper-item-icon-active-color);
-              {% endif %}
-            }
+          card_mod:
+            style: |
+              #head { 
+                {% if is_state('group.meteoalert', 'on') %}
+                --paper-item-icon-color: var(--paper-item-icon-active-color);
+                {% endif %}
+              }
           # padding: 0 #Allinea icone a sx
           head: 
             entity: group.meteoalert
@@ -105,44 +106,47 @@ cards:
           group_config:
             state_color: true
             secondary_info: last-changed
+            card_mod:
+              style: |
+                :host {
+                  {% set color = {0:'var(--primary-text-color)', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
+                  color: {% if 'dpc' in config.entity %} {{color[state_attr(config.entity, 'level')|int]}} 
+                          {% elif 'binary_sensor.meteoalarm' in config.entity %} 
+                            {{state_attr('binary_sensor.global_natural_alert','meteoalarm_level')}}
+                          {% elif 'burze' in config.entity and states(config.entity) == 'on'%}
+                            {% set d = state_attr(config.entity,'distance') %}
+                            {% if d %}
+                              {% if d <= 1 %}Red{% elif 1 < d <= 5 %}Orange{% elif 5 < d <= 10 %}Yellow{% else %}Green{% endif %}
+                            {% endif %}
+                          {% endif %};
+                  {% if 'meteoalarm_custom' in config.entity and states(config.entity) > '0' %} 
+                  --paper-item-icon-color: var(--paper-item-icon-active-color);
+                  {% endif %}
+                }
+        - type: custom:fold-entity-row # 2 group.geoalert
+          card_mod:
             style: |
-              :host {
-                {% set color = {0:'var(--primary-text-color)', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
-                color: {% if 'dpc' in config.entity %} {{color[state_attr(config.entity, 'level')|int]}} 
-                        {% elif 'binary_sensor.meteoalarm' in config.entity %} 
-                          {{state_attr('binary_sensor.global_natural_alert','meteoalarm_level')}}
-                        {% elif 'burze' in config.entity and states(config.entity) == 'on'%}
-                          {% set d = state_attr(config.entity,'distance') %}
-                          {% if d %}
-                            {% if d <= 1 %}Red{% elif 1 < d <= 5 %}Orange{% elif 5 < d <= 10 %}Yellow{% else %}Green{% endif %}
-                          {% endif %}
-                        {% endif %};
-                {% if 'meteoalarm_custom' in config.entity and states(config.entity) > '0' %} 
+              #head { 
+                {% if is_state('group.geoalert', 'on') %}
                 --paper-item-icon-color: var(--paper-item-icon-active-color);
                 {% endif %}
               }
-        - type: custom:fold-entity-row # 2 group.geoalert
-          style: |
-            #head { 
-              {% if is_state('group.geoalert', 'on') %}
-              --paper-item-icon-color: var(--paper-item-icon-active-color);
-              {% endif %}
-            }
           head: 
             entity: group.geoalert
             state_color: true
           group_config:
             state_color: true
             secondary_info: last-changed
-            style: |
-              :host {
-                  {% set color = {0:'var(--primary-text-color)', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
-                  color: {% if 'dpc' in config.entity %} {{color[state_attr(config.entity, 'level')|int]}} 
-                          {% elif 'meteoalarm' in config.entity %} {{state_attr('binary_sensor.global_natural_alert','meteoalarm_level')}}
-                          {% elif 'quake' in config.entity and states('binary_sensor.lastquake') == 'on' %} {{color[state_attr('binary_sensor.lastquake', 'level')|int]}}
-                        {% endif %};
-                  {% if 'gdacs' in config.entity and states(config.entity) > '0' %} --paper-item-icon-color: var(--paper-item-icon-active-color);{% endif %}
-              }
+            card_mod:
+              style: |
+                :host {
+                    {% set color = {0:'var(--primary-text-color)', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
+                    color: {% if 'dpc' in config.entity %} {{color[state_attr(config.entity, 'level')|int]}} 
+                            {% elif 'meteoalarm' in config.entity %} {{state_attr('binary_sensor.global_natural_alert','meteoalarm_level')}}
+                            {% elif 'quake' in config.entity and states('binary_sensor.lastquake') == 'on' %} {{color[state_attr('binary_sensor.lastquake', 'level')|int]}}
+                          {% endif %};
+                    {% if 'gdacs' in config.entity and states(config.entity) > '0' %} --paper-item-icon-color: var(--paper-item-icon-active-color);{% endif %}
+                }
 #################################################################
 ## AUTOENTITIES SENSORS ON AND BUTTONS MAPS
 #################################################################
@@ -155,10 +159,11 @@ cards:
     card:
       type: entities
       show_empty: false
-      style: |
-        ha-card { background: none; border-radius: 0px; box-shadow: none; }
-        # .card-content {padding: 0px}
-        div#states.card-content {padding-block-end: 0; padding-block-start: 0;}
+      card_mod:
+        style: |
+          ha-card { background: none; border-radius: 0px; box-shadow: none; }
+          # .card-content {padding: 0px}
+          div#states.card-content {padding-block-end: 0; padding-block-start: 0;}
       header:
         type: custom:paper-buttons-row
         buttons:
@@ -272,22 +277,23 @@ cards:
             entity: this.entity_id
             secondary_info: last-changed
             state_color: true
-            style: |
-              :host {
-                --color:
-                  {% set color = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
-                  {% if 'dpc' in config.entity %} {{color[state_attr(config.entity, 'level')|int]}}
-                  {% elif 'meteoalarm' in config.entity %} {{state_attr('binary_sensor.global_natural_alert','meteoalarm_level')}}
-                  {% elif 'quake' in config.entity %} {{color[state_attr('binary_sensor.lastquake', 'level')|int]}}
-                  {% elif 'burze' in config.entity and states(config.entity) == 'on'%}
-                    {% set d = state_attr(config.entity,'distance') %}
-                    {% if d %}
-                      {% if d <= 1 %}Red{% elif 1 < d <= 5 %}Orange{% elif 5 < d <= 10 %}Yellow{% else %}Green{% endif %}
-                    {% endif %}
-                  {% endif %};
-                color: var(--color);
-                {#--paper-item-icon-color: var(--color); #}
-              }
+            card_mod:
+              style: |
+                :host {
+                  --color:
+                    {% set color = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
+                    {% if 'dpc' in config.entity %} {{color[state_attr(config.entity, 'level')|int]}}
+                    {% elif 'meteoalarm' in config.entity %} {{state_attr('binary_sensor.global_natural_alert','meteoalarm_level')}}
+                    {% elif 'quake' in config.entity %} {{color[state_attr('binary_sensor.lastquake', 'level')|int]}}
+                    {% elif 'burze' in config.entity and states(config.entity) == 'on'%}
+                      {% set d = state_attr(config.entity,'distance') %}
+                      {% if d %}
+                        {% if d <= 1 %}Red{% elif 1 < d <= 5 %}Orange{% elif 5 < d <= 10 %}Yellow{% else %}Green{% endif %}
+                      {% endif %}
+                    {% endif %};
+                  color: var(--color);
+                  {#--paper-item-icon-color: var(--color); #}
+                }
         - entity_id: 'sensor.m*'
           state: '> 0'
           attributes: 
@@ -295,24 +301,25 @@ cards:
           options:
             entity: this.entity_id
             secondary_info: last-changed
-            style: |
-              :host {
-                {% set dict_code={'Green':'1','Yellow':'2','Orange':'3','Red':'4'} %}
-                {% set color = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
-                {% macro code() %}
-                {%- for s  in ['today', 'tomorrow'] -%}
-                  {% set v = state_attr('sensor.meteoalarm_custom', s) -%}
-                    {% if v -%}
-                      {% for d  in v -%}
-                      {{dict_code[d['code']]}}
-                      {% endfor -%}
-                    {% endif -%}
-                {%- endfor -%}
-                {% endmacro -%}
-                --color: {{color[code()|max|int]}};
-                color: var(--color);
-                --paper-item-icon-color: var(--paper-item-icon-active-color);
-              }
+            card_mod:
+              style: |
+                :host {
+                  {% set dict_code={'Green':'1','Yellow':'2','Orange':'3','Red':'4'} %}
+                  {% set color = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %}
+                  {% macro code() %}
+                  {%- for s  in ['today', 'tomorrow'] -%}
+                    {% set v = state_attr('sensor.meteoalarm_custom', s) -%}
+                      {% if v -%}
+                        {% for d  in v -%}
+                        {{dict_code[d['code']]}}
+                        {% endfor -%}
+                      {% endif -%}
+                  {%- endfor -%}
+                  {% endmacro -%}
+                  --color: {{color[code()|max|int]}};
+                  color: var(--color);
+                  --paper-item-icon-color: var(--paper-item-icon-active-color);
+                }
 
 #################################################################
 ## INFO  
@@ -333,8 +340,9 @@ cards:
           state: 'on'
       card:
         type: markdown
-        style: |
-          ha-card {background: none; border-radius: 0px; box-shadow: none;}
+        card_mod:
+          style: |
+            ha-card {background: none; border-radius: 0px; box-shadow: none;}
         content: >-
           {%- set mycolor = 'var(--error-color)' -%}
           {%- set color2 = 'Yellow' -%}
@@ -365,9 +373,10 @@ cards:
       card:
         type: markdown
         entity_id: this.entity_id
-        style: |
-          ha-card {background: none; border-radius: 0px; box-shadow: none;}
-          # .card-content {padding: 0}
+        card_mod:
+          style: |
+            ha-card {background: none; border-radius: 0px; box-shadow: none;}
+            # .card-content {padding: 0}
         content: >
           ___
 
@@ -395,8 +404,9 @@ cards:
           state: 'on'
       card:
         type: markdown
-        style: |
-          ha-card {background: none; border-radius: 0px; box-shadow: none;}
+        card_mod:
+          style: |
+            ha-card {background: none; border-radius: 0px; box-shadow: none;}
         content: >
           ___
 
@@ -430,8 +440,9 @@ cards:
           state_not: '0'
       card:
         type: markdown
-        style: |
-          ha-card {background: none; border-radius: 0px; box-shadow: none;}
+        card_mod:
+          style: |
+            ha-card {background: none; border-radius: 0px; box-shadow: none;}
         content: >
           ___
 
@@ -486,8 +497,9 @@ cards:
         type: vertical-stack
         cards:
         - type: markdown
-          style: |
-            ha-card {background: none; border-radius: 0px; box-shadow: none;}
+          card_mod:
+            style: |
+              ha-card {background: none; border-radius: 0px; box-shadow: none;}
           content: >-
             ___
 
@@ -497,6 +509,7 @@ cards:
             <!-- Setting -->
               {%- set person = 'person.claudio' -%}
               {%- set url = "http://shakemap.rm.ingv.it/shake/{}/download/{}.jpg" -%}
+              {%- set url_new = "http://shakemap.ingv.it/shake4/data/{}/current/products/{}.jpg" -%}
               {%- set entityid = 'binary_sensor.lastquake' -%}
               {%- set id = state_attr(entityid, 'event_id') -%}
               {%- set data_utc = state_attr(entityid, 'publication_date') -%}
@@ -534,7 +547,7 @@ cards:
         - type: custom:auto-entities # CONDITIONAL ULTIMI xx TERREMOTI
           show_empty: false
           sort:
-            {attribute: publication_date, method: attribute, reverse: true, count: 3, first: 1}
+            {attribute: publication_date, method: attribute, reverse: true, count: 4, first: 1}
           filter:
             include:
               - entity_id: geo_location.*
@@ -543,23 +556,25 @@ cards:
                 # options:
           card:
             type: markdown
-            entity_id: this.entity_id
-            style: |
-              ha-card {background: none; border-radius: 0px; box-shadow: none;}
+            # entity_id: this.entity_id
+            card_mod:
+              style: |
+                ha-card {background: none; border-radius: 0px; box-shadow: none;}
             content: >-
               <center>
               <img src="http://terremoti.ingv.it/favicon.ico" width="16"/> 
               <a href="http://terremoti.ingv.it/"> LISTA ULTIMI TERREMOTI </a></center>
-              {% set url = "http://shakemap.rm.ingv.it/shake/{}/download/{}.jpg" %}
+              {% set url  = "http://shakemap.rm.ingv.it/shake/{}/download/{}.jpg" %}
+              {% set url_new = "http://shakemap.ingv.it/shake4/data/{}/current/products/{}.jpg" %}
               {% set url2 = "https://e.hsit.it/{}/{}_{}.jpg" %}
               {% set code = {1:'White', 2:'Green', 3:'Yellow', 4:'Orange', 5:'Red'} %}
-              {% for e in config.entities %} {% set id = state_attr(e.entity, 'event_id') %}<br>
 
+              {% for e in config.entities %} {% set id = state_attr(e.entity, 'event_id') %}<br>
               <font color="var(--disabled-text-color)">{{state_attr(e.entity, 'publication_date').strftime("%d/%m %H:%M") }}</font>
               <font color="{{code[state_attr(e.entity, 'magnitude')|int]}}">
               <ha-icon icon="{{state_attr(e.entity, 'icon')}}"></ha-icon></font> {{state_attr(e.entity, 'friendly_name')}} 🏡➡ {{states(e.entity)}} Km
 
-              {% if state_attr(e.entity, 'magnitude') >= 3 %}
+              {% if state_attr(e.entity, 'magnitude') >= 3 and state_attr(e.entity, 'image_url') is defined %}
               <center> 
               <a href="{{state_attr(e.entity, 'image_url')}}"> <img src="{{state_attr(e.entity, 'image_url')}}" height="50"></a>
               <a href="{{url.format(id,'pga')}}"> <img src="{{url.format(id,'pga')}}" height="50" ></a>
@@ -586,8 +601,9 @@ cards:
               alert_level: "/^((?!Green).)*$/" # Escludi string
       card:
         type: markdown
-        style: |
-          ha-card {background: none; border-radius: 0px; box-shadow: none;}
+        card_mod:
+          style: |
+            ha-card {background: none; border-radius: 0px; box-shadow: none;}
         content: |
           ___
 
@@ -614,13 +630,14 @@ cards:
       state_not: 'Nessuna'
   card:
     type: picture-entity
-    style: |
-      ha-card {
-        border-radius: var(--ha-card-border-radius);
-        border: solid 1px var(--accent-color);
-        box-shadow: none;
-        margin: 16px;
-      }
+    card_mod:
+      style: |
+        ha-card {
+          border-radius: var(--ha-card-border-radius);
+          border: solid 1px var(--accent-color);
+          box-shadow: none;
+          margin: 16px;
+        }
     title: Nuvole
     entity: input_select.meteo_map
     tap_action:
@@ -654,13 +671,14 @@ cards:
       state: 'Posizione Geografica'
   card:
     type: map
-    style: |
-      ha-card {
-        border-radius: var(--ha-card-border-radius);
-        border: solid 1px var(--accent-color); 
-        box-shadow: none;
-        margin: 16px;
-      }
+    card_mod:
+      style: |
+        ha-card {
+          border-radius: var(--ha-card-border-radius);
+          border: solid 1px var(--accent-color); 
+          box-shadow: none;
+          margin: 16px;
+        }
     # entities:
     #   - entity: person.claudio
     geo_location_sources:
@@ -675,12 +693,13 @@ cards:
       state: 'Windy Alert'
   card: 
     type: iframe
-    style: |
-      ha-card {
-        border-radius: var(--ha-card-border-radius);
-        border: solid 1px var(--accent-color); 
-        margin: 16px;
-      }
+    card_mod:
+      style: |
+        ha-card {
+          border-radius: var(--ha-card-border-radius);
+          border: solid 1px var(--accent-color); 
+          margin: 16px;
+        }
     aspect_ratio: 100%
     url: https://embed.windy.com/embed2.html?lat=42.000&lon=12.000&zoom=5&level=surface&overlay=capAlerts&menu=&type=map&location=coordinates&detail=&detailLat=42.000&detailLon=12.000
 - type: conditional # DPC
@@ -689,12 +708,13 @@ cards:
       state: 'Protezione Civile'
   card: 
     type: iframe
-    style: |
-      ha-card {
-        border-radius: var(--ha-card-border-radius);
-        border: solid 1px var(--accent-color); 
-        margin: 16px;
-      }
+    card_mod:
+      style: |
+        ha-card {
+          border-radius: var(--ha-card-border-radius);
+          border: solid 1px var(--accent-color); 
+          margin: 16px;
+        }
     aspect_ratio: 100%
     url: 'http://www.protezionecivile.gov.it/radar-dpc'
 - type: conditional # Blitzortung
@@ -703,12 +723,13 @@ cards:
       state: 'Blitzortung'
   card: 
     type: iframe
-    style: |
-      ha-card {
-        border-radius: var(--ha-card-border-radius);
-        border: solid 1px var(--accent-color); 
-        margin: 16px;
-      }
+    card_mod:
+      style: |
+        ha-card {
+          border-radius: var(--ha-card-border-radius);
+          border: solid 1px var(--accent-color); 
+          margin: 16px;
+        }
     aspect_ratio: 100%
     url: 'https://map.blitzortung.org/#5.11/42.5/12.51' # Il Centro geografico d'Italia
     # <img src="http://terremoti.ingv.it/images/ingv_logo_colore.png" background="white"/><br>
@@ -718,12 +739,13 @@ cards:
       state: 'Radareu'
   card: 
     type: iframe
-    style: |
-      ha-card {
-        border-radius: var(--ha-card-border-radius);
-        border: solid 1px var(--accent-color); 
-        margin: 16px;
-      }
+    card_mod:
+      style: |
+        ha-card {
+          border-radius: var(--ha-card-border-radius);
+          border: solid 1px var(--accent-color); 
+          margin: 16px;
+        }
     aspect_ratio: 100%
     url: 'http://www.radareu.cz/?lng=uk&core'
 - type: conditional # Volcanodiscovery
@@ -732,11 +754,12 @@ cards:
       state: 'Volcanodiscovery'
   card: 
     type: iframe
-    style: |
-      ha-card {
-        border-radius: var(--ha-card-border-radius);
-        border: solid 1px var(--accent-color); 
-        margin: 16px;
-      }
+    card_mod:
+      style: |
+        ha-card {
+          border-radius: var(--ha-card-border-radius);
+          border: solid 1px var(--accent-color); 
+          margin: 16px;
+        }
     aspect_ratio: 100%
     url: 'https://earthquakes.volcanodiscovery.com/?L=12&zoom=6&lat=41&lon=13&minMag=3'
