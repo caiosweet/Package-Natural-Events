@@ -543,6 +543,10 @@ cards:
               Map Open Streat Map
               [{{state_attr(entityid, 'region')}}](https://www.openstreetmap.org/?mlat={{lat}}&mlon={{long}}#map=8/{{lat}}/{{long}})
             -->
+            <!-- 
+              <center><img src="http://terremoti.ingv.it/favicon.ico" width="16"/> 
+              <a href="http://terremoti.ingv.it/"> LISTA TERREMOTI </a>
+            -->
 
         - type: custom:auto-entities # CONDITIONAL ULTIMI xx TERREMOTI
           show_empty: false
@@ -569,11 +573,14 @@ cards:
               {% set url2 = "https://e.hsit.it/{}/{}_{}.jpg" %}
               {% set code = {1:'White', 2:'Green', 3:'Yellow', 4:'Orange', 5:'Red'} %}
 
-              {% for e in config.entities %} {% set id = state_attr(e.entity, 'event_id') %}<br>
+              {% for e in config.entities %} 
+              {% if state_attr(e.entity,'publication_date') is not none %}
+              {% set id = state_attr(e.entity, 'event_id') %}<br>
               <font color="var(--disabled-text-color)">{{state_attr(e.entity, 'publication_date').strftime("%d/%m %H:%M") }}</font>
               <font color="{{code[state_attr(e.entity, 'magnitude')|int]}}">
               <ha-icon icon="{{state_attr(e.entity, 'icon')}}"></ha-icon></font> {{state_attr(e.entity, 'friendly_name')}} 🏡➡ {{states(e.entity)}} Km
-
+              {% endif %}
+              
               {% if state_attr(e.entity, 'magnitude') >= 3 and state_attr(e.entity, 'image_url') is defined %}
               <center> 
               <a href="{{state_attr(e.entity, 'image_url')}}"> <img src="{{state_attr(e.entity, 'image_url')}}" height="50"></a>
