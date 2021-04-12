@@ -1,11 +1,14 @@
-## INFO 📦 Natural_events PATH /config/www/hassiohelp/pkg_natural_events
-#  ✍ Caio & Gianpi [hassiohelp.eu]
-#  📅 01/08/2019 [Update 12/04/2021]
-#  📌 Information provided by MeteoAlarm, Burze, GDACS, DPC and INGV Italy
-#--------------------------------------------------------------------------------------------------|
-# DPC: per trovare il codice ISTAT: https://www.paginebianche.it/codice-istat
-# METEOALARM: Cerca il nome della tua Regione o ID: http://meteoalarm.eu/it_IT/0/0/IT-Italia.html
-# Strumento per visualizzare il raggio delle zone https://www.mapdevelopers.com/draw-circle-tool.php
+## INFO 📦 Natural_events
+##  😅 Caio & Gianpi [hassiohelp.eu]
+##  📅 01/08/2019 [Update 12/04/2021]
+##  📌 Information provided by MeteoAlarm, Burze, GDACS, DPC and INGV Italy
+##  📂 PATH IMAGE /config/www/hassiohelp/pkg_natural_events
+##--------------------------------------------------------------------------------------------------|
+## DPC: per trovare il codice ISTAT: https://www.paginebianche.it/codice-istat
+## METEOALARM: Cerca il nome della tua Regione o ID: http://meteoalarm.eu/it_IT/0/0/IT-Italia.html
+## Strumento per visualizzare il raggio delle zone https://www.mapdevelopers.com/draw-circle-tool.php
+## SSH & Web Terminal: per il check url e download immagine INGV https://github.com/hassio-addons/addon-ssh
+## Centro Notifiche (AppDaemon Notifier): https://github.com/caiosweet/Package-Notification-HUB-AppDaemon/wiki
 
 homeassistant:
   customize:
@@ -15,29 +18,31 @@ homeassistant:
     package.node_anchors:
       ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
       setting:
-        # ⚓SCRIPT centro notifiche: &script script.natural_events_notifications
-        ⚓SCRIPT centro notifiche: &script script.my_notify
-        ⚓SERVIZIO Notify: &notify "telegram"
-        ⚓MEDIA PLAYER Google: &media_player_google "media_player.red"
-        ⚓MEDIA PLAYER Alexa: &media_player_alexa "media_player.studio"
-        # Orario di riproduzione messaggi TTS (Per script.natural_events_notifications)
-        ⚓DOPO LE: &after "07:00:00"
-        ⚓PRIMA DELLE: &before "23:00:00"
-        # Cartella per downloads [Se la cambi, ricorda di farlo anche in lovelace]
-        ⚓DOWNLOAD DIRECTORY: &download_dir "/config/www/hassiohelp/downloads/"
+        # SCRIPT centro notifiche: &script script.natural_events_notifications
+        SCRIPT centro notifiche: &script script.my_notify
+        SERVIZIO Notify: &notify "telegram"
+        MEDIA PLAYER Google: &media_player_google "media_player.red"
+        MEDIA PLAYER Alexa: &media_player_alexa "media_player.studio"
+          ## Orario di riproduzione messaggi TTS (Per script.natural_events_notifications)
+        DOPO LE: &after "07:00:00"
+        PRIMA DELLE: &before "23:00:00"
+          ## Cartella per downloads [Se la cambi, ricorda di farlo anche in lovelace!]
+        DOWNLOAD DIRECTORY: &download_dir "/config/www/hassiohelp/downloads/"
       filter:
-        ⚓RAGGIO ZONA MeteoAlert metri: &radius_meteoalert 25000
-        ⚓RAGGIO ZONA GeoAlert metri: &radius_geoalert 1000000
-        ⚓RAGGIO TERREMOTO km: &radius_quake 1000
-        ⚓MAGNITUDO minimo: &magnitude 2
-        ⚓RAGGIO BURZE km: &radius_burze 25
-      secret: # Oppure inserire i dati direttamente al posto di !secret etcetc
-        ⚓LATITUDINE per le zone: !secret &latitude latitude_home
-        ⚓LONGITUDINE per le zone: !secret &longitude longitude_home
-        ⚓REGIONE MeteoAlarm: !secret &province regione
-        ⚓ID Meteoalarm Custom: !secret &meteoalarm_custom_id meteoalarm_custom_id
-        ⚓ISTAT DPC: !secret &istat istat
-        ⚓API KEY Burze: !secret &burze_api_key burze_api_key
+        RAGGIO ZONA MeteoAlert metri: &radius_meteoalert 25000
+        RAGGIO ZONA GeoAlert metri: &radius_geoalert 1000000
+        RAGGIO TERREMOTO km: &radius_quake 1000
+        MAGNITUDO minimo: &magnitude 2
+        RAGGIO BURZE km: &radius_burze 25
+      secret: 
+          ## Se non vuoi usare il secret, cancella "!secret" e aggiungili dopo &xxxxxx ⚓
+          ## Esempio LATITUDINE per le zone: &latitude 41.9109
+        LATITUDINE per le zone: !secret &latitude latitude_home
+        LONGITUDINE per le zone: !secret &longitude longitude_home
+        REGIONE MeteoAlarm: !secret &province regione
+        ID Meteoalarm Custom: !secret &meteoalarm_custom_id meteoalarm_custom_id
+        ISTAT DPC: !secret &istat istat
+        API KEY Burze: !secret &burze_api_key burze_api_key
       ##--------------------- FINE IMPOSTAZIONI PACKAGE ---------------------##
 
       ##------------------ IMPOSTAZIONI >inizio< VARIABILI ------------------##
