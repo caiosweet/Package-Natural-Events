@@ -284,9 +284,6 @@ homeassistant:
 #######################################-#######################################
 ##                                 COMPONENT
 #######################################-#######################################
-downloader:
-  download_dir: /config/www/hassiohelp/
-
 #-------------------------------------
 # GDACS info https://www.home-assistant.io/integrations/gdacs/
 #-------------------------------------
@@ -630,18 +627,6 @@ sensor:
 ##                                 AUTOMATION
 #######################################-#######################################
 automation:
-  - alias: "Download Notification"
-    trigger:
-      - platform: event
-        event_type: downloader_download_failed
-      - platform: event
-        event_type: downloader_download_completed
-    action:
-      service: script.my_notify
-      data:
-        message: " download {{trigger.description}}"
-        title: "Download File"
-
   #----------------------------------------------------------------------------------------------------#
   # START-UP - natural_events (Crea gruppo di tutti i binary sensor e aggiorna alcuni sensori all'avvio)
   #----------------------------------------------------------------------------------------------------#
