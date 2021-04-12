@@ -907,10 +907,6 @@ automation:
                       input: response=$(curl -fs -m 5 "{{url_format}}" -o {{download_dir}}lastquake.jpg --create-dirs -w "%{http_code}\n" -s); test "$response" -eq 200 && hass-cli state edit binary_sensor.check_url "on" || hass-cli state edit binary_sensor.check_url "off"
                   - wait_template: "{{ is_state('binary_sensor.check_url', 'on') }}"
                     timeout: "00:00:10"
-                  - service: notify.telegram
-                    data:
-                      title: "Wait Test URL"
-                      message: "{{states('binary_sensor.check_url')}} [{{repeat.index|default(0)}}]"
                 until: "{{ is_state('binary_sensor.check_url', 'on') or repeat.index >= 15  }}"
       - service: *script
         data:
