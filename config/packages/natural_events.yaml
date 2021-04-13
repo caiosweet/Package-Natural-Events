@@ -1,11 +1,14 @@
 ## INFO 📦 Natural_events
-#  ✍ Caio & Gianpi [hassiohelp.eu]
-#  📅 01/08/2019 [Update 19/02/2021]
-#  📌 Information provided by MeteoAlarm, Burze, GDACS, DPC and INGV Italy
-#--------------------------------------------------------------------------------------------------|
-# DPC: per trovare il codice ISTAT: https://www.paginebianche.it/codice-istat
-# METEOALARM: Cerca il nome della tua Regione o ID: http://meteoalarm.eu/it_IT/0/0/IT-Italia.html
-# Strumento per visualizzare il raggio delle zone https://www.mapdevelopers.com/draw-circle-tool.php
+##  😅 Caio & Gianpi [hassiohelp.eu]
+##  📅 01/08/2019 [Update 12/04/2021]
+##  📌 Information provided by MeteoAlarm, Burze, GDACS, DPC and INGV Italy
+##  📂 PATH IMAGE /config/www/hassiohelp/pkg_natural_events
+##--------------------------------------------------------------------------------------------------|
+## DPC: per trovare il codice ISTAT: https://www.paginebianche.it/codice-istat
+## METEOALARM: Cerca il nome della tua Regione o ID: http://meteoalarm.eu/it_IT/0/0/IT-Italia.html
+## Strumento per visualizzare il raggio delle zone https://www.mapdevelopers.com/draw-circle-tool.php
+## SSH & Web Terminal: per il check url e download immagine INGV https://github.com/hassio-addons/addon-ssh
+## Centro Notifiche (AppDaemon Notifier): https://github.com/caiosweet/Package-Notification-HUB-AppDaemon/wiki
 
 homeassistant:
   customize:
@@ -15,27 +18,31 @@ homeassistant:
     package.node_anchors:
       ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
       setting:
-        # ⚓SCRIPT centro notifiche: &script script.natural_events_notifications
-        ⚓SCRIPT centro notifiche: &script script.my_notify
-        ⚓SERVIZIO Notify: &notify "telegram"
-        ⚓MEDIA PLAYER Google: &media_player_google "media_player.red"
-        ⚓MEDIA PLAYER Alexa: &media_player_alexa "media_player.studio"
-        # Orario di riproduzione messaggi TTS (Per script.natural_events_notifications)
-        ⚓DOPO LE: &after "07:00:00"
-        ⚓PRIMA DELLE: &before "23:00:00"
+        # SCRIPT centro notifiche: &script script.natural_events_notifications
+        SCRIPT centro notifiche: &script script.my_notify
+        SERVIZIO Notify: &notify "telegram"
+        MEDIA PLAYER Google: &media_player_google "media_player.red"
+        MEDIA PLAYER Alexa: &media_player_alexa "media_player.studio"
+          ## Orario di riproduzione messaggi TTS (Per script.natural_events_notifications)
+        DOPO LE: &after "07:00:00"
+        PRIMA DELLE: &before "23:00:00"
+          ## Cartella per downloads [Se la cambi, ricorda di farlo anche in lovelace!]
+        DOWNLOAD DIRECTORY: &download_dir "/config/www/hassiohelp/downloads/"
       filter:
-        ⚓RAGGIO ZONA MeteoAlert metri: &radius_meteoalert 25000
-        ⚓RAGGIO ZONA GeoAlert metri: &radius_geoalert 50000
-        ⚓RAGGIO TERREMOTO km: &radius_quake 50
-        ⚓MAGNITUDO minimo: &magnitude 3
-        ⚓RAGGIO BURZE km: &radius_burze 25
-      secret: # Oppure inserire i dati direttamente al posto di !secret etcetc
-        ⚓LATITUDINE per le zone: &latitude !secret latitude_home
-        ⚓LONGITUDINE per le zone: &longitude !secret longitude_home
-        ⚓REGIONE MeteoAlaram: &province !secret regione
-        ⚓ID Meteoalarm Custom: &meteoalarm_custom_id !secret meteoalarm_custom_id
-        ⚓ISTAT DPC: &istat !secret istat
-        ⚓API KEY Burze: &burze_api_key !secret burze_api_key
+        RAGGIO ZONA MeteoAlert metri: &radius_meteoalert 25000
+        RAGGIO ZONA GeoAlert metri: &radius_geoalert 1000000
+        RAGGIO TERREMOTO km: &radius_quake 1000
+        MAGNITUDO minimo: &magnitude 2
+        RAGGIO BURZE km: &radius_burze 25
+      secret: 
+          ## Se NON usi il secret, osserva l'esempio qui sotto.
+          ## Esempio LATITUDINE per le zone: &latitude 41.9109
+        LATITUDINE per le zone: !secret &latitude latitude_home
+        LONGITUDINE per le zone: !secret &longitude longitude_home
+        REGIONE MeteoAlarm: !secret &province regione
+        ID Meteoalarm Custom: !secret &meteoalarm_custom_id meteoalarm_custom_id
+        ISTAT DPC: !secret &istat istat
+        API KEY Burze: !secret &burze_api_key burze_api_key
       ##--------------------- FINE IMPOSTAZIONI PACKAGE ---------------------##
 
       ##------------------ IMPOSTAZIONI >inizio< VARIABILI ------------------##
@@ -149,11 +156,7 @@ homeassistant:
         package: "Natural_events 🌍"
         site: "hassiohelp.eu 🌐"
         author: "Caio & Gianpi"
-        version: "3.9.1"
-      expose: &expose
-        <<: *customize
-        haaska_hidden: false
-        homebridge_hidden: false
+        version: "2021.04.0"
 
     ## Automation
     automation.natural_events_burze_notifications:
@@ -174,6 +177,9 @@ homeassistant:
     automation.natural_events_quake_notifications:
       <<: *customize
       friendly_name: "INGV Notifiche"
+    automation.natural_events_quake_notifications_usgs:
+      <<: *customize
+      friendly_name: "USGS Notifiche"
     automation.natural_events_startup:
       <<: *customize
       friendly_name: "StartUp Natural events"
@@ -191,9 +197,9 @@ homeassistant:
       <<: *customize
       friendly_name: Scossa Terremoto
       icon: mdi:pulse
-    binary_sensor.shakemap:
+    binary_sensor.check_url:
       <<: *customize
-      friendly_name: Check Shakemap
+      friendly_name: Check URL
       icon: mdi:link
     ## Group
     group.natural_events:
@@ -279,7 +285,6 @@ homeassistant:
 #######################################-#######################################
 ##                                 COMPONENT
 #######################################-#######################################
-
 #-------------------------------------
 # GDACS info https://www.home-assistant.io/integrations/gdacs/
 #-------------------------------------
@@ -412,13 +417,6 @@ binary_sensor:
   #-------------------------------------
   # LAST QUAKE
   #-------------------------------------
-  - platform: command_line # check URL
-    name: shakemap
-    device_class: connectivity
-    command: response=$(curl -LIk -m 3 "{{state_attr('binary_sensor.lastquake', 'image_url')}}" -o /dev/null -w "%{http_code}\n" -s); test "$response" -eq 200 && echo "ON" || echo "OFF"
-    scan_interval: 864000 # 10 gg
-    value_template: "{{ value }}"
-
   - platform: template
     sensors:
       lastquake:
@@ -429,39 +427,39 @@ binary_sensor:
           {% set last_date = states.geo_location
             | selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
             | sort(attribute='attributes.publication_date')
-            | map(attribute='attributes.publication_date') |list|last %}
+            | map(attribute='attributes.publication_date') |list|last|default %}
           {{ ((as_timestamp(utcnow())-as_timestamp(last_date))/3600) <= 24 if last_date else False }}
         attribute_templates:
           distance: >-
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='state')|list|last}}
+              |sort(attribute='attributes.publication_date')|map(attribute='state')|list|last|default}}
           lat: >-
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.latitude')|list|last}}
+              |sort(attribute='attributes.publication_date')|map(attribute='attributes.latitude')|list|last|default}}
           long: >-
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.longitude')|list|last}}
+              |sort(attribute='attributes.publication_date')|map(attribute='attributes.longitude')|list|last|default}}
           title: >-
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.title')|list|last}}
+              |sort(attribute='attributes.publication_date')|map(attribute='attributes.title')|list|last|default}}
           region: >-
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.region')|list|last}}
+              |sort(attribute='attributes.publication_date')|map(attribute='attributes.region')|list|last|default}}
           magnitude: >-
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.magnitude')|list|last}}
+              |sort(attribute='attributes.publication_date')|map(attribute='attributes.magnitude')|list|last|default}}
           publication_date: >-
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.publication_date')|list|last}}
+              |sort(attribute='attributes.publication_date')|map(attribute='attributes.publication_date')|list|last|default}}
           event_id: >-
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.event_id')|list|last}}
+              |sort(attribute='attributes.publication_date')|map(attribute='attributes.event_id')|list|last|default}}
           image_url: >-
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.image_url')|list|last}}
+              |sort(attribute='attributes.publication_date')|map(attribute='attributes.image_url')|list|last|default}}
           attribution: >-
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.attribution')|list|last}}
+              |sort(attribute='attributes.publication_date')|map(attribute='attributes.attribution')|list|last|default}}
           level: >-
             {%set m = states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
               |sort(attribute='attributes.publication_date')|map(attribute='attributes.magnitude')|list|last|default(0)%}
@@ -469,7 +467,7 @@ binary_sensor:
               {%if 0<=m<=1.9%}0{%elif 2<=m<=2.9%}1{%elif 3<=m<=3.9%}2{%elif 4<=m<=5.9%}3{%else%}4{%endif%}
           external_id: >-
             {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-            |sort(attribute='attributes.publication_date')|map(attribute='attributes.external_id')|list|last|replace('smi:','')}}
+            |sort(attribute='attributes.publication_date')|map(attribute='attributes.external_id')|list|last|default|replace('smi:','')}}
   #-------------------------------------
   # GLOBAL NATURAL ALERT PACKAGE
   #-------------------------------------
@@ -876,12 +874,12 @@ automation:
         zone: zone.geoalert
         event: enter
     condition: >-
-      {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.publication_date))/3600*60)|int < 60}}
+      {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.publication_date))/3600*60)|int < 90 }}
     action:
       - variables:
           alert: *alert
-          level:
-            > #{{alert.get(state_attr('binary_sensor.lastquake', 'level')).color}}
+          download_dir: *download_dir
+          level: >-
             {% set m = trigger.to_state.attributes.magnitude %}
             {% macro magnitude() %}
             {%if 0<=m<=1.9%}0{%elif 2<=m<=2.9%}1{%elif 3<=m<=3.9%}2{%elif 4<=m<=5.9%}3{%else%}4{%endif%}
@@ -890,25 +888,22 @@ automation:
             Rilevato terremoto a {{trigger.to_state.state}} km.
             Epicentro {{trigger.to_state.attributes.region}}.
             Magnitudo {{trigger.to_state.attributes.magnitude}}.
+          url_format: >- ## "{{trigger.to_state.attributes.image_url}}"
+            {% set eventid = trigger.to_state.attributes.event_id %}
+            {{'http://shakemap.rm.ingv.it/shake4/data/{}/current/products/intensity.jpg'.format(eventid) 
+            if trigger.to_state.attributes.magnitude >= 3 }}
       - choose:
-          - conditions: "{{trigger.to_state.attributes.magnitude >= 3}}"
+          - conditions: "{{trigger.to_state.attributes.magnitude >= 3}}" # "{{url_format is defined}}"
             sequence:
               repeat:
                 sequence:
-                  - service: homeassistant.update_entity
-                    entity_id: binary_sensor.shakemap
-                  - wait_for_trigger:
-                      - platform: state
-                        entity_id: binary_sensor.shakemap
-                        to: "on"
-                    timeout: 20
-                    continue_on_timeout: true
-                until:
-                  - condition: state
-                    entity_id: binary_sensor.shakemap
-                    state: "on"
-                  - condition: template
-                    value_template: "{{ repeat.index <= 10 }}"
+                  - service: hassio.addon_stdin
+                    data:
+                      addon: a0d7b954_ssh
+                      input: response=$(curl -fs -m 5 "{{url_format}}" -o {{download_dir}}lastquake.jpg --create-dirs -w "%{http_code}\n" -s); test "$response" -eq 200 && hass-cli state edit binary_sensor.check_url "on" || hass-cli state edit binary_sensor.check_url "off"
+                  - wait_template: "{{ is_state('binary_sensor.check_url', 'on') }}"
+                    timeout: "00:00:10"
+                until: "{{ is_state('binary_sensor.check_url', 'on') or repeat.index >= 15  }}"
       - service: *script
         data:
           call_no_annuncio: 1
@@ -919,8 +914,8 @@ automation:
             Rilevato terremoto di magnitudo: {{trigger.to_state.attributes.magnitude}} 
             a una distanza di {{trigger.to_state.state}} Km da casa. Epicentro: {{trigger.to_state.attributes.region}} 
             {{as_timestamp(data_utc)|timestamp_custom ('Data %d/%m/%Y Ore %H:%M:%S')}}
-            {% if trigger.to_state.attributes.image_url and is_state('binary_sensor.shakemap', 'off') %}
-            [Immagine]({{trigger.to_state.attributes.image_url}}) {% endif %}
+            {% if url_format is defined and is_state('binary_sensor.check_url', 'off') %}
+            [Immagine]({{url_format}}) {% endif %}
           alexa:
             message_tts: "{{quake_tts_msg}}"
             media_player: *media_player_alexa
@@ -929,7 +924,8 @@ automation:
             message_tts: "{{quake_tts_msg}}"
             media_player: *media_player_google
           url: >-
-            {% if is_state('binary_sensor.shakemap', 'on') %}{{trigger.to_state.attributes.image_url}}{% endif %}
+            {% if url_format is defined and is_state('binary_sensor.check_url', 'on') %}
+            {{url_format}}{% endif %}
 
   # USGS
   - alias: natural_events_quake_notifications_usgs
@@ -946,9 +942,9 @@ automation:
     action:
       - variables:
           usgs_tts_msg: >-
-              Evento sismico a {{trigger.to_state.state}} km.
-              Epicentro {{trigger.to_state.attributes.place}}.
-              Magnitudo {{trigger.to_state.attributes.magnitude}}.
+            Evento sismico a {{trigger.to_state.state}} km.
+            Epicentro {{trigger.to_state.attributes.place}}.
+            Magnitudo {{trigger.to_state.attributes.magnitude}}.
       - service: *script
         data:
           call_no_annuncio: 1
