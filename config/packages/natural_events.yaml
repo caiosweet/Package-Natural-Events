@@ -35,7 +35,7 @@ homeassistant:
         MAGNITUDO minimo: &magnitude 2
         RAGGIO BURZE km: &radius_burze 25
       secret: 
-          ## Se non vuoi usare il secret, cancella "!secret" e aggiungili dopo &xxxxxx ⚓
+          ## Se NON usi il secret, osserva l'esempio qui sotto.
           ## Esempio LATITUDINE per le zone: &latitude 41.9109
         LATITUDINE per le zone: !secret &latitude latitude_home
         LONGITUDINE per le zone: !secret &longitude longitude_home
@@ -157,10 +157,6 @@ homeassistant:
         site: "hassiohelp.eu 🌐"
         author: "Caio & Gianpi"
         version: "2021.04.0"
-      expose: &expose
-        <<: *customize
-        haaska_hidden: false
-        homebridge_hidden: false
 
     ## Automation
     automation.natural_events_burze_notifications:
@@ -878,13 +874,12 @@ automation:
         zone: zone.geoalert
         event: enter
     condition: >-
-      {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.publication_date))/3600*60)|int < 90}}
+      {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.publication_date))/3600*60)|int < 90 }}
     action:
       - variables:
           alert: *alert
           download_dir: *download_dir
-          level:
-            > #{{alert.get(state_attr('binary_sensor.lastquake', 'level')).color}}
+          level: >-
             {% set m = trigger.to_state.attributes.magnitude %}
             {% macro magnitude() %}
             {%if 0<=m<=1.9%}0{%elif 2<=m<=2.9%}1{%elif 3<=m<=3.9%}2{%elif 4<=m<=5.9%}3{%else%}4{%endif%}
@@ -893,11 +888,12 @@ automation:
             Rilevato terremoto a {{trigger.to_state.state}} km.
             Epicentro {{trigger.to_state.attributes.region}}.
             Magnitudo {{trigger.to_state.attributes.magnitude}}.
-          url_format: >-
+          url_format: >- ## "{{trigger.to_state.attributes.image_url}}"
             {% set eventid = trigger.to_state.attributes.event_id %}
-            http://shakemap.rm.ingv.it/shake4/data/{{eventid}}/current/products/intensity.jpg
+            {{'http://shakemap.rm.ingv.it/shake4/data/{}/current/products/intensity.jpg'.format(eventid) 
+            if trigger.to_state.attributes.magnitude >= 3 }}
       - choose:
-          - conditions: "{{trigger.to_state.attributes.magnitude >= 3}}"
+          - conditions: "{{trigger.to_state.attributes.magnitude >= 3}}" # "{{url_format is defined}}"
             sequence:
               repeat:
                 sequence:
@@ -928,8 +924,7 @@ automation:
             message_tts: "{{quake_tts_msg}}"
             media_player: *media_player_google
           url: >-
-            {% if is_state('binary_sensor.check_url', 'on') 
-            and trigger.to_state.attributes.magnitude >= 3 %}
+            {% if url_format is defined and is_state('binary_sensor.check_url', 'on') %}
             {{url_format}}{% endif %}
 
   # USGS
