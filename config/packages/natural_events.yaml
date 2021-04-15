@@ -156,7 +156,7 @@ homeassistant:
         package: "Natural_events 🌍"
         site: "hassiohelp.eu 🌐"
         author: "Caio & Gianpi"
-        version: "2021.04.0"
+        version: "2021.04.1"
 
     ## Automation
     automation.natural_events_burze_notifications:
