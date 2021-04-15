@@ -156,7 +156,7 @@ homeassistant:
         package: "Natural_events 🌍"
         site: "hassiohelp.eu 🌐"
         author: "Caio & Gianpi"
-        version: "2021.04.0"
+        version: "2021.04.1"
 
     ## Automation
     automation.natural_events_burze_notifications:
@@ -863,6 +863,7 @@ automation:
   #----------------------------------------------------------------------------------------------------#
   # GEO LOCATION - Notifica Terremoti
   #----------------------------------------------------------------------------------------------------#
+
   # INGV
   - alias: natural_events_quake_notifications
     mode: queued
@@ -900,9 +901,16 @@ automation:
                   - service: hassio.addon_stdin
                     data:
                       addon: a0d7b954_ssh
-                      input: response=$(curl -fs -m 5 "{{url_format}}" -o {{download_dir}}lastquake.jpg --create-dirs -w "%{http_code}\n" -s); test "$response" -eq 200 && hass-cli state edit binary_sensor.check_url "on" || hass-cli state edit binary_sensor.check_url "off"
+                      input: >-
+                        rm -f {{download_dir}}lastquake.jpg &&
+                        response=$(curl
+                        -fs -m 5 "{{url_format}}"
+                        -o {{download_dir}}lastquake.jpg --create-dirs -w "%{http_code}" -s);
+                        test "$response" -eq 200 && hass-cli state edit
+                        binary_sensor.check_url "on" || hass-cli state edit
+                        binary_sensor.check_url "off"
                   - wait_template: "{{ is_state('binary_sensor.check_url', 'on') }}"
-                    timeout: "00:00:10"
+                    timeout: "00:00:20"
                 until: "{{ is_state('binary_sensor.check_url', 'on') or repeat.index >= 15  }}"
       - service: *script
         data:
