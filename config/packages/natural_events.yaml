@@ -912,6 +912,7 @@ automation:
                         - platform: state
                           entity_id: binary_sensor.check_url
                           to: 'on'
+                      timeout: '00:00:20'
                   until: "{{ is_state('binary_sensor.check_url', 'on') or repeat.index >= 15 }}"
       - service: *script
         data:
