@@ -896,24 +896,24 @@ automation:
       - choose:
           - conditions: "{{trigger.to_state.attributes.magnitude >= 3}}" # "{{url_format is defined}}"
             sequence:
-              - repeat:
-                  sequence:
-                    - service: hassio.addon_stdin
-                      data:
-                        addon: a0d7b954_ssh
-                        input: >-
-                          rm -f {{download_dir}}lastquake.jpg &&
-                          response=$(curl -Lk -fs -m 5 "{{url_format}}"
-                          -o {{download_dir}}lastquake.jpg --create-dirs -w "%{http_code}");
-                          test "$response" -eq 200 &&
-                          hass-cli state edit binary_sensor.check_url "on" ||
-                          hass-cli state edit binary_sensor.check_url "off"
-                    - wait_for_trigger:
-                        - platform: state
-                          entity_id: binary_sensor.check_url
-                          to: 'on'
-                      timeout: '00:00:20'
-                  until: "{{ is_state('binary_sensor.check_url', 'on') or repeat.index >= 15 }}"
+              repeat:
+                sequence:
+                  - service: hassio.addon_stdin
+                    data:
+                      addon: a0d7b954_ssh
+                      input: >-
+                        rm -f "{{download_dir}}lastquake.jpg";
+                        wget --spider "{{url_format}}" &&
+                        curl -Lk -f -m 5 "{{url_format}}" --create-dirs -o "{{download_dir}}lastquake.jpg" &&
+                        hass-cli state edit binary_sensor.check_url "on" ||
+                        hass-cli state edit binary_sensor.check_url "off"
+                  - wait_for_trigger:
+                      - platform: state
+                        entity_id: binary_sensor.check_url
+                        to: 'on'
+                    timeout: '00:00:20'
+                until: "{{ is_state('binary_sensor.check_url', 'on') or repeat.index >= 15 }}"
+      - delay: "00:00:01"
       - service: *script
         data:
           call_no_annuncio: 1
