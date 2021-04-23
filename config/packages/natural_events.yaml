@@ -17,32 +17,30 @@ homeassistant:
     ########################################################################
     package.node_anchors:
       ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
-      setting:
-        # SCRIPT centro notifiche: &script script.natural_events_notifications
-        SCRIPT centro notifiche: &script script.my_notify
-        SERVIZIO Notify: &notify "telegram"
-        MEDIA PLAYER Google: &media_player_google "media_player.red"
-        MEDIA PLAYER Alexa: &media_player_alexa "media_player.studio"
-          ## Orario di riproduzione messaggi TTS (Per script.natural_events_notifications)
-        DOPO LE: &after "07:00:00"
-        PRIMA DELLE: &before "23:00:00"
-          ## Cartella per downloads [Se la cambi, ricorda di farlo anche in lovelace!]
-        DOWNLOAD DIRECTORY: &download_dir "/config/www/hassiohelp/downloads/"
-      filter:
-        RAGGIO ZONA MeteoAlert metri: &radius_meteoalert 25000
-        RAGGIO ZONA GeoAlert metri: &radius_geoalert 1000000
-        RAGGIO TERREMOTO km: &radius_quake 1000
-        MAGNITUDO minimo: &magnitude 2
-        RAGGIO BURZE km: &radius_burze 25
-      secret: 
-          ## Se NON usi il secret, osserva l'esempio qui sotto.
-          ## Esempio LATITUDINE per le zone: &latitude 41.9109
-        LATITUDINE per le zone: !secret &latitude latitude_home
-        LONGITUDINE per le zone: !secret &longitude longitude_home
-        REGIONE MeteoAlarm: !secret &province regione
-        ID Meteoalarm Custom: !secret &meteoalarm_custom_id meteoalarm_custom_id
-        ISTAT DPC: !secret &istat istat
-        API KEY Burze: !secret &burze_api_key burze_api_key
+      ## Se NON usi il secret, osserva l'esempio qui sotto.
+      ## Esempio LATITUDINE per le zone: &latitude 41.9109
+      SCRIPT centro notifiche: !secret &script pkg_natural_events_script
+      SERVIZIO Notify: !secret &notify pkg_natural_events_notify
+      MEDIA PLAYER Google: !secret &media_player_google pkg_natural_events_google
+      MEDIA PLAYER Alexa: !secret &media_player_alexa pkg_natural_events_alexa
+      ## Orario di riproduzione messaggi TTS (Per script.natural_events_notifications)
+      DOPO LE: !secret &speaker_on_dnd_end pkg_natural_events_dnd_end
+      PRIMA DELLE: !secret &speaker_off_dnd_start pkg_natural_events_dnd_start
+      ## Cartella per downloads [Se la cambi, ricorda di farlo anche in lovelace!]
+      DOWNLOAD DIRECTORY: !secret &download_dir pkg_natural_events_download_dir
+
+      RAGGIO ZONA MeteoAlert metri: !secret &radius_meteoalert pkg_natural_events_radius_meteoalert
+      RAGGIO ZONA GeoAlert metri: !secret &radius_geoalert pkg_natural_events_radius_geoalert
+      RAGGIO TERREMOTO km: !secret &radius_quake pkg_natural_events_radius_quake
+      MAGNITUDO minimo: !secret &magnitude pkg_natural_events_magnitude
+      RAGGIO BURZE km: !secret &radius_burze pkg_natural_events_radius_burze
+
+      LATITUDINE per le zone: !secret &latitude pkg_natural_events_latitude_home
+      LONGITUDINE per le zone: !secret &longitude pkg_natural_events_longitude_home
+      REGIONE MeteoAlarm: !secret &province pkg_natural_events_meteoalarm_regione
+      ID Meteoalarm Custom: !secret &meteoalarm_custom_id pkg_natural_events_meteoalarm_custom_id
+      ISTAT DPC: !secret &istat pkg_natural_events_istat
+      API KEY Burze: !secret &burze_api_key pkg_natural_events_burze_api_key
       ##--------------------- FINE IMPOSTAZIONI PACKAGE ---------------------##
 
       ##------------------ IMPOSTAZIONI >inizio< VARIABILI ------------------##
@@ -75,63 +73,78 @@ homeassistant:
         - Venerdì
         - Sabato
 
-      meteoalarm_type: &meteoalarm_type
+      meteoalarm_type:
+        &meteoalarm_type #https://d3qhmae9zx9eb.cloudfront.net/ al posto di soundbank://soundlibrary/
         0:
           icon: "❌"
           text: "Nessun Avviso"
           audio: <audio src="soundbank://soundlibrary/musical/amzn_sfx_test_tone_01"/>
+          google_audio: "https://d3qhmae9zx9eb.cloudfront.net/musical/amzn_sfx_test_tone_01.mp3"
         1:
           icon: "🚩"
           text: "Vento"
           audio: <audio src="soundbank://soundlibrary/weather/wind/wind_10"/>
+          google_audio: "https://d3qhmae9zx9eb.cloudfront.net/weather/wind/wind_10.mp3"
         2:
           icon: "🧊"
           text: "Neve-Ghiaccio"
           audio: <audio src="soundbank://soundlibrary/footsteps/snow/snow_06"/>
+          google_audio: "https://d3qhmae9zx9eb.cloudfront.net/footsteps/snow/snow_06.mp3"
         3:
           icon: "⚡"
           text: "Temporali"
           audio: <audio src="soundbank://soundlibrary/weather/thunder/thunder_01"/>
+          google_audio: "https://d3qhmae9zx9eb.cloudfront.net/weather/thunder/thunder_01.mp3"
         4:
           icon: "🌫"
           text: "Nebbia"
           audio: <audio src="soundbank://soundlibrary/alarms/air_horns/air_horns_01"/>
+          google_audio: "https://d3qhmae9zx9eb.cloudfront.net/alarms/air_horns/air_horns_01.mp3"
         5:
           icon: "🥵"
           text: "Temperature massime estreme"
           audio: <audio src="soundbank://soundlibrary/human/amzn_sfx_drinking_slurp_01"/>
+          google_audio: "https://d3qhmae9zx9eb.cloudfront.net/human/amzn_sfx_drinking_slurp_01.mp3"
         6:
           icon: "🥶"
           text: "Temperature minime estreme"
           audio: <audio src="soundbank://soundlibrary/human/amzn_sfx_sneeze_01"/>
+          google_audio: "https://d3qhmae9zx9eb.cloudfront.net/human/amzn_sfx_sneeze_01.mp3"
         7:
           icon: "⚓"
           text: "Eventi Costieri"
           audio: <audio src="soundbank://soundlibrary/boats_ships/anchors/anchor_01"/>
+          google_audio: "https://d3qhmae9zx9eb.cloudfront.net/boats_ships/anchors/anchor_01.mp3"
         8:
           icon: "🔥🌲"
           text: "Incendi bischivi"
           audio: <audio src="soundbank://soundlibrary/home/amzn_sfx_fireplace_crackle_03"/>
+          google_audio: "https://d3qhmae9zx9eb.cloudfront.net/home/amzn_sfx_fireplace_crackle_03.mp3"
         9:
           icon: "⛄"
           text: "Valanghe"
-          audio: null
+          audio: <audio src="soundbank://soundlibrary/ice_snow/ski/ski_01"/>
+          google_audio: "https://d3qhmae9zx9eb.cloudfront.net/ice_snow/ski/ski_01.mp3"
         10:
           icon: "☔"
           text: "Pioggia"
           audio: <audio src="soundbank://soundlibrary/nature/amzn_sfx_rain_01"/>
+          google_audio: "https://d3qhmae9zx9eb.cloudfront.net/nature/amzn_sfx_rain_01.mp3"
         11:
           icon: "❌"
           text: "Non disponibile"
           audio: <audio src="soundbank://soundlibrary/alarms/beeps_and_bloops/tone_02"/>
+          google_audio: "https://d3qhmae9zx9eb.cloudfront.net/alarms/beeps_and_bloops/tone_02.mp3"
         12:
           icon: "🌊"
           text: "Alluvione"
           audio: <audio src="soundbank://soundlibrary/nature/amzn_sfx_oars_splashing_rowboat_01"/>
+          google_audio: "https://d3qhmae9zx9eb.cloudfront.net/nature/amzn_sfx_oars_splashing_rowboat_01.mp3"
         13:
           icon: "💧🌊"
           text: "Pioggia-Alluvione"
           audio: <audio src="soundbank://soundlibrary/weather/rain/rain_08"/>
+          google_audio: "https://d3qhmae9zx9eb.cloudfront.net/weather/rain/rain_08.mp3"
 
       num:
         &num {
@@ -174,7 +187,7 @@ homeassistant:
     automation.natural_events_protezione_civile_notifications:
       <<: *customize
       friendly_name: "DPC Notifiche"
-    automation.natural_events_quake_notifications:
+    automation.natural_events_quake_notifications_ingv:
       <<: *customize
       friendly_name: "INGV Notifiche"
     automation.natural_events_quake_notifications_usgs:
@@ -545,7 +558,7 @@ binary_sensor:
               {%- for s  in ['today', 'tomorrow'] if not is_state('sensor.meteoalarm_custom', '0') -%}
                 {% set v = state_attr('sensor.meteoalarm_custom', s) -%}
                   {% if v -%}
-                    {% for d  in v -%}
+                    {% for d in v -%}
                       {{dict_code[d['code']]}}
                     {% endfor -%}
                   {% endif -%}
@@ -565,7 +578,7 @@ binary_sensor:
               {%- for s  in ['today', 'tomorrow'] if not is_state('sensor.meteoalarm_custom', '0') -%}
                 {% set v = state_attr('sensor.meteoalarm_custom', s) -%}
                   {% if v -%}
-                    {% for d  in v -%}
+                    {% for d in v -%}
                       {{dict_code[d['code']]}}
                     {% endfor -%}
                   {% endif -%}
@@ -719,7 +732,7 @@ automation:
           alert: *alert
           dpc_tts_msg: >-
             Attenzione. {{attr.get('friendly_name')}}. Allerta {{attr.get('allerta')}} {{attr.get('info')}}.
-      - service: *script
+      - service: script.natural_events_notifications #*script
         data:
           call_no_annuncio: 1
           title: >-
@@ -735,6 +748,7 @@ automation:
           google:
             message_tts: "{{dpc_tts_msg}}"
             media_player: *media_player_google
+            audio: "https://d3qhmae9zx9eb.cloudfront.net/weather/thunder/thunder_11.mp3"
           link: >-
             [Bollettino di criticità]({{trigger.to_state.attributes.link}})
 
@@ -779,10 +793,12 @@ automation:
             {{'/config/www/hassiohelp/pkg_natural_events/meteoalarm_{}.png'.format(type)}}{% else %}{% endif %}
           alexa:
             message_tts: "{{meteoalarm_tts_msg}}"
+            media_player: *media_player_alexa
             audio: "{{type_dict[type].audio}}"
           google:
             message_tts: "{{meteoalarm_tts_msg}}"
             media_player: *media_player_google
+            audio: "{{type_dict[type].google_audio}}"
 
   #----------------------------------------------------------------------------------------------------#
   # METEOALARM CUSTOM - Notifica criticità meteo nella regione impostata - Vedi tabella a fine package
@@ -865,7 +881,7 @@ automation:
   #----------------------------------------------------------------------------------------------------#
 
   # INGV
-  - alias: natural_events_quake_notifications
+  - alias: natural_events_quake_notifications_ingv
     mode: queued
     max_exceeded: silent
     initial_state: true
@@ -875,7 +891,7 @@ automation:
         zone: zone.geoalert
         event: enter
     condition: >-
-      {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.publication_date))/3600*60)|int < 90 }}
+      {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.publication_date))/3600*60)|int < 1080 }}
     action:
       - variables:
           alert: *alert
@@ -886,39 +902,76 @@ automation:
             {%if 0<=m<=1.9%}0{%elif 2<=m<=2.9%}1{%elif 3<=m<=3.9%}2{%elif 4<=m<=5.9%}3{%else%}4{%endif%}
             {% endmacro %} {{alert.get(magnitude()|int).color}}
           quake_tts_msg: >-
-            Rilevato terremoto a {{trigger.to_state.state}} km.
-            Epicentro {{trigger.to_state.attributes.region}}.
-            Magnitudo {{trigger.to_state.attributes.magnitude}}.
+            Rilevato terremoto a {{trigger.to_state.state}} km,
+            di magnitudo {{trigger.to_state.attributes.magnitude}},
+            con epicentro {{trigger.to_state.attributes.region}}.
+
           url_format: >- ## "{{trigger.to_state.attributes.image_url}}"
             {% set eventid = trigger.to_state.attributes.event_id %}
             {{'http://shakemap.rm.ingv.it/shake4/data/{}/current/products/intensity.jpg'.format(eventid) 
             if trigger.to_state.attributes.magnitude >= 3 }}
+      # Notifica Audio e Testo con link evento
+      - service: *script
+        data:
+          call_no_annuncio: 1
+          title: >-
+            🚧{{level}} INGV.
+          message: |
+            Rilevato terremoto a una distanza di {{trigger.to_state.state}} Km da casa.
+            {%for person in expand(states.person) %}
+            {{"{} è a {} km dall'epicentro.".format(person.name, distance(trigger.to_state.attributes.latitude, trigger.to_state.attributes.longitude, person.entity_id)) 
+            if not is_state(person.entity_id, 'home') else ''}}
+            {%endfor %}
+            [Dati Evento](http://terremoti.ingv.it/event/{{trigger.to_state.attributes.event_id}})
+
+          alexa:
+            message_tts: "{{quake_tts_msg}}"
+            media_player: *media_player_alexa
+            audio: <audio src="soundbank://soundlibrary/nature/amzn_sfx_earthquake_rumble_02"/>
+          google:
+            message_tts: "{{quake_tts_msg}}"
+            media_player: *media_player_google
+            audio: "https://d3qhmae9zx9eb.cloudfront.net/nature/amzn_sfx_earthquake_rumble_02.mp3"
+
+      # IF IMAGE URLs IS DEFINED TRY DOWNLOAD IMAGE FOR xx TIME
       - choose:
           - conditions: "{{trigger.to_state.attributes.magnitude >= 3}}" # "{{url_format is defined}}"
             sequence:
-              repeat:
-                sequence:
-                  - service: hassio.addon_stdin
-                    data:
-                      addon: a0d7b954_ssh
-                      input: >-
-                        rm -f "{{download_dir}}lastquake.jpg";
-                        wget --spider "{{url_format}}" &&
-                        curl -Lk -f -m 5 "{{url_format}}" --create-dirs -o "{{download_dir}}lastquake.jpg" &&
-                        hass-cli state edit binary_sensor.check_url "on" ||
-                        hass-cli state edit binary_sensor.check_url "off"
-                  - wait_for_trigger:
-                      - platform: state
-                        entity_id: binary_sensor.check_url
-                        to: 'on'
-                    timeout: '00:00:20'
-                until: "{{ is_state('binary_sensor.check_url', 'on') or repeat.index >= 15 }}"
+              - repeat:
+                  sequence:
+                    - service: hassio.addon_stdin
+                      data:
+                        addon: a0d7b954_ssh
+                        input: >-
+                          rm -f "{{download_dir}}lastquake.jpg";
+                          wget --spider "{{url_format}}" &&
+                          curl -Lk -f -m 5 "{{url_format}}" --create-dirs -o "{{download_dir}}lastquake.jpg" &&
+                          hass-cli state edit binary_sensor.check_url "on" ||
+                          hass-cli state edit binary_sensor.check_url "off"
+                    - wait_for_trigger:
+                        - platform: state
+                          entity_id: binary_sensor.check_url
+                          to: "on"
+                      timeout: "00:00:20"
+                  until: "{{ is_state('binary_sensor.check_url', 'on') or repeat.index >= 15 }}"
+              - choose:
+                  - conditions: >
+                      {{ url_format is defined and is_state('binary_sensor.check_url', 'on') }}
+                    sequence:
+                      - service: *script
+                        data:
+                          call_no_annuncio: true
+                          title: "INGV"
+                          message: "{{ trigger.to_state.attributes.title }}"
+                          url: "{{ url_format }}"
+
+      # TEST
       - delay: "00:00:01"
       - service: *script
         data:
           call_no_annuncio: 1
           title: >-
-            🚧{{level}} Rilevato terremoto.
+            🚧{{level}} INGV.
           message: >-
             {% set data_utc = trigger.to_state.attributes.publication_date %}
             Rilevato terremoto di magnitudo: {{trigger.to_state.attributes.magnitude}} 
@@ -933,6 +986,7 @@ automation:
           google:
             message_tts: "{{quake_tts_msg}}"
             media_player: *media_player_google
+            audio: "https://d3qhmae9zx9eb.cloudfront.net/nature/amzn_sfx_earthquake_rumble_02.mp3"
           url: >-
             {% if url_format is defined and is_state('binary_sensor.check_url', 'on') %}
             {{url_format}}{% endif %}
@@ -976,6 +1030,7 @@ automation:
           google:
             message_tts: "{{usgs_tts_msg}}"
             media_player: *media_player_google
+            audio: "https://d3qhmae9zx9eb.cloudfront.net/backgrounds_ambience/volcano_earthquake/volcano_earthquake_03.mp3"
 
   #----------------------------------------------------------------------------------------------------#
   # GEO LOCATION - Notifica GDACS # Global Disaster Alert and Coordination System
@@ -1031,19 +1086,10 @@ script:
     max_exceeded: silent
     sequence:
       - variables:
-          tts: "{{alexa.get('message_tts', '')}}"
-          alexa_audio: "{{alexa.get('audio', '')}}"
-          alexa_audio_tag: >
-            {% if not '<audio src=' in alexa_audio and alexa_audio %}
-            {{'<audio src="'+alexa_audio+'"/>'}}
-            {% else %}{{alexa_audio}}{% endif %}
-          google: *media_player_google
-          alexa: *media_player_alexa
           notify: *notify
-          message_tts: >-
-            {{tts|regex_replace(find="\s+|_", replace=" ")}}
           notify_service: "{{'' if '.' in notify else 'notify.'}}{{notify|replace(' ','_')}}"
-      - choose: # IF URL/FILE IMAGE + TEXT
+          message: "{{message + '\n{}'.format(link if link is defined else '') }}"
+      - choose: # IF URL|FILE + TEXT
           - conditions:
               - "{{(file|length > 1 or url|length > 1) and notify|length > 1}}"
             sequence:
@@ -1053,40 +1099,83 @@ script:
                   message: "{{message}}"
                   data:
                     photo:
-                      - "{{'url' if url else 'file'}}": "{{url if url else file}}"
+                      - "{{'url' if url is defined else 'file'}}": "{{url if url is defined else file}}"
                         caption: |
                           {{title}}
                           {{message}}
-        default: # IF TEXT
+        default: # ELSE TEXT
           - service: "{{notify_service}}"
             data:
               title: "{{title}}"
               message: "{{message}}"
-      - choose: # IF AUDIO (DND)
+      - choose: # IF AUDIO AND NOT DND
           - conditions:
               - condition: time
-                after: *after
-                before: *before
-              - "{{message_tts|length > 1}}"
+                after: *speaker_on_dnd_end
+                # before: *speaker_off_dnd_start
+              - "{{ alexa is defined or google is defined }}"
             sequence:
-              - choose: # IF GOOGLE
-                  - conditions: "{{google|length > 1}}"
-                    sequence:
-                      - service: tts.google_translate_say
-                        data:
-                          entity_id: "{{google}}"
-                          message: "{{message_tts}}"
               - choose: # IF ALEXA
-                  - conditions: "{{alexa|length > 1}}"
+                  - conditions: "{{ alexa is defined }}"
                     sequence:
+                      - variables:
+                          alexa_default: *media_player_alexa
+                          tts: "{{ message if alexa['message_tts'] is not defined else alexa['message_tts'] }}"
+                          alexa_audio: "{{alexa['audio']|default }}"
+                          # alexa_audio: "{{alexa.get('audio', '')}}"
+                          alexa_audio_tag: >
+                            {% if not '<audio src=' in alexa_audio and alexa_audio %}
+                            {{'<audio src="'+alexa_audio+'"/>'}}
+                            {% else %}{{alexa_audio}}{% endif %}
+                          # alexa_players: *media_player_alexa
+                          alexa_players: >
+                            {{ alexa['media_player'] if alexa['media_player'] is defined else alexa_default }}
+                          message_tts: >-
+                            {{ tts|regex_replace(find="\s+|_", replace=" ")|regex_replace(find="http\S+", replace="") }}
                       - service: notify.alexa_media
                         data:
-                          target: "{{alexa}}"
+                          target: "{{alexa_players}}"
                           message: "{{alexa_audio_tag + message_tts}}"
                           data:
                             type: tts
+
+              - choose: # IF GOOGLE
+                  - conditions: "{{ google is defined }}"
+                    sequence:
+                      - variables:
+                          google_default: *media_player_google
+                          # tts: "{{google['message_tts']|default }}"
+                          tts: "{{ message if google['message_tts'] is not defined else google['message_tts']}}"
+                          google_audio: "{{google['audio']|default }}"
+                          google_players: >
+                            {{ google['media_player'] if google['media_player'] is defined else google_default }}
+                          message_tts: >-
+                            {{ tts|regex_replace(find="\s+|_", replace=" ")|regex_replace(find="http\S+", replace="") }}
+                      - choose: # IF GOOGLE AUDIO
+                          - conditions: "{{google_audio|length > 1 }}"
+                            sequence:
+                              #### SISTEMARE ####
+                              - service: media_player.play_media
+                                data:
+                                  entity_id: "{{google_players}}"
+                                  media_content_id: "{{google_audio}}"
+                                  media_content_type: music
+                              - wait_template: "{{ state_attr(google_players, 'media_duration') is not none }}"
+                                timeout: 1
+                              - delay: "{{ state_attr(google, 'media_duration') if state_attr(google_players, 'media_duration') is not none else 9 }}"
+                      - service: tts.google_translate_say
+                        data:
+                          entity_id: "{{google_players}}"
+                          message: "{{message_tts}}"
               - delay:
-                  seconds: "{{message_tts|wordcount // 2+(2 if not alexa_audio_tag else 9)}}"
+                  seconds: &wait_test >
+                    {{ ( (alexa['message_tts']|wordcount if alexa.message_tts is defined else 0), 
+                    (google['message_tts']|wordcount if google is defined else 0) )
+                    |max|default(message|wordcount, true) // 2+(2 if not alexa_audio_tag|default else 9) }}
+              - service: system_log.write
+                data:
+                  message: *wait_test
+                  level: critical
 #######################################-#######################################
 ##                                  LEGEND
 #######################################-#######################################
@@ -1129,3 +1218,4 @@ script:
 #######################################-#######################################
 ##                                END PACKAGE
 #######################################-#######################################
+
