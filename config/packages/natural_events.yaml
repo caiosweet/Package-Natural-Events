@@ -1125,7 +1125,7 @@ script:
         choose:
           - alias: IF URL OR FILE AND TEXT
             conditions:
-              - "{{(file|length > 1 or url|length > 1) and notify|length > 1 }}"
+              - "{{(file|default not in is_not or url|default not in is_not) and notify|length > 1 }}"
             sequence:
               - service: "{{notify_service}}"
                 data:
@@ -1142,7 +1142,7 @@ script:
           - alias: IF MESSAGGE
             conditions: 
               - "{{message|length > 0 and notify|length > 1}}"
-              - "{{file in is_not or url in is_not}}"
+              - "{{file|default in is_not and url|default in is_not}}"
             sequence:
               - service: "{{notify_service}}"
                 data:
