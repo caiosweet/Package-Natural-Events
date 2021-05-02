@@ -1142,6 +1142,7 @@ script:
           - alias: IF MESSAGGE
             conditions: 
               - "{{message|length > 0 and notify|length > 1}}"
+              - "{{file in is_not or url in is_not}}"
             sequence:
               - service: "{{notify_service}}"
                 data:
