@@ -663,9 +663,13 @@ cards:
                   è avvenuto nella zona: [{{state_attr(entityid, 'region')}}](https://www.openstreetmap.org/?mlat={{lat}}&mlon={{long}}#map=12/{{lat}}/{{long}})<br>
                   a <font color="{{color}}">**{{state_attr(entityid, 'distance')}}**</font> km da casa,<br>
                   con coordinate geografiche (lat, long) {{lat}},{{long}}.
-                  {%for person in expand(states.person) %}
-                  <br>{{"{} è a {} km dall'epicentro.".format(person.name, distance(lat, long, person.entity_id)) if is_state(person.entity_id, 'not_home') else ''}}<br>
-                  {%endfor %}
+
+                  {% set state_dict = {'home': 'casa', 'not_home': 'fuori casa'} %}
+                  {%- for person in expand(states.person) -%}
+                    {% set distanza = distance(lat, long, person.entity_id) 
+                    if person.latitude is defined else state_attr(entityid, 'distance') %}
+                  {{"📍{} \[{}\] a circa {} km dall'epicentro.".format(person.name|upper, state_dict.get(person.state, person.state), distanza) }}
+                  {% endfor %}
                   </font>
                   {% if magnitudo >= 3 %}
                   [Intensity]({{url.format(id,'intensity')}}) ~ 
