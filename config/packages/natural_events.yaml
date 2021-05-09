@@ -30,7 +30,7 @@ homeassistant:
       MEDIA PLAYER Google: !secret &DEFAULT_MEDIA_PLAYER_GOOGLE pkg_natural_events_google
       SERIVICE TTS: !secret &DEFAULT_SERVICE_TTS pkg_natural_events_service_tts
 
-      ## DND TTS (Orario Non Disturbare - Per script.natural_events_notifications)
+      ## DND TTS (Orario Non Disturbare - Per script.notify_hub)
       TTS PRIMA CHE INIZIA DoNotDisturb: !secret &DEFAULT_DND_START pkg_natural_events_dnd_start
       TTS DOPO CHE FINISCE DoNotDisturb: !secret &DEFAULT_DND_STOP pkg_natural_events_dnd_stop
 
@@ -251,7 +251,7 @@ homeassistant:
       friendly_name: "MeteoAlarm Custom"
       unit_of_measurement: eventi
     ## Script
-    script.natural_events_notifications:
+    script.notify_hub:
       <<: *CUSTOMIZE
       friendly_name: Mini Centro Notifiche
       icon: mdi:account-tie
@@ -1089,9 +1089,8 @@ automation:
 ##                                  SCRIPT
 #######################################-#######################################
 script:
-  natural_events_notifications:
-    #TODO chenge name in... notify_hub? mini_notifier? mini_notify? minicn? multinotify? notifyme?
-    alias: Notification Hub
+  notify_hub:
+    alias: Mini Notification Center
     mode: queued
     max_exceeded: silent
     sequence:
@@ -1273,13 +1272,13 @@ script:
 # ## EXAMPLE NATURAL EVENTS SECRETS FILE
 # ###########################################################
 # ## DEFAULT
-# pkg_natural_events_script: script.natural_events_notifications
+# pkg_natural_events_script: script.notify_hub
 # pkg_natural_events_notify: telegram
 # pkg_natural_events_google: media_player.red,media_player.black,media_player.black_due
 # pkg_natural_events_alexa: media_player.sala,media_player.studio
 # pkg_natural_events_service_tts: tts.google_translate_say
 
-# ## DND TTS (Orario Non Disturbare - Per script.natural_events_notifications)
+# ## DND TTS (Orario Non Disturbare - Per script.notify_hub)
 # pkg_natural_events_dnd_start: 23:00
 # pkg_natural_events_dnd_stop: 07:00
 
@@ -1311,7 +1310,7 @@ script:
 #   tts.{{states('input_select.tts_notify')|lower
 #   |replace(' ','_')|replace('google','google_translate')
 #   |replace('reverso','reversotts_say')|default('google_translate_say')}}
-# ## DND TTS (Orario Non Disturbare - Per script.natural_events_notifications)
+# ## DND TTS (Orario Non Disturbare - Per script.notify_hub)
 # pkg_natural_events_dnd_start: "input_datetime.dnd_start_weekdays"
 # pkg_natural_events_dnd_stop: "input_datetime.dnd_end_weekdays"
 
