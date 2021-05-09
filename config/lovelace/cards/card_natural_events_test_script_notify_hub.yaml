@@ -1,0 +1,121 @@
+type: vertical-stack
+cards:
+  - type: horizontal-stack
+    cards:
+      - type: button
+        name: Solo Testo
+        icon: 'mdi:telegram'
+        tap_action:
+          action: call-service
+          service: script.notify_hub
+          service_data:
+            title: Prova solo testo
+            message: messaggio principale.
+      - type: button
+        name: Solo Alexa
+        icon: 'mdi:amazon-alexa'
+        tap_action:
+          action: call-service
+          service: script.notify_hub
+          service_data:
+            alexa:
+              message: prova alexa message
+      - type: button
+        name: Solo Google
+        icon: 'mdi:google-home'
+        tap_action:
+          action: call-service
+          service: script.notify_hub
+          service_data:
+            google:
+              message: prova google message
+  - type: horizontal-stack
+    cards:
+      - type: button
+        name: Alexa e Google + Message Principale
+        tap_action:
+          action: call-service
+          service: script.notify_hub
+          service_data:
+            message: messaggio principale.
+            google: true
+            alexa: true
+  - type: horizontal-stack
+    cards:
+      - type: button
+        name: URL solo Foto
+        tap_action:
+          action: call-service
+          service: script.notify_hub
+          service_data:
+            url: 'https://hassiohelp.eu/wp-content/uploads/2019/04/Indice-00.jpg'
+      - type: button
+        name: URL Foto + Titolo + Messaggio
+        tap_action:
+          action: call-service
+          service: script.notify_hub
+          service_data:
+            title: 'Una foto dal URL a caso :0)'
+            message: Messaggio e titolo come caption
+            url: >-
+              https://hassiohelp.eu/wp-content/uploads/2019/04/Assistente-Personale-00-1525x1080.jpg
+  - type: horizontal-stack
+    cards:
+      - type: button
+        name: FILE solo Foto
+        tap_action:
+          action: call-service
+          service: script.notify_hub
+          service_data:
+            file: /config/www/hassiohelp/pkg_natural_events/burze.png
+      - type: button
+        name: FILE Foto + Titolo + Messaggio
+        tap_action:
+          action: call-service
+          service: script.notify_hub
+          service_data:
+            title: 'Una foto da FILE a caso :0)'
+            message: Messaggio e titolo come caption
+            file: /config/www/hassiohelp/pkg_natural_events/burze.png
+  - type: horizontal-stack
+    cards:
+      - type: button
+        name: Titolo + Messaggio + Foto URL + Alexa + Google
+        tap_action:
+          action: call-service
+          service: script.notify_hub
+          service_data:
+            title: 'Una foto a caso :0)'
+            message: >-
+              Mentre ascolti alexa o google, ti ricordo che puoi usare meggase o
+              message tts sotto google o alexa.
+            url: >-
+              https://hassiohelp.eu/wp-content/uploads/2020/11/Notifer-3.0-00-2-2048x1451.jpg
+            alexa:
+              message: Puoi usare message e message_tts
+            google:
+              message_tts: Puoi usare message e message_tts
+  - type: horizontal-stack
+    cards:
+      - type: button
+        name: Alexa solo media player + Message principale
+        tap_action:
+          action: call-service
+          service: script.notify_hub
+          service_data:
+            title: Test e alexa senza mess in alexa
+            message: Messaggio testo più alexa da media player specificato
+            alexa:
+              media_player: media_player.studio
+  - type: horizontal-stack
+    cards:
+      - type: button
+        name: Google solo media player + Message principale
+        tap_action:
+          action: call-service
+          service: script.notify_hub
+          service_data:
+            title: Test e google senza mess in google
+            message: Messaggio testo più google da media player specificato
+            google:
+              media_player: media_player.red
