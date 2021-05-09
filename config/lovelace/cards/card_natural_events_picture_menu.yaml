@@ -636,6 +636,8 @@ cards:
             type: vertical-stack
             cards:
               - type: markdown
+                entity_id:
+                  - binary_sensor.lastquake
                 card_mod:
                   style: |
                     ha-card {background: none; border-radius: 0px; box-shadow: none;}
@@ -667,10 +669,10 @@ cards:
                   {% set state_dict = {'home': 'casa', 'not_home': 'fuori casa'} %}
                   {%- for person in expand(states.person) -%}
                     {% set distanza = distance(lat, long, person.entity_id) 
-                    if person.latitude is defined else state_attr(entityid, 'distance') %}
-                  {{"📍{} \[{}\] a circa {} km dall'epicentro.".format(person.name|upper, state_dict.get(person.state, person.state), distanza) }}
-                  {% endfor %}
-                  </font>
+                    if person.attributes.latitude is defined else state_attr(entityid, 'distance') %}
+                  {{"📍{} \[{}\] a circa {} km dall'epicentro.".format(person.name|upper, state_dict.get(person.state, person.state), distanza|round(1)) }}
+                  {% endfor %}</font><br>
+                  
                   {% if magnitudo >= 3 %}
                   [Intensity]({{url.format(id,'intensity')}}) ~ 
                   [PGA]({{url.format(id,'pga')}}) ~ [PGV]({{url.format(id,'pgv')}}) ~ [PSA0]({{url.format(id,'psa0p3')}}) ~ [PSA1]({{url.format(id,'psa1p0')}}) ~ 
@@ -681,14 +683,18 @@ cards:
                     [![](/local/hassiohelp/downloads/lastquake.jpg)](http://shakemap.rm.ingv.it/shake4/viewLeaflet.html?eventid={{id}})
                   -->
 
-                  <a href="http://shakemap.rm.ingv.it/shake4/viewLeaflet.html?eventid={{id}}"><img src="/local/hassiohelp/downloads/lastquake.jpg?t='{{now().timestamp()}}'"></a>
-
-                  {% endif %}
+                  {% if is_state('binary_sensor.check_url', 'on') %}
+                  <a href="http://shakemap.rm.ingv.it/shake4/view.html?eventid={{id}}"><img src="/local/hassiohelp/downloads/lastquake.jpg?t='{{now().timestamp()}}'"></a>
+                  {% else %}
+                  <a href="http://shakemap.rm.ingv.it/shake4/view.html?eventid={{id}}"><img src="http://shakemap.rm.ingv.it/shake4/data/{{id}}/current/products/pga.jpg"></a>
+                  {% endif %}{% endif %}
 
                   <center>
                   <a href="http://terremoti.ingv.it/"> <img src="https://www.ingv.it/images/INGV_Acronimo_50.png" width="100" ></a>
 
                   <!-- Examples
+                    Interactive Map
+                    http://shakemap.rm.ingv.it/shake4/viewLeaflet.html?eventid=
                     Map Google
                     [{{state_attr(entityid, 'region')}}](http://maps.google.com/maps?z=8&q=loc:{{lat}}+{{long}})
                     Map Open Streat Map
@@ -703,7 +709,7 @@ cards:
                     method: attribute,
                     reverse: true,
                     count: 4,
-                    first: 1,
+                    first: 0,
                   }
                 filter:
                   include:

@@ -1,45 +1,47 @@
 type: custom:vertical-stack-in-card # type: vertical-stack 
-style: |
-  ha-card {
-      border: 1px solid {% if is_state('binary_sensor.global_natural_alert', 'on') %} {{state_attr('binary_sensor.global_natural_alert','level')}} {% else %} Green {% endif %};
-  }
+card_mod:
+  style: |
+    ha-card {
+        border: 1px solid {% if is_state('binary_sensor.global_natural_alert', 'on') %} {{state_attr('binary_sensor.global_natural_alert','level')}} {% else %} Green {% endif %};
+    }
 cards:
 #################################################################
 ## PICTURE ELEMENTS 
 #################################################################
 - type: picture-elements
-  style: |
-    {% set global = 'binary_sensor.global_natural_alert' %}
-    @keyframes blink {
-      30% {
-        background: {% if is_state(global, 'on') %} gray; {% endif %}
+  card_mod:
+    style: |
+      {% set global = 'binary_sensor.global_natural_alert' %}
+      @keyframes blink {
+        30% {
+          background: {% if is_state(global, 'on') %} gray; {% endif %}
+        }
       }
-    }
-    ha-card {
-      --my-animation: blink 2s linear 3;
-      --global-level: {% if is_state(global, 'on') %} {{state_attr(global,'level')}}; {% else %} Green;{% endif %} 
-      --meteoalarm-level: {{state_attr(global,'meteoalarm_level')}};
-      --meteoalarm-level-left: {% if (state_attr('binary_sensor.meteoalarm', 'urgency')|lower) == 'immediate' %} 5%; {% else %} 90%; {% endif %}
-      --meteoalarm-type-left: {% if (state_attr('binary_sensor.meteoalarm', 'urgency')|lower) == 'immediate' %} 10%; {% else %} 95%; {% endif %}
-      --meteoalarmc: {% if 'today' in states('sensor.meteoalarm_custom') %} 10%; {% endif %}
-      --meteoalarmc: {% if 'tomorrow' in states('sensor.meteoalarm_custom') %} 95%; {% endif %}
-      --my-border-style: solid;
+      ha-card {
+        --my-animation: blink 2s linear 3;
+        --global-level: {% if is_state(global, 'on') %} {{state_attr(global,'level')}}; {% else %} Green;{% endif %} 
+        --meteoalarm-level: {{state_attr(global,'meteoalarm_level')}};
+        --meteoalarm-level-left: {% if (state_attr('binary_sensor.meteoalarm', 'urgency')|lower) == 'immediate' %} 5%; {% else %} 90%; {% endif %}
+        --meteoalarm-type-left: {% if (state_attr('binary_sensor.meteoalarm', 'urgency')|lower) == 'immediate' %} 10%; {% else %} 95%; {% endif %}
+        --meteoalarmc: {% if 'today' in states('sensor.meteoalarm_custom') %} 10%; {% endif %}
+        --meteoalarmc: {% if 'tomorrow' in states('sensor.meteoalarm_custom') %} 95%; {% endif %}
+        --my-border-style: solid;
 
-      --my-border-width: {% if is_state('input_boolean.natural_events', 'off') %} 1px; {% else %} 0px; {% endif %}
-      --my-border-color: {% if is_state(global, 'on') %} var(--global-level); {% endif %}
-      --my-background: {% if is_state(global, 'on') %} var(--global-level); {% else %} Green;{% endif %}
-      --my-color: {% if state_attr(global, 'level') in ['White','Yellow','Orange'] %} var(--disabled-text-color); {% endif %}
-      {% if is_state(global, 'on') %}
-      --my-border-width: {% if is_state('input_boolean.natural_events', 'off') %} 1px; {% else %} 1px 0px 0px 0px; {% endif %}
-      {% else %}
-      --my-border-width: 0px;
-      --my-color: Wihte;
-      {% endif %}
-      border-color: var(--my-border-color);
-      border-style: var(--my-border-style);
-      border-width: var(--my-border-width);
-      background: var(--my-background);
-    }
+        --my-border-width: {% if is_state('input_boolean.natural_events', 'off') %} 1px; {% else %} 0px; {% endif %}
+        --my-border-color: {% if is_state(global, 'on') %} var(--global-level); {% endif %}
+        --my-background: {% if is_state(global, 'on') %} var(--global-level); {% else %} Green;{% endif %}
+        --my-color: {% if state_attr(global, 'level') in ['White','Yellow','Orange'] %} var(--disabled-text-color); {% endif %}
+        {% if is_state(global, 'on') %}
+        --my-border-width: {% if is_state('input_boolean.natural_events', 'off') %} 1px; {% else %} 1px 0px 0px 0px; {% endif %}
+        {% else %}
+        --my-border-width: 0px;
+        --my-color: Wihte;
+        {% endif %}
+        border-color: var(--my-border-color);
+        border-style: var(--my-border-style);
+        border-width: var(--my-border-width);
+        background: var(--my-background);
+      }
   image: /local/hassiohelp/pkg_natural_events/background.png
   elements:
     - type: conditional # Nessun Evento
