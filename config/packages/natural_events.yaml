@@ -21,7 +21,7 @@ homeassistant:
         package: "Natural_events 🌍"
         site: "hassiohelp.eu 🌐"
         author: "Caio & Gianpi"
-        version: "2021.05.1"
+        version: "2021.05.2"
       ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
       ## DEFAULT
       SCRIPT centro notifiche: !secret &DEFAULT_SCRIPT pkg_natural_events_script
@@ -291,6 +291,7 @@ homeassistant:
       <<: *CUSTOMIZE
       friendly_name: GDACS
       unit_of_measurement: eventi
+      Integration: Manual
 
 #######################################-#######################################
 ##                                 COMPONENT
@@ -299,8 +300,8 @@ homeassistant:
 # GDACS info https://www.home-assistant.io/integrations/gdacs/
 #-------------------------------------
 gdacs:
-  # categories: [Drought, Earthquake, Flood, Tropical Cyclone, Tsunami, Volcano]
-  radius: *CONF_RADIUS_QUAKE
+  categories: [Drought, Earthquake, Flood, Tropical Cyclone, Tsunami, Volcano]
+  radius: *CONF_RADIUS_GEOALERT
   latitude: *CONF_LATITUDE
   longitude: *CONF_LONGITUDE
 #-------------------------------------
@@ -657,12 +658,17 @@ automation:
         event_type: automation_reloaded
     action:
       # - delay: 00:00:15
-      - service: group.set
-        data:
-          object_id: geoalert
-          add_entities: "{{states.sensor|selectattr('name','==','GDACS')|join(',','entity_id')|lower}}"
       - service: homeassistant.update_entity
         entity_id: binary_sensor.lastquake
+      - alias: Add GDACS sensor in group geoalert
+        choose:
+          - alias: if entity GDACS exists
+            conditions: "{{ states|selectattr('name', '==', 'GDACS')|list|count > 0}}"
+            sequence:
+              - service: group.set
+                data:
+                  object_id: geoalert
+                  add_entities: "{{states|selectattr('name', '==', 'GDACS')|map(attribute='entity_id')|join}}"
 
   #----------------------------------------------------------------------------------------------------#
   # BURZE.NET Notifica caduti fulmini nel raggio impostato in radius_meteoalert
@@ -1272,15 +1278,15 @@ script:
 # ## EXAMPLE NATURAL EVENTS SECRETS FILE
 # ###########################################################
 # ## DEFAULT
-# pkg_natural_events_script: script.notify_hub
-# pkg_natural_events_notify: telegram
-# pkg_natural_events_google: media_player.red,media_player.black,media_player.black_due
-# pkg_natural_events_alexa: media_player.sala,media_player.studio
-# pkg_natural_events_service_tts: tts.google_translate_say
+# pkg_natural_events_script: "script.notify_hub"
+# pkg_natural_events_notify: "telegram"
+# pkg_natural_events_google: "media_player.red,media_player.black,media_player.black_due"
+# pkg_natural_events_alexa: "media_player.sala,media_player.studio"
+# pkg_natural_events_service_tts: "tts.google_translate_say"
 
 # ## DND TTS (Orario Non Disturbare - Per script.notify_hub)
-# pkg_natural_events_dnd_start: 23:00
-# pkg_natural_events_dnd_stop: 07:00
+# pkg_natural_events_dnd_start: "23:00"
+# pkg_natural_events_dnd_stop: "07:00"
 
 # ## FOLDER DOWLOADS [Se la cambi, ricorda di farlo anche in lovelace!]
 # pkg_natural_events_download_dir: "/config/www/hassiohelp/downloads/"
@@ -1292,9 +1298,9 @@ script:
 # pkg_natural_events_radius_meteoalert: 25000 # Metri
 # pkg_natural_events_magnitude: 2.0
 # pkg_natural_events_radius_quake: 1000 # Km
-# pkg_natural_events_meteoalarm_region: Lazio
-# pkg_natural_events_meteoalarm_custom_id: IT012-Lazio
-# pkg_natural_events_burze_api_key: x123456789012xx12xxx12aa345bb6c67890d12e
+# pkg_natural_events_meteoalarm_region: "Lazio"
+# pkg_natural_events_meteoalarm_custom_id: "IT012-Lazio"
+# pkg_natural_events_burze_api_key: "x123456789012xx12xxx12aa345bb6c67890d12e"
 # pkg_natural_events_radius_burze: 25 # Km
 # pkg_natural_events_istat: "058091"
 
@@ -1310,7 +1316,8 @@ script:
 #   tts.{{states('input_select.tts_notify')|lower
 #   |replace(' ','_')|replace('google','google_translate')
 #   |replace('reverso','reversotts_say')|default('google_translate_say')}}
-# ## DND TTS (Orario Non Disturbare - Per script.notify_hub)
+
+# ## DND TTS (Orario Non Disturbare - Per script.notify_hub
 # pkg_natural_events_dnd_start: "input_datetime.dnd_start_weekdays"
 # pkg_natural_events_dnd_stop: "input_datetime.dnd_end_weekdays"
 
@@ -1324,8 +1331,8 @@ script:
 # pkg_natural_events_radius_meteoalert: 25000 # Metri
 # pkg_natural_events_magnitude: 2.0
 # pkg_natural_events_radius_quake: 1000 # Km
-# pkg_natural_events_meteoalarm_region: Lazio
-# pkg_natural_events_meteoalarm_custom_id: IT012-Lazio
-# pkg_natural_events_burze_api_key: x123456789012xx12xxx12aa345bb6c67890d12e
+# pkg_natural_events_meteoalarm_region: "Lazio"
+# pkg_natural_events_meteoalarm_custom_id: "IT012-Lazio"
+# pkg_natural_events_burze_api_key: "x123456789012xx12xxx12aa345bb6c67890d12e"
 # pkg_natural_events_radius_burze: 25 # Km
 # pkg_natural_events_istat: "058091"
