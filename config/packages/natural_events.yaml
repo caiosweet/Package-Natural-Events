@@ -21,7 +21,7 @@ homeassistant:
         package: "Natural_events 🌍"
         site: "hassiohelp.eu 🌐"
         author: "Caio & Gianpi"
-        version: "2021.05.2"
+        version: "2021.05.3"
       ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
       ## DEFAULT
       SCRIPT centro notifiche: !secret &DEFAULT_SCRIPT pkg_natural_events_script
@@ -291,7 +291,7 @@ homeassistant:
       <<: *CUSTOMIZE
       friendly_name: GDACS
       unit_of_measurement: eventi
-      Integration: Manual
+      Configuration: integration
 
 #######################################-#######################################
 ##                                 COMPONENT
@@ -299,11 +299,11 @@ homeassistant:
 #-------------------------------------
 # GDACS info https://www.home-assistant.io/integrations/gdacs/
 #-------------------------------------
-gdacs:
-  categories: [Drought, Earthquake, Flood, Tropical Cyclone, Tsunami, Volcano]
-  radius: *CONF_RADIUS_GEOALERT
-  latitude: *CONF_LATITUDE
-  longitude: *CONF_LONGITUDE
+# gdacs: ### Old configuration
+#   categories: [Drought, Earthquake, Flood, Tropical Cyclone, Tsunami, Volcano]
+#   radius: *CONF_RADIUS_QUAKE
+#   latitude: *CONF_LATITUDE
+#   longitude: *CONF_LONGITUDE
 #-------------------------------------
 # GEO LOCATION info https://www.home-assistant.io/components/geo_location/
 # INGV info https://github.com/caiosweet/Home-Assistant-custom-components-INGV
@@ -1336,3 +1336,17 @@ script:
 # pkg_natural_events_burze_api_key: "x123456789012xx12xxx12aa345bb6c67890d12e"
 # pkg_natural_events_radius_burze: 25 # Km
 # pkg_natural_events_istat: "058091"
+
+
+# N.B
+# pkg_natural_events_script: "{{states('input_select.centro_notifiche')}}"
+# questo è un selettore che mi sono creato io, per cambiare script al volo e testarli.
+
+# input_select:
+#   centro_notifiche:
+#     options:
+#       - script.my_notify
+#       - script.notify_hub
+
+# Se vuoi semplicemente utilizzare solo lo script del Centro notifiche, ovviamente va inserito in questo modo:
+# pkg_natural_events_script: "script.my_notify"
