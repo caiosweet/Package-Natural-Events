@@ -28,7 +28,7 @@ homeassistant:
       SERVIZIO Notify: &DEFAULT_NOTIFY !secret pkg_natural_events_notify
       MEDIA PLAYER Alexa: &DEFAULT_MEDIA_PLAYER_ALEXA !secret pkg_natural_events_alexa
       MEDIA PLAYER Google: &DEFAULT_MEDIA_PLAYER_GOOGLE !secret pkg_natural_events_google
-      SERIVICE TTS: !secret &DEFAULT_SERVICE_TTS pkg_natural_events_service_tts
+      SERIVICE TTS: &DEFAULT_SERVICE_TTS !secret pkg_natural_events_service_tts
 
       ## DND TTS (Orario Non Disturbare - Per script.notify_hub)
       TTS PRIMA CHE INIZIA DoNotDisturb: &DEFAULT_DND_START !secret pkg_natural_events_dnd_start
