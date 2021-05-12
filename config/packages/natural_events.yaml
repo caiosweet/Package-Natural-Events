@@ -21,34 +21,34 @@ homeassistant:
         package: "Natural_events 🌍"
         site: "hassiohelp.eu 🌐"
         author: "Caio & Gianpi"
-        version: "2021.05.3"
+        version: "2021.05.4"
       ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
       ## DEFAULT
-      SCRIPT centro notifiche: !secret &DEFAULT_SCRIPT pkg_natural_events_script
-      SERVIZIO Notify: !secret &DEFAULT_NOTIFY pkg_natural_events_notify
-      MEDIA PLAYER Alexa: !secret &DEFAULT_MEDIA_PLAYER_ALEXA pkg_natural_events_alexa
-      MEDIA PLAYER Google: !secret &DEFAULT_MEDIA_PLAYER_GOOGLE pkg_natural_events_google
-      SERIVICE TTS: !secret &DEFAULT_SERVICE_TTS pkg_natural_events_service_tts
+      SCRIPT centro notifiche: &DEFAULT_SCRIPT !secret pkg_natural_events_script
+      SERVIZIO Notify: &DEFAULT_NOTIFY !secret pkg_natural_events_notify
+      MEDIA PLAYER Alexa: &DEFAULT_MEDIA_PLAYER_ALEXA !secret pkg_natural_events_alexa
+      MEDIA PLAYER Google: &DEFAULT_MEDIA_PLAYER_GOOGLE !secret pkg_natural_events_google
+      SERIVICE TTS: &DEFAULT_SERVICE_TTS !secret pkg_natural_events_service_tts
 
       ## DND TTS (Orario Non Disturbare - Per script.notify_hub)
-      TTS PRIMA CHE INIZIA DoNotDisturb: !secret &DEFAULT_DND_START pkg_natural_events_dnd_start
-      TTS DOPO CHE FINISCE DoNotDisturb: !secret &DEFAULT_DND_STOP pkg_natural_events_dnd_stop
+      TTS PRIMA CHE INIZIA DoNotDisturb: &DEFAULT_DND_START !secret pkg_natural_events_dnd_start
+      TTS DOPO CHE FINISCE DoNotDisturb: &DEFAULT_DND_STOP !secret pkg_natural_events_dnd_stop
 
       ## FOLDER DOWLOADS [Se la cambi, ricorda di farlo anche in lovelace!]
-      DOWNLOAD DIRECTORY: !secret &DEFAULT_DOWNLOAD_DIR pkg_natural_events_download_dir
+      DOWNLOAD DIRECTORY: &DEFAULT_DOWNLOAD_DIR !secret pkg_natural_events_download_dir
 
       ## CONFIGURATION
-      LATITUDINE di casa: !secret &CONF_LATITUDE pkg_natural_events_latitude_home
-      LONGITUDINE di casa: !secret &CONF_LONGITUDE pkg_natural_events_longitude_home
-      RAGGIO ZONA GeoAlert (metri): !secret &CONF_RADIUS_GEOALERT pkg_natural_events_radius_geoalert
-      RAGGIO ZONA MeteoAlert (metri): !secret &CONF_RADIUS_METEOALERT pkg_natural_events_radius_meteoalert
-      MAGNITUDO INGV minimo: !secret &CONF_MAGNITUDE pkg_natural_events_magnitude
-      RAGGIO INGV (km): !secret &CONF_RADIUS_QUAKE pkg_natural_events_radius_quake
-      REGIONE MeteoAlarm: !secret &CONF_METEOALARM_REGION pkg_natural_events_meteoalarm_region
-      ID Meteoalarm Custom: !secret &CONF_METEOALARM_CUSTOM_ID pkg_natural_events_meteoalarm_custom_id
-      API KEY Burze: !secret &CONF_BURZE_API_KEY pkg_natural_events_burze_api_key
-      RAGGIO BURZE (km): !secret &CONF_RADIUS_BURZE pkg_natural_events_radius_burze
-      ISTAT DPC (Protezione CIvile): !secret &CONF_ISTAT pkg_natural_events_istat
+      LATITUDINE di casa: &CONF_LATITUDE !secret pkg_natural_events_latitude_home
+      LONGITUDINE di casa: &CONF_LONGITUDE !secret pkg_natural_events_longitude_home
+      RAGGIO ZONA GeoAlert (metri): &CONF_RADIUS_GEOALERT !secret pkg_natural_events_radius_geoalert
+      RAGGIO ZONA MeteoAlert (metri): &CONF_RADIUS_METEOALERT !secret pkg_natural_events_radius_meteoalert
+      MAGNITUDO INGV minimo: &CONF_MAGNITUDE !secret pkg_natural_events_magnitude
+      RAGGIO INGV (km): &CONF_RADIUS_QUAKE !secret pkg_natural_events_radius_quake
+      REGIONE MeteoAlarm: &CONF_METEOALARM_REGION !secret pkg_natural_events_meteoalarm_region
+      ID Meteoalarm Custom: &CONF_METEOALARM_CUSTOM_ID !secret pkg_natural_events_meteoalarm_custom_id
+      API KEY Burze: &CONF_BURZE_API_KEY !secret pkg_natural_events_burze_api_key
+      RAGGIO BURZE (km): &CONF_RADIUS_BURZE !secret pkg_natural_events_radius_burze
+      ISTAT DPC (Protezione CIvile): &CONF_ISTAT !secret pkg_natural_events_istat
       ##--------------------- FINE IMPOSTAZIONI PACKAGE ---------------------##
 
       ##----------------------- HELP SETTINGS BEGIN -------------------------##
@@ -932,12 +932,14 @@ automation:
             Magnitudo: {{trigger.to_state.attributes.magnitude}} 
             Epicentro: {{trigger.to_state.attributes.region}}
 
-            {% set state_dict = {'home': 'casa', 'not_home': 'fuori casa'} %}
-            {%- for person in expand(states.person) -%}
-            {% set distanza = distance(trigger.to_state.attributes.latitude, trigger.to_state.attributes.longitude, person.entity_id)
-              if person.attributes.latitude is defined else trigger.to_state.state -%}
-            
+            {% set state_dict = {'home': 'casa', 'not_home': 'fuori casa', 'unknown': '❓'} %}
+            {%- for person in expand(states.person)|sort(attribute='name') -%}
+            {% if 'latitude' in person.attributes -%}
+            {% set distanza = distance(trigger.entity_id, person.entity_id) -%}
             {{"📍{} ({}) a circa {} km dall'epicentro.".format(person.name|upper, state_dict.get(person.state, person.state), distanza|round(1)) }}
+            {% else -%}
+            {{"🔹{} ({})".format(person.name|upper, state_dict.get(person.state, person.state)) }}
+            {% endif -%}
             {% endfor %}
             [Dati Evento](http://terremoti.ingv.it/event/{{trigger.to_state.attributes.event_id}})
           alexa:
@@ -997,20 +999,23 @@ automation:
       #       a una distanza di {{trigger.to_state.state}} Km da casa. Epicentro: {{trigger.to_state.attributes.region}}
       #       {{as_timestamp(data_utc)|timestamp_custom ('Data %d/%m/%Y Ore %H:%M:%S')}}
 
-      #       {% set state_dict = {'home': 'casa', 'not_home': 'fuori casa'} %}
-      #       {%- for person in expand(states.person) -%}
-      #       {% set distanza = distance(trigger.to_state.attributes.latitude, trigger.to_state.attributes.longitude, person.entity_id)
-      #           if person.attributes.latitude is defined else trigger.to_state.state -%}
-      #       {{"📍{} ({}) a circa {} km dall'epicentro.".format(person.name|upper, state_dict.get(person.state, person.state), distanza) }}
+      #       {% set state_dict = {'home': 'casa', 'not_home': 'fuori casa', 'unknown': '❓'} %}
+      #       {%- for person in expand(states.person)|sort(attribute='name') -%}
+      #       {% if 'latitude' in person.attributes -%}
+      #       {% set distanza = distance(trigger.entity_id, person.entity_id) -%}
+      #       {{"📍{} ({}) a circa {} km dall'epicentro.".format(person.name|upper, state_dict.get(person.state, person.state), distanza|round(1)) }}
+      #       {% else -%}
+      #       {{"🔹{} ({})".format(person.name|upper, state_dict.get(person.state, person.state)) }}
+      #       {% endif -%}
       #       {% endfor %}
       #       [Dati Evento](http://terremoti.ingv.it/event/{{trigger.to_state.attributes.event_id}})
       #     url: "{{image_url if image_url|length > 0 and is_state('binary_sensor.check_url', 'on')}}"
-      # alexa:
-      #   message_tts: "{{quake_tts_msg}}"
-      #   audio: <audio src="soundbank://soundlibrary/nature/amzn_sfx_earthquake_rumble_02"/>
-      # google:
-      #   message_tts: "{{quake_tts_msg}}"
-      #   audio: "https://d3qhmae9zx9eb.cloudfront.net/nature/amzn_sfx_earthquake_rumble_02.mp3"
+      #     alexa:
+      #       message_tts: "{{quake_tts_msg}}"
+      #       audio: <audio src="soundbank://soundlibrary/nature/amzn_sfx_earthquake_rumble_02"/>
+      #     google:
+      #       message_tts: "{{quake_tts_msg}}"
+      #       audio: "https://d3qhmae9zx9eb.cloudfront.net/nature/amzn_sfx_earthquake_rumble_02.mp3"
 
   # USGS
   - alias: natural_events_quake_usgs_notifications
@@ -1175,7 +1180,7 @@ script:
                           alexa_players: >
                             {{ (alexa['media_player'] if alexa['media_player'] is defined else DEFAULT_MEDIA_PLAYER_ALEXA)|lower }}
                           # alexa_players: >
-                          #   {% set entity = alexa['media_player'] if alexa['media_player'] is defined 
+                          #   {% set entity = alexa['media_player'] if alexa['media_player'] is defined
                           #     else DEFAULT_MEDIA_PLAYER_ALEXA %}
                           #   {{ expand((entity|regex_replace(find="\s+", replace="")).rsplit(",")
                           #     if entity is string else entity)|map(attribute='entity_id')|list }}
@@ -1336,7 +1341,6 @@ script:
 # pkg_natural_events_burze_api_key: "x123456789012xx12xxx12aa345bb6c67890d12e"
 # pkg_natural_events_radius_burze: 25 # Km
 # pkg_natural_events_istat: "058091"
-
 
 # N.B
 # pkg_natural_events_script: "{{states('input_select.centro_notifiche')}}"
