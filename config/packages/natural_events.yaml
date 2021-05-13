@@ -22,7 +22,7 @@ homeassistant:
         package: "Natural_events 🌍"
         site: "hassiohelp.eu 🌐"
         author: "Caio & Gianpi"
-        version: "2021.05.4"
+        version: "2021.05.5"
       ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
       ## DEFAULT
       SCRIPT centro notifiche: &DEFAULT_SCRIPT !secret pkg_natural_events_script
