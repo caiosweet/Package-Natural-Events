@@ -22,7 +22,7 @@ homeassistant:
         package: "Natural_events 🌍"
         site: "hassiohelp.eu 🌐"
         author: "Caio & Gianpi"
-        version: "2021.05.5"
+        version: "2021.05.6"
       ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
       ## DEFAULT
       SCRIPT centro notifiche: &DEFAULT_SCRIPT !secret pkg_natural_events_script
@@ -53,6 +53,11 @@ homeassistant:
       ##--------------------- FINE IMPOSTAZIONI PACKAGE ---------------------##
 
       ##----------------------- HELP SETTINGS BEGIN -------------------------##
+      DEFAULT_MOBILE_APP_ICON: 
+        &DEFAULT_MOBILE_APP_ICON "https://forum.hassiohelp.eu/assets/favicon-nd6kd8nu.ico"
+        # "https://hassiohelp.eu/wp-content/uploads/2020/02/favicon.ico"
+        # "https://lh4.googleusercontent.com/gWYLWEqGpDiTu9QAzF01d7fujiKDgGn1LKpc4KEFXR5G26B9OqH5
+        # _nWdni11eJqcLOrpY63nmDHkHgdSJgTTG3MxH2jj4_twXfYqM-kQKMyxoT8ls_9mefRmJfPWEZqx=w512"
       METEOALARM_SIGN: &METEOALARM_SIGN
         0:
           icon: "❌"
@@ -251,6 +256,12 @@ homeassistant:
       <<: *CUSTOMIZE
       friendly_name: "MeteoAlarm Custom"
       unit_of_measurement: eventi
+    sensor.meteoalarm_level:
+      <<: *CUSTOMIZE
+      friendly_name: "MeteoAlarm Level"
+    sensor.meteoalarm_type:
+      <<: *CUSTOMIZE
+      friendly_name: "MeteoAlarm Type"
     ## Script
     script.notify_hub:
       <<: *CUSTOMIZE
@@ -300,7 +311,7 @@ homeassistant:
 #-------------------------------------
 # GDACS info https://www.home-assistant.io/integrations/gdacs/
 #-------------------------------------
-# gdacs: ### Old configuration
+# gdacs: ### Configuration in Integration UI
 #   categories: [Drought, Earthquake, Flood, Tropical Cyclone, Tsunami, Volcano]
 #   radius: *CONF_RADIUS_QUAKE
 #   latitude: *CONF_LATITUDE
@@ -669,7 +680,7 @@ automation:
               - service: group.set
                 data:
                   object_id: geoalert
-                  add_entities: "{{states|selectattr('name', '==', 'GDACS')|map(attribute='entity_id')|join}}"
+                  add_entities: "{{states|selectattr('name', '==', 'GDACS')|map(attribute='entity_id')|list}}"
 
   #----------------------------------------------------------------------------------------------------#
   # BURZE.NET Notifica caduti fulmini nel raggio impostato in radius_meteoalert
@@ -826,7 +837,8 @@ automation:
           WARNING_SIGN: *WARNING_SIGN
           METEOALARM_SIGN: *METEOALARM_SIGN
           day: { "today": "Oggi", "tomorrow": "Domani" }
-          level: { "White": 0, "Green": 1, "Yellow": 2, "Orange": 3, "Red": 4 }
+          level:
+            { "White": 0, "Green": 1, "Yellow": 2, "Orange": 3, "Red": 4 }
           type_index:
             {
               "No-warnings": 0,
@@ -987,6 +999,7 @@ automation:
                             {% set data_utc = trigger.to_state.attributes.publication_date %}
                             {{as_timestamp(data_utc)|timestamp_custom ('%d/%m/%Y - %H:%M:%S')}}
                             Epicentro: {{trigger.to_state.attributes.region}}
+                            [Compila il Questionario](https://www.hsit.it/xml-server.php?item=quest&action=compile&event_id={{trigger.to_state.attributes.event_id}})
                           url: "{{ image_url }}"
       # ALL IN ONE
       # - delay: "00:00:01"
@@ -1111,10 +1124,13 @@ script:
           DEFAULT_NOTIFY: *DEFAULT_NOTIFY
           DEFAULT_MEDIA_PLAYER_ALEXA: *DEFAULT_MEDIA_PLAYER_ALEXA
           DEFAULT_MEDIA_PLAYER_GOOGLE: *DEFAULT_MEDIA_PLAYER_GOOGLE
+          DEFAULT_MOBILE_APP_ICON: *DEFAULT_MOBILE_APP_ICON
           INVALIDATE: [false, null, "", "none"]
-          notify_service: >
-            {{'' if '.' in DEFAULT_NOTIFY else 'notify.'}}{{DEFAULT_NOTIFY|default('notify')|replace(' ','_')|lower}}
-          message: "{{ message|default ~ '\n\n{}'.format(link|default)}}"
+          notify_service: >-
+            {{ (DEFAULT_NOTIFY|replace('notify.','')|regex_replace(find=" *, *", replace=",")|lower).rsplit(",") 
+            if DEFAULT_NOTIFY is string else DEFAULT_NOTIFY }}
+          title: "{{title|default}}"
+          message: "{{message|default}}"
           alexa_message: >
             {% if alexa is boolean %}
             {{ message if alexa }}
@@ -1129,33 +1145,129 @@ script:
             {{ (google['message_tts'] if 'message_tts' in google 
                 else google['message'] if 'message' in google)|default(message) }}
             {% endif %}
-      - alias: NOTIFY IMAGE
+
+      - alias: NOTIFIER
         choose:
-          - alias: IF URL OR FILE
+          - alias: IF DEFAULT NOTIFY VALIDATE
             conditions:
-              - "{{file|default not in INVALIDATE or url|default not in INVALIDATE}}"
+              - "{{ DEFAULT_NOTIFY not in INVALIDATE }}"
             sequence:
-              - service: "{{notify_service}}"
-                data:
-                  title: "{{title|default}}"
-                  message: "{{message}}"
-                  data:
-                    photo:
-                      - "{{'url' if url is defined else 'file'}}": "{{url if url is defined else file}}"
-                        caption: |
-                          {{title|default}}
-                          {{message}}
-      - alias: NOTIFY MESSAGE
-        choose:
-          - alias: IF MESSAGGE AND NOT URL OR FILE
-            conditions:
-              - "{{message|length > 0}}"
-              - "{{file|default in INVALIDATE and url|default in INVALIDATE}}"
-            sequence:
-              - service: "{{notify_service}}"
-                data:
-                  title: "{{title|default}}"
-                  message: "{{message}}"
+              - alias: NOTIFY IMAGE
+                choose:
+                  - alias: IF URL OR FILE
+                    conditions:
+                      - "{{file|default not in INVALIDATE or url|default not in INVALIDATE}}"
+                    sequence:
+                      - variables:
+                          url_file: "{{url if url is defined else file}}"
+                          extra_mobile_app:
+                            {
+                              "sticky": "true",
+                              "image": "{{url_file|replace('config/www','local')}}",
+                            }
+                          extra_pushbullet:
+                            {
+                              "{{'file_url' if url is defined else 'file'}}": "{{url_file}}"
+                            }
+                          extra_pushover:
+                            {
+                              "{{'attachment' if 'http' not in url_file else 'url'}}": "{{url_file}}",
+                              "sound": "siren",
+                            }
+                          extra_telegram:
+                            {
+                              "photo":
+                                {
+                                  "{{'url' if url is defined else 'file'}}": "{{url_file}}",
+                                  "caption": "{{title}}\n{{message}}",
+                                  "timeout": 90,
+                                },
+                            }
+                      - alias: "Repeat Image notify"
+                        repeat:
+                          while:
+                            - condition: template
+                              value_template: "{{ repeat.index <= notify_service|length }}"
+                          sequence:
+                            - variables:
+                                notify_name: "{{ notify_service[repeat.index -1] |replace(' ','_') }}"
+                                extra_data: >-
+
+                                  {% if notify_name.find('mobile_app') != -1 %}
+                                    {{extra_mobile_app}}
+                                  {% elif (notify_name).find('pushbullet') != -1 %}
+                                    {{extra_pushbullet}}
+                                  {% elif notify_name.find('pushover') != -1 %}
+                                    {{extra_pushover}}
+                                  {% elif notify_name.find('telegram') != -1 %}
+                                    {{extra_telegram}}
+                                  {% else %}
+                                  {}
+                                  {% endif %}
+
+                            - service: "notify.{{notify_name}}"
+                              data:
+                                title: "{{ title }}"
+                                message: "{{ 'Message' if (notify_name).find('pushover') != -1 and message == '' else message }}"
+                                # target: []
+                                data: "{{extra_data}}"
+              - alias: NOTIFY MESSAGE
+                choose:
+                  - alias: IF MESSAGGE AND NOT URL OR FILE
+                    conditions:
+                      - "{{message|length > 0}}"
+                      - "{{file|default in INVALIDATE and url|default in INVALIDATE}}"
+                    sequence:
+                      - variables:
+                          extra_mobile_app:
+                            {
+                              "sticky": "true",
+                              "color": "#FF4500",
+                              "ledColor": "#FF4500",
+                              "icon_url": "{{DEFAULT_MOBILE_APP_ICON}}",
+                              "clickAction": "{{link|default|regex_replace(find='\\[.*\\]|[()]', replace='')}}",
+                              "url": "{{link|default|regex_replace(find='\\[.*\\]|[()]', replace='')}}",
+                            }
+                          extra_pushbullet:
+                            {
+                              "url": "{{link|default|regex_replace(find='\\[.*\\]|[()]', replace='')}}"
+                            }
+                          extra_pushover:
+                            {
+                              "url": "{{link|default|regex_replace(find='\\[.*\\]|[()]', replace='')}}",
+                              "url_title": "{{link|default|regex_replace(find='[()].*|\\]|\\[', replace='')}}",
+                              "sound": "siren",
+                            }
+                          extra_telegram: { "timeout": 90 }
+                      - alias: "Repeat the sequence AS LONG AS the conditions are true"
+                        repeat:
+                          while:
+                            - condition: template
+                              value_template: "{{ repeat.index <= notify_service|length }}"
+                          sequence:
+                            - variables:
+                                notify_name: "{{ notify_service[repeat.index -1] |replace(' ','_') }}"
+                                extra_data: >-
+
+                                  {% if (notify_name).find('mobile_app') != -1 %}
+                                    {{extra_mobile_app}}
+                                  {% elif (notify_name).find('pushbullet') != -1 %}
+                                    {{extra_pushbullet}}
+                                  {% elif (notify_name).find('pushover') != -1 %}
+                                    {{extra_pushover}}
+                                  {% elif (notify_name).find('telegram') != -1 %}
+                                    {{extra_telegram}}
+                                  {% else %}
+                                    {}
+                                  {% endif %}
+
+                            - service: "notify.{{ notify_name }}"
+                              data:
+                                title: "{{title}}"
+                                message: "{{message ~ '\n\n{}'.format(link|default)
+                                  if (notify_name).find('telegram') != -1 else message }}"
+                                # target: []
+                                data: "{{extra_data}}"
       - alias: TTS MESSAGE
         choose:
           - alias: IF TIME AND AUDIO
