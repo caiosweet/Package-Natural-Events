@@ -1127,6 +1127,7 @@ script:
           DEFAULT_MOBILE_APP_ICON: *DEFAULT_MOBILE_APP_ICON
           INVALIDATE: [false, null, "", "none"]
           notify_service: >-
+            {% set DEFAULT_NOTIFY = notify|default(DEFAULT_NOTIFY) %}
             {{ (DEFAULT_NOTIFY|replace('notify.','')|regex_replace(find=" *, *", replace=",")|lower).rsplit(",") 
             if DEFAULT_NOTIFY is string else DEFAULT_NOTIFY }}
           title: "{{title|default}}"
