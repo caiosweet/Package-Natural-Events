@@ -5,7 +5,6 @@
 ##  📌 Information provided by MeteoAlarm, Burze, GDACS, DPC and INGV Italy
 ##  📂 PATH IMAGE /config/www/hassiohelp/pkg_natural_events
 ##--------------------------------------------------------------------------------------------------|
-## DPC: per trovare il codice ISTAT: https://www.paginebianche.it/codice-istat
 ## METEOALARM: Cerca il nome della tua Regione o ID: http://meteoalarm.eu/it_IT/0/0/IT-Italia.html
 ## Strumento per visualizzare il raggio delle zone https://www.mapdevelopers.com/draw-circle-tool.php
 ## SSH & Web Terminal: per il check url e download immagine INGV https://github.com/hassio-addons/addon-ssh
@@ -22,7 +21,7 @@ homeassistant:
         package: "Natural_events 🌍"
         site: "hassiohelp.eu 🌐"
         author: "Caio & Gianpi"
-        version: "2021.05.6"
+        version: "2021.7.1"
       ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
       ## DEFAULT
       SCRIPT centro notifiche: &DEFAULT_SCRIPT !secret pkg_natural_events_script
@@ -49,15 +48,14 @@ homeassistant:
       ID Meteoalarm Custom: &CONF_METEOALARM_CUSTOM_ID !secret pkg_natural_events_meteoalarm_custom_id
       API KEY Burze: &CONF_BURZE_API_KEY !secret pkg_natural_events_burze_api_key
       RAGGIO BURZE (km): &CONF_RADIUS_BURZE !secret pkg_natural_events_radius_burze
-      ISTAT DPC (Protezione CIvile): &CONF_ISTAT !secret pkg_natural_events_istat
       ##--------------------- FINE IMPOSTAZIONI PACKAGE ---------------------##
 
       ##----------------------- HELP SETTINGS BEGIN -------------------------##
-      DEFAULT_MOBILE_APP_ICON: 
-        &DEFAULT_MOBILE_APP_ICON "https://forum.hassiohelp.eu/assets/favicon-nd6kd8nu.ico"
-        # "https://hassiohelp.eu/wp-content/uploads/2020/02/favicon.ico"
-        # "https://lh4.googleusercontent.com/gWYLWEqGpDiTu9QAzF01d7fujiKDgGn1LKpc4KEFXR5G26B9OqH5
-        # _nWdni11eJqcLOrpY63nmDHkHgdSJgTTG3MxH2jj4_twXfYqM-kQKMyxoT8ls_9mefRmJfPWEZqx=w512"
+      DEFAULT_MOBILE_APP_ICON_2: &DEFAULT_MOBILE_APP_ICON_2 "https://hassiohelp.eu/wp-content/uploads/2021/05/icon_forum-750x750-full.png"
+      DEFAULT_MOBILE_APP_ICON_1:
+        &DEFAULT_MOBILE_APP_ICON_1 "https://hassiohelp.eu/wp-content/uploads/2021/05/icon_site-750x750-full.png"
+        #"https://hassiohelp.eu/wp-content/uploads/2019/03/hassiohelp-192.png"
+
       METEOALARM_SIGN: &METEOALARM_SIGN
         0:
           icon: "❌"
@@ -146,23 +144,35 @@ homeassistant:
 
       WARNING_SIGN: &WARNING_SIGN
         0:
-          color: "⚪"
+          icon_color: "⚪"
           text: "Bianca"
+          decimal_color: 16777215
+          hex_color: "#FFFFFF"
         1:
-          color: "🟢"
+          icon_color: "🟢"
           text: "Verde"
+          decimal_color: 3381555
+          hex_color: "#339933"
         2:
-          color: "🟡"
+          icon_color: "🟡"
           text: "Gialla"
+          decimal_color: 16776960
+          hex_color: "#FFFF00"
         3:
-          color: "🟠"
+          icon_color: "🟠"
           text: "Arancione"
+          decimal_color: 16753920
+          hex_color: "#FFA500"
         4:
-          color: "🔴"
+          icon_color: "🔴"
           text: "Rossa"
+          decimal_color: 16711680
+          hex_color: "#FF0000"
         5:
-          color: "🏴‍☠️"
+          icon_color: "🏴‍☠️"
           text: "Nera"
+          decimal_color: 0
+          hex_color: "#000000"
 
       WEEKDAYS: &WEEKDAYS
         - Domenica
@@ -189,7 +199,10 @@ homeassistant:
       friendly_name: "MeteoAlarm Custom Notifiche"
     automation.natural_events_protezione_civile_notifications:
       <<: *CUSTOMIZE
-      friendly_name: "DPC Notifiche"
+      friendly_name: "DPC Notifiche BinarySensor"
+    automation.natural_events_protezione_civile_notifications_sensor:
+      <<: *CUSTOMIZE
+      friendly_name: "DPC Notifiche Sensore"
     automation.natural_events_quake_ingv_notifications:
       <<: *CUSTOMIZE
       friendly_name: "INGV Notifiche"
@@ -255,7 +268,6 @@ homeassistant:
     sensor.meteoalarm_custom:
       <<: *CUSTOMIZE
       friendly_name: "MeteoAlarm Custom"
-      unit_of_measurement: eventi
     sensor.meteoalarm_level:
       <<: *CUSTOMIZE
       friendly_name: "MeteoAlarm Level"
@@ -297,25 +309,26 @@ homeassistant:
       <<: *CUSTOMIZE
     geo_location.volcano*:
       <<: *CUSTOMIZE
-    script.natural_events_*:
+    sensor.dpc*:
       <<: *CUSTOMIZE
     sensor.gdacs*:
       <<: *CUSTOMIZE
       friendly_name: GDACS
-      unit_of_measurement: eventi
       Configuration: integration
 
 #######################################-#######################################
 ##                                 COMPONENT
 #######################################-#######################################
 #-------------------------------------
-# GDACS info https://www.home-assistant.io/integrations/gdacs/
+# DPC Configuration in Integration UI
+# Info https://github.com/caiosweet/Home-Assistant-custom-components-DPC-Alert
 #-------------------------------------
-# gdacs: ### Configuration in Integration UI
-#   categories: [Drought, Earthquake, Flood, Tropical Cyclone, Tsunami, Volcano]
-#   radius: *CONF_RADIUS_QUAKE
-#   latitude: *CONF_LATITUDE
-#   longitude: *CONF_LONGITUDE
+
+#-------------------------------------
+# GDACS Configuration in Integration UI
+# Info https://www.home-assistant.io/integrations/gdacs/
+#-------------------------------------
+
 #-------------------------------------
 # GEO LOCATION info https://www.home-assistant.io/components/geo_location/
 # INGV info https://github.com/caiosweet/Home-Assistant-custom-components-INGV
@@ -372,7 +385,9 @@ input_select:
   meteo_iframe:
     options:
       - Windy Alert
-      - Protezione Civile
+      - DPC Radar
+      - DPC Bollettino Criticità
+      - DPC Vigilanza Meteo
       - Blitzortung
       - Radareu
       - Volcanodiscovery
@@ -407,20 +422,6 @@ group:
 #######################################-#######################################
 binary_sensor:
   #-------------------------------------
-  # DPC info https://github.com/caiosweet/Home-Assistant-custom-components-DPC-Alert
-  #-------------------------------------
-  - platform: dpc
-    name: "dpc"
-    istat: *CONF_ISTAT
-    warnings:
-      - temporali_oggi
-      - idraulico_oggi
-      - idrogeologico_oggi
-      - temporali_domani
-      - idraulico_domani
-      - idrogeologico_domani
-    scan_interval: 900 # in seconds (default 1800 [30min])
-  #-------------------------------------
   # BURZE info https://github.com/PiotrMachowski/Home-Assistant-custom-components-Burze.dzis.net
   #-------------------------------------
   - platform: burze_dzis_net
@@ -434,7 +435,7 @@ binary_sensor:
   # METEOALARM INTEGRATION info https://www.home-assistant.io/components/meteoalarm/
   #-------------------------------------
   - platform: meteoalarm
-    country: "IT"
+    country: "italy"
     province: *CONF_METEOALARM_REGION
     language: "it"
   #-------------------------------------
@@ -672,6 +673,7 @@ automation:
       # - delay: 00:00:15
       - service: homeassistant.update_entity
         entity_id: binary_sensor.lastquake
+
       - alias: Add GDACS sensor in group geoalert
         choose:
           - alias: if entity GDACS exists
@@ -680,13 +682,14 @@ automation:
               - service: group.set
                 data:
                   object_id: geoalert
-                  add_entities: "{{states|selectattr('name', '==', 'GDACS')|map(attribute='entity_id')|list}}"
+                  add_entities: >
+                    {{states|selectattr('name', 'eq', 'GDACS')|join(',',attribute='entity_id')}}
 
   #----------------------------------------------------------------------------------------------------#
   # BURZE.NET Notifica caduti fulmini nel raggio impostato in radius_meteoalert
   #----------------------------------------------------------------------------------------------------#
   - alias: natural_events_burze_notifications
-    initial_state: true
+    # initial_state: true
     trigger:
       platform: state
       entity_id: binary_sensor.burze_storms_nearby
@@ -713,10 +716,11 @@ automation:
             {{ trigger.to_state.attributes.friendly_name }}.
             {% else %} AGGIORNAMENTO TEMPORALE. {% endif %}
           message: >-
-            {% set n = attr.get('number', 0) %} {% set d = attr.get('distance')|default(radius,'0') %}
+            {% set n = attr.get('number', 0) %}
+            {% set d = attr.get('distance')|default(radius,'0') %}
             {% macro range_distance() %} {% if d <= 0.5 %}5{% elif 0.5 < d <= 1 %}4{% elif 1 < d <= 5 %}3
             {% elif 5 < d <= 10 %}2{% elif 10 < d <= 20 %}1{% else %}0{% endif %} {% endmacro %}
-            {{WARNING_SIGN.get(range_distance()|int).color}} Negli ultimi {{attr.get('period',0)}} minuti
+            {{WARNING_SIGN.get(range_distance()|int).icon_color}} Negli ultimi {{attr.get('period',0)}} minuti
             {% for x in n|string %} {{NUMBER_ICONS[x]|default(x)}}{% endfor %}⚡{% if n != 1 %}
             scariche di fulmini {% else %} fulmine scaricato {% endif %} nel raggio di {{radius}} km. 
             La scarica più vicina è avvenuta a {{attr.get('distance', 0)}} km a {{direction}} da casa.
@@ -730,58 +734,171 @@ automation:
             /config/www/hassiohelp/pkg_natural_events/burze.png{% else %}{% endif %}
 
   #----------------------------------------------------------------------------------------------------#
-  # D. PROTEZIONE CIVILE - Notifica criticità meteo-idro nella provincia impostata - Vedi tabella a fine package
+  # D. PROTEZIONE CIVILE - Notifica criticità meteo-idro Sensor
+  #----------------------------------------------------------------------------------------------------#
+  - alias: natural_events_protezione_civile_notifications_sensor
+    mode: queued
+    max_exceeded: silent
+    # initial_state: true
+    trigger:
+      - platform: state
+        entity_id:
+          - sensor.dpc
+    condition: >-
+      {{ trigger.to_state.state != '0' 
+      and (trigger.to_state.state != trigger.from_state.state 
+      or trigger.to_state.attributes.id != trigger.from_state.attributes.id) }}
+    action:
+      - variables:
+          WARNING_SIGN: *WARNING_SIGN
+          BULLETIN: "https://mappe.protezionecivile.gov.it/it/mappe-rischi/bollettino-di-criticita"
+          WARN_DPC:
+            {
+              none: "❌",
+              "Temporali": "⚡",
+              "Idraulico": "💧",
+              "Idrogeologico": "🌊",
+            }
+          # ENTITY: "{{ trigger.entity_id }}" # if trigger is defined else 'sensor.dpc'
+          ENTITY: sensor.dpc
+      - alias: DPC today tomorrow
+        choose:
+          - alias: Check if events today or tomorrow in sensor
+            # conditions: "{{ 'events_today' in trigger.to_state.attributes or 'events_tomorrow' in trigger.to_state.attributes }}"
+            conditions: "{{ state_attr(ENTITY, 'events_today') is not none or state_attr(ENTITY, 'events_tomorrow') is not none }}"
+            sequence:
+              - alias: DPC today
+                choose:
+                  - alias: Check if events today in sensor
+                    # conditions: "{{ 'events_today' in trigger.to_state.attributes }}"
+                    conditions: "{{ state_attr(ENTITY, 'events_today') is not none }}"
+                    sequence:
+                      - service: *DEFAULT_SCRIPT
+                        data:
+                          call_no_annuncio: 1
+                          title: "DPC"
+                          message: |
+                            {%- set attr = state_attr(ENTITY, 'events_today') %}
+                            Criticità per oggi
+                            {%- for d in attr %}
+                            {{WARNING_SIGN[d['level']].icon_color}} {{ WARN_DPC[d['risk']] }} {{ d['info'] }} per rischio {{ d['risk'] }}. Allerta {{ d['alert'] }}
+                            {%- endfor %}
+                          alexa:
+                            message_tts: &dpc_tts_msg_today >-
+                              {%- set attr = state_attr(ENTITY, 'events_today') %}
+                              Protezione Civile, bollettino di criticità per oggi,
+                              {%- for d in attr %}
+                              {{ d['info'] }} per rischio {{ d['risk'] }}, allerta {{ d['alert'] }},
+                              {%- endfor %}
+                            audio: soundbank://soundlibrary/weather/thunder/thunder_11
+                          google:
+                            message_tts: *dpc_tts_msg_today
+                            audio: "https://d3qhmae9zx9eb.cloudfront.net/weather/thunder/thunder_11.mp3"
+                          url: >
+                            {{ state_attr(ENTITY, 'today').image_url }}
+                          link: >
+                            [Bollettino di criticità]({{ BULLETIN }})
+                          level: >
+                            {{ state_attr(ENTITY, 'today')['level'] |default(0) |int }}
+
+              - alias: DPC tomorrow
+                choose:
+                  - alias: Check if events tomorrow in sensor
+                    # conditions: "{{ 'events_tomorrow' in trigger.to_state.attributes }}"
+                    conditions: "{{ state_attr(ENTITY, 'events_tomorrow') is not none }}"
+                    sequence:
+                      - service: *DEFAULT_SCRIPT
+                        data:
+                          call_no_annuncio: 1
+                          title: "DPC"
+                          message: |
+                            {%- set attr = state_attr(ENTITY, 'events_tomorrow') %}
+                            Criticità per domani
+                            {%- for d in attr %}
+                            {{WARNING_SIGN[d['level']].icon_color}} {{ WARN_DPC[d['risk']] }} {{ d['info'] }} per rischio {{ d['risk'] }}. Allerta {{ d['alert'] }}
+                            {%- endfor %}
+                          alexa:
+                            message_tts: &dpc_tts_msg_tomorrow >-
+                              {%- set attr = state_attr(ENTITY, 'events_tomorrow') %}
+                              Protezione Civile, bollettino di criticità per domani,
+                              {%- for d in attr %}
+                              {{ d['info'] }} per rischio {{ d['risk'] }}, allerta {{ d['alert'] }},
+                              {%- endfor %}
+                            audio: soundbank://soundlibrary/weather/thunder/thunder_11
+                          google:
+                            message_tts: *dpc_tts_msg_tomorrow # "{{dpc_tts_msg}}"
+                            audio: "https://d3qhmae9zx9eb.cloudfront.net/weather/thunder/thunder_11.mp3"
+                          url: >
+                            {{ state_attr(ENTITY, 'tomorrow').image_url }}
+                          link: >
+                            [Bollettino di criticità]({{ BULLETIN }})
+                          level: >
+                            {{ state_attr(ENTITY, 'tomorrow')['level'] |default(0) |int }}
+        default: []
+
+  #----------------------------------------------------------------------------------------------------#
+  # D. PROTEZIONE CIVILE - Notifica criticità meteo-idro Binary Sensor
   #----------------------------------------------------------------------------------------------------#
   - alias: natural_events_protezione_civile_notifications
     mode: queued
     max_exceeded: silent
-    initial_state: true
+    # initial_state: true
     trigger:
-      platform: state
-      entity_id:
-        - binary_sensor.dpc_idrogeologico_oggi
-        - binary_sensor.dpc_idraulico_oggi
-        - binary_sensor.dpc_temporali_oggi
-        - binary_sensor.dpc_idrogeologico_domani
-        - binary_sensor.dpc_idraulico_domani
-        - binary_sensor.dpc_temporali_domani
+      - platform: state
+        entity_id:
+          - binary_sensor.dpc_idrogeologico_oggi
+          - binary_sensor.dpc_idraulico_oggi
+          - binary_sensor.dpc_temporali_oggi
+          - binary_sensor.dpc_idrogeologico_domani
+          - binary_sensor.dpc_idraulico_domani
+          - binary_sensor.dpc_temporali_domani
     condition: >-
-      {{ trigger.to_state.state == 'on' and (trigger.from_state.state == 'off' 
-      or (trigger.to_state.attributes != trigger.from_state.attributes))}}
+      {{ trigger.to_state.state == 'on' and (trigger.from_state.state == 'off'
+      or (trigger.to_state.attributes.id != trigger.from_state.attributes.id))}}
     action:
       - variables:
           WARNING_SIGN: *WARNING_SIGN
-          BULLETIN: >-
-            {{"http://www.protezionecivile.gov.it/attivita-rischi/meteo-idro/attivita/previsione-prevenzione" +
-            "/centro-funzionale-centrale-rischio-meteo-idrogeologico/previsionale/bollettini-criticita/bollettino-odierno"}}
+          BULLETIN: "https://mappe.protezionecivile.gov.it/it/mappe-rischi/bollettino-di-criticita"
+          PREVIEW: "https://raw.githubusercontent.com/pcm-dpc/DPC-Bollettini-Criticita-Idrogeologica-Idraulica/master/files/preview/{}_{}.png"
           attr: "{{ trigger.to_state.attributes if trigger.to_state is defined else ({}) }}"
-          dpc_tts_msg: >-
+          dpc_tts_msg: >- 
+            {% set attr = trigger.to_state.attributes if trigger.to_state is defined else ({}) %}
             Attenzione. {{attr.get('friendly_name', 'Test DPC')}}. 
-            Allerta {{attr.get('allerta', 'Bianca')}} {{attr.get('info', 'Nessuna info')}}.
+            Allerta {{attr.get('alert', 'Bianca')}} {{attr.get('info', 'Nessuna info')}}.
       - service: *DEFAULT_SCRIPT
         data:
           call_no_annuncio: 1
           title: >-
-            Protezione Civile - {{attr.get('rischio', 'Test DPC')}}
+            {% set attr = trigger.to_state.attributes if trigger.to_state is defined else ({}) %}
+            Protezione Civile - {{attr.get('risk', 'Test DPC')}}
             {% if trigger.from_state is defined and trigger.from_state.state == 'on' %} - Revisione {% endif %}
           message: |
-            {% set risk = {none: '❌', 'Temporali':'⚡', 'Idraulico':'💧', 'Idrogeologico':'🌊'} %}
-            {{risk[attr.get('rischio')]}} {{attr.get('friendly_name', 'Test DPC')}}. 
-            {{WARNING_SIGN[attr.get('level', 0)].color}} Allerta {{attr.get('allerta' ,'Bianca')}} {{attr.get('info', 'No Info')}}.
+            {% set attr = trigger.to_state.attributes if trigger.to_state is defined else ({}) %}
+            {% set warn = {none: '❌', 'Temporali':'⚡', 'Idraulico':'💧', 'Idrogeologico':'🌊'} %}
+            {{warn[attr.get('risk')]}} {{attr.get('friendly_name', 'Test DPC')}}. 
+            {{WARNING_SIGN[attr.get('level', 0)].icon_color}} Allerta {{attr.get('alert' ,'Bianca')}} {{attr.get('info', 'No Info')}}.
           alexa:
             message_tts: "{{dpc_tts_msg}}"
             audio: soundbank://soundlibrary/weather/thunder/thunder_11
           google:
             message_tts: "{{dpc_tts_msg}}"
             audio: "https://d3qhmae9zx9eb.cloudfront.net/weather/thunder/thunder_11.mp3"
-          link: "[Bollettino di criticità]({{attr.get('link', BULLETIN)}})"
+          link: >
+            {% set attr = trigger.to_state.attributes if trigger.to_state is defined else ({}) %}
+            [Bollettino di criticità]({{attr.get('link', BULLETIN)}})
+          level: >
+            {% set attr = trigger.to_state.attributes if trigger.to_state is defined else ({}) %}
+            {{attr.get('level', 0)}}
+          url: >
+            {% set attr = trigger.to_state.attributes if trigger.to_state is defined else ({}) %}
+            {{attr.get('image_url', PREVIEW.format('20210702_1500', 'domani'))}}
 
   #----------------------------------------------------------------------------------------------------#
   # METEOALARM - Notifica criticità meteo nella regione impostata - Vedi tabella a fine package
   #----------------------------------------------------------------------------------------------------#
   - alias: natural_events_meteoalarm_notifications
     mode: queued
-    initial_state: true
+    # initial_state: true
     trigger:
       platform: state
       entity_id: binary_sensor.meteoalarm
@@ -808,7 +925,7 @@ automation:
             {{ attr.get('urgency')}}.{% else %}Revisione.{% endif %}
           message: |
             Per {{WEEKDAYS[day]}}
-            {{WARNING_SIGN[level].color}} {{(METEOALARM_SIGN[type].text)|upper}}. Allerta {{WARNING_SIGN[level].text}}
+            {{WARNING_SIGN[level].icon_color}} {{(METEOALARM_SIGN[type].text)|upper}}. Allerta {{WARNING_SIGN[level].text}}
             Descrizione: {{attr.get('description','Test Descrizione')}}
             {{as_timestamp(attr.get('effective'))|timestamp_custom('Valido dalle ore %H:%M del %d/%m')|default(now(),true)}}
             {{as_timestamp(attr.get('expires'))|timestamp_custom(' alle ore %H:%M del %d/%m')|default(now(),true)}}
@@ -821,13 +938,14 @@ automation:
           google:
             message_tts: "{{meteoalarm_tts_msg}}"
             audio: "{{METEOALARM_SIGN[type].google_sound}}"
+          level: "{{level}}"
 
   #----------------------------------------------------------------------------------------------------#
   # METEOALARM CUSTOM - Notifica criticità meteo nella regione impostata - Vedi tabella a fine package
   #----------------------------------------------------------------------------------------------------#
   - alias: natural_events_meteoalarm_custom_notifications
     mode: queued
-    initial_state: true
+    # initial_state: true
     trigger:
       platform: state
       entity_id: sensor.meteoalarm_custom
@@ -885,7 +1003,7 @@ automation:
             {{day[s]|upper}}
             {{'¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯'}}
             {%- for d in v %}
-            {{WARNING_SIGN[level[d['code']]].color + METEOALARM_SIGN[type_index[d['event']]].icon + 
+            {{WARNING_SIGN[level[d['code']]].icon_color + METEOALARM_SIGN[type_index[d['event']]].icon + 
             METEOALARM_SIGN[type_index[d['event']]].text}} allerta {{WARNING_SIGN[level[d['code']]].text}}
             Descrizione: {{d['italiano']}}
             Data: {{d['start']|trim("CEST")|replace('.','/')}} - {{d['end']|trim("CEST")|replace('.','/')}}
@@ -896,6 +1014,7 @@ automation:
             message_tts: "{{meteoalarm_custom_tts_msg}}"
           google:
             message_tts: "{{meteoalarm_custom_tts_msg}}"
+          # level: "{{ level }}"
 
   #----------------------------------------------------------------------------------------------------#
   # GEO LOCATION - Notifica Terremoti
@@ -905,7 +1024,7 @@ automation:
   - alias: natural_events_quake_ingv_notifications
     mode: queued
     max_exceeded: silent
-    initial_state: true
+    # initial_state: true
     trigger:
       - platform: geo_location
         source: "ingv_centro_nazionale_terremoti"
@@ -922,7 +1041,7 @@ automation:
             {% set m = trigger.to_state.attributes.magnitude %}
             {% macro magnitude() %}
             {%if 0<=m<=1.9%}0{%elif 2<=m<=2.9%}1{%elif 3<=m<=3.9%}2{%elif 4<=m<=5.9%}3{%else%}4{%endif%}
-            {% endmacro %} {{WARNING_SIGN.get(magnitude()|int).color}}
+            {% endmacro %} {{ magnitude()|int }}
           quake_tts_msg: >-
             Rilevato terremoto a {{trigger.to_state.state}} km,
             di magnitudo {{trigger.to_state.attributes.magnitude}},
@@ -937,13 +1056,13 @@ automation:
         data:
           call_no_annuncio: 1
           title: >-
-            🚧{{level}} INGV.
+            🚧{{ WARNING_SIGN.get(level).icon_color }} INGV.
           message: |
-            {% set data_utc = trigger.to_state.attributes.publication_date %}
-            {{as_timestamp(data_utc)|timestamp_custom ('%d/%m/%Y - %H:%M:%S')}}
             Rilevato terremoto a una distanza di {{trigger.to_state.state}} Km da casa.
             Magnitudo: {{trigger.to_state.attributes.magnitude}} 
             Epicentro: {{trigger.to_state.attributes.region}}
+            {% set data_utc = trigger.to_state.attributes.publication_date %}
+            {{as_timestamp(data_utc)|timestamp_custom('%H:%M:%S - %d/%m/%Y')}}
 
             {% set state_dict = {'home': 'casa', 'not_home': 'fuori casa', 'unknown': '❓'} %}
             {%- for person in expand(states.person)|sort(attribute='name') -%}
@@ -962,6 +1081,7 @@ automation:
           google:
             message_tts: "{{quake_tts_msg}}"
             audio: "https://d3qhmae9zx9eb.cloudfront.net/nature/amzn_sfx_earthquake_rumble_02.mp3"
+          level: "{{level}}"
       # TRY DOWNLOAD IMAGE FOR xx TIME IF IMAGE URL EXISTS
       - alias: Download image
         choose:
@@ -983,8 +1103,8 @@ automation:
                         - platform: state
                           entity_id: binary_sensor.check_url
                           to: "on"
-                      timeout: "00:00:20"
-                  until: "{{ is_state('binary_sensor.check_url', 'on') or repeat.index >= 15 }}"
+                      timeout: "00:00:20" #TODO DYNAMIC TIME
+                  until: "{{ is_state('binary_sensor.check_url', 'on') or repeat.index >= 18 }}"
               - alias: Send Image
                 choose:
                   - alias: If successful check
@@ -994,49 +1114,24 @@ automation:
                       - service: *DEFAULT_SCRIPT
                         data:
                           call_no_annuncio: true
-                          title: "✅{{level}} INGV. Ⓜ {{trigger.to_state.attributes.magnitude}}"
+                          title: >
+                            ✅{{ WARNING_SIGN.get(level).icon_color }} 
+                            INGV. Ⓜ {{ trigger.to_state.attributes.magnitude }} 
+                            📐 {{ trigger.to_state.state }} km
                           message: |
+                            Epicentro: {{ trigger.to_state.attributes.region }}
                             {% set data_utc = trigger.to_state.attributes.publication_date %}
-                            {{as_timestamp(data_utc)|timestamp_custom ('%d/%m/%Y - %H:%M:%S')}}
-                            Epicentro: {{trigger.to_state.attributes.region}}
+                            {{ as_timestamp(data_utc)|timestamp_custom('%H:%M:%S - %d/%m/%Y') }}
+                          link: >
                             [Compila il Questionario](https://www.hsit.it/xml-server.php?item=quest&action=compile&event_id={{trigger.to_state.attributes.event_id}})
+                          file: "{{ DOWNLOAD_DIR }}lastquake.jpg"
                           url: "{{ image_url }}"
-      # ALL IN ONE
-      # - delay: "00:00:01"
-      # - service: *DEFAULT_SCRIPT
-      #   data:
-      #     call_no_annuncio: 1
-      #     title: >-
-      #       🚧{{level}} TEST.
-      #     message: |
-      #       {% set data_utc = trigger.to_state.attributes.publication_date %}
-      #       Rilevato terremoto di magnitudo: {{trigger.to_state.attributes.magnitude}}
-      #       a una distanza di {{trigger.to_state.state}} Km da casa. Epicentro: {{trigger.to_state.attributes.region}}
-      #       {{as_timestamp(data_utc)|timestamp_custom ('Data %d/%m/%Y Ore %H:%M:%S')}}
-
-      #       {% set state_dict = {'home': 'casa', 'not_home': 'fuori casa', 'unknown': '❓'} %}
-      #       {%- for person in expand(states.person)|sort(attribute='name') -%}
-      #       {% if 'latitude' in person.attributes -%}
-      #       {% set distanza = distance(trigger.entity_id, person.entity_id) -%}
-      #       {{"📍{} ({}) a circa {} km dall'epicentro.".format(person.name|upper, state_dict.get(person.state, person.state), distanza|round(1)) }}
-      #       {% else -%}
-      #       {{"🔹{} ({})".format(person.name|upper, state_dict.get(person.state, person.state)) }}
-      #       {% endif -%}
-      #       {% endfor %}
-      #       [Dati Evento](http://terremoti.ingv.it/event/{{trigger.to_state.attributes.event_id}})
-      #     url: "{{image_url if image_url|length > 0 and is_state('binary_sensor.check_url', 'on')}}"
-      #     alexa:
-      #       message_tts: "{{quake_tts_msg}}"
-      #       audio: <audio src="soundbank://soundlibrary/nature/amzn_sfx_earthquake_rumble_02"/>
-      #     google:
-      #       message_tts: "{{quake_tts_msg}}"
-      #       audio: "https://d3qhmae9zx9eb.cloudfront.net/nature/amzn_sfx_earthquake_rumble_02.mp3"
-
+                          level: "{{ level }}"
   # USGS
   - alias: natural_events_quake_usgs_notifications
     mode: queued
     max_exceeded: silent
-    initial_state: true
+    # initial_state: true
     trigger:
       - platform: geo_location
         source: usgs_earthquakes_feed
@@ -1046,6 +1141,12 @@ automation:
       {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.time))/3600*60)|int < 60}}
     action:
       - variables:
+          level: >-
+            {% set m = trigger.to_state.attributes.magnitude %}
+            {% macro magnitude() %}
+            {%if 0<=m<=1.9%}0{%elif 2<=m<=2.9%}1{%elif 3<=m<=3.9%}2{%elif 4<=m<=5.9%}3{%else%}4{%endif%}
+            {% endmacro %} {{ magnitude()|int }}
+          WARNING_SIGN: *WARNING_SIGN
           usgs_tts_msg: >-
             Evento sismico a {{trigger.to_state.state}} km.
             Epicentro {{trigger.to_state.attributes.place}}.
@@ -1054,7 +1155,7 @@ automation:
         data:
           call_no_annuncio: 1
           title: >-
-            🚧 USGS - Evento sismico. {{trigger.to_state.attributes.status}}
+            🚧{{ WARNING_SIGN.get(level).icon_color }} USGS - Evento sismico. {{trigger.to_state.attributes.status}}
           message: >-
             {% set data_utc = trigger.to_state.attributes.time %}
             Evento sismico di magnitudo: {{trigger.to_state.attributes.magnitude}} 
@@ -1070,6 +1171,7 @@ automation:
           google:
             message_tts: "{{usgs_tts_msg}}"
             audio: "https://d3qhmae9zx9eb.cloudfront.net/backgrounds_ambience/volcano_earthquake/volcano_earthquake_03.mp3"
+          level: "{{level}}"
 
   #----------------------------------------------------------------------------------------------------#
   # GEO LOCATION - Notifica GDACS # Global Disaster Alert and Coordination System
@@ -1077,7 +1179,7 @@ automation:
   - alias: natural_events_gdacs_notifications
     mode: queued
     max_exceeded: silent
-    initial_state: true
+    # initial_state: true
     trigger:
       - platform: geo_location
         source: "gdacs"
@@ -1111,26 +1213,96 @@ automation:
             message_tts: "{{gdacs_tts_msg}}"
           google:
             message_tts: "{{gdacs_tts_msg}}"
+
 #######################################-#######################################
 ##                                  SCRIPT
 #######################################-#######################################
 script:
   notify_hub:
     alias: Mini Notification Center
+    description: "Cross-platform notification sorting center"
+    fields:
+      title:
+        name: title
+        description: "Il titolo della notifica"
+        example: "Attenzione! Allarme inserito"
+        default: "Attenzione! Allarme inserito"
+        selector:
+          text:
+            multiline: true
+      message:
+        name: message
+        description: "The message content"
+        example: "Allerta bianca temporali oggi"
+        default: "Allerta bianca temporali oggi."
+        selector:
+          text:
+            multiline: true
+      alexa:
+        name: alexa
+        description: "Parameter for TTS Alexa. Bool (True/Flase) or Dict (media_player, message/message_tts, audio)"
+        example: &ex_alexa |
+          media_player: media_player.studio
+          message_tts: messaggio diverso per alexa
+          audio: '<audio src="soundbank://soundlibrary/nature/amzn_sfx_earthquake_rumble_02"/>'
+        default: *ex_alexa
+        required: false
+        selector:
+          object:
+      google:
+        name: google
+        description: "Parameter for TTS Google. Bool (True/Flase) or Dict (media_player, message/message_tts, audio)"
+        example: "true"
+        default: false
+        selector:
+          boolean:
+      notify:
+        name: notify
+        description: "Notify or more then one service notificstion (notify.telegram, notify.pushover, notify.pushbullt)"
+        example: "notify.telegram"
+        default: "notify.telegram"
+        selector:
+          text:
+      file:
+        name: file
+        description: "Path to send local image"
+        example: "/config/www/hassiohelp/pkg_natural_events/burze.png"
+        default: "/config/www/hassiohelp/pkg_natural_events/burze.png"
+        selector:
+          text:
+      url:
+        name: url
+        description: "Uri to send remote image"
+        example: "https://hassiohelp.eu/wp-content/uploads/2020/11/Notifer-3.0-00-2-2048x1451.jpg"
+        default: "https://hassiohelp.eu/wp-content/uploads/2020/11/Notifer-3.0-00-2-2048x1451.jpg"
+        selector:
+          text:
+      link:
+        name: link
+        description: "Un link da inserire nel messaggio. Se inserito in formato markdown [alias](uri link), dove previsto verrà trasformato in alias cliccabile"
+        example: "[Google](https://www.google.it/)"
+        default: "[Google](https://www.google.it/)"
+        selector:
+          text:
+
     mode: queued
     max_exceeded: silent
     sequence:
       - variables:
+          WARNING_SIGN: *WARNING_SIGN
           DEFAULT_NOTIFY: *DEFAULT_NOTIFY
           DEFAULT_MEDIA_PLAYER_ALEXA: *DEFAULT_MEDIA_PLAYER_ALEXA
           DEFAULT_MEDIA_PLAYER_GOOGLE: *DEFAULT_MEDIA_PLAYER_GOOGLE
-          DEFAULT_MOBILE_APP_ICON: *DEFAULT_MOBILE_APP_ICON
+          DEFAULT_MOBILE_APP_ICON_1: *DEFAULT_MOBILE_APP_ICON_1
+          DEFAULT_MOBILE_APP_ICON_2: *DEFAULT_MOBILE_APP_ICON_2
           INVALIDATE: [false, null, "", "none"]
           notify_service: >-
+            {% set DEFAULT_NOTIFY = notify|default(DEFAULT_NOTIFY) %}
             {{ (DEFAULT_NOTIFY|replace('notify.','')|regex_replace(find=" *, *", replace=",")|lower).rsplit(",") 
             if DEFAULT_NOTIFY is string else DEFAULT_NOTIFY }}
-          title: "{{title|default}}"
-          message: "{{message|default}}"
+          title: "{{ title|default }}"
+          message: "{{ message|default }}"
+          link: "{{ link|default }}"
           alexa_message: >
             {% if alexa is boolean %}
             {{ message if alexa }}
@@ -1146,128 +1318,222 @@ script:
                 else google['message'] if 'message' in google)|default(message) }}
             {% endif %}
 
+      - alias: PERSISTENT 
+        choose:
+          - alias: IF DPERSISTENT
+            conditions:
+              - "{{ message not in INVALIDATE }}"
+              - "{{ states('input_boolean.screen_notifications') != 'off' }}"
+            sequence:
+              - service: persistent_notification.create
+                data:
+                  title: "Mini Centro Notifiche"
+                  message: 
+                    | #  {% set image = file|default('none') %} ![image](/local/my_image.jpg)
+                    {% set timestamp = now().strftime("%H:%M:%S") %}
+                    {% set old_message = state_attr('persistent_notification.mini_centro_notifiche','message') %}
+                    {% set message = "\n`{}` - {}\n{}".format(timestamp,message,link) %}
+                    {% set persistent_message = "{}\n{}".format(old_message,message) %}
+                    {{ persistent_message if old_message is not none and old_message|length < 2000 else message }}
+                  notification_id: "mini_centro_notifiche"
+
       - alias: NOTIFIER
         choose:
           - alias: IF DEFAULT NOTIFY VALIDATE
             conditions:
               - "{{ DEFAULT_NOTIFY not in INVALIDATE }}"
             sequence:
+              - variables:
+                  ### Split link from markdown format [alias](url)
+                  link_uri: "{{ link|regex_replace(find='\\[.*\\]|[()]', replace='') }}"
+                  link_alias: "{{ link|regex_replace(find='[()].*|\\]|\\[', replace='') }}"
+                  word_regex_color: 
+                    "(magnitudo\\b|epicentro\\b|\\ballerta\\b|\\balert\\b
+                    |\\bverde\\b|\\bgiall.\\b|\\barancione\\b|\\bross.\\b)"
               - alias: NOTIFY IMAGE
                 choose:
                   - alias: IF URL OR FILE
                     conditions:
-                      - "{{file|default not in INVALIDATE or url|default not in INVALIDATE}}"
+                      - "{{ file|default not in INVALIDATE or url|default not in INVALIDATE }}"
                     sequence:
                       - variables:
-                          url_file: "{{url if url is defined else file}}"
-                          extra_mobile_app:
-                            {
-                              "sticky": "true",
-                              "image": "{{url_file|replace('config/www','local')}}",
-                            }
-                          extra_pushbullet:
-                            {
-                              "{{'file_url' if url is defined else 'file'}}": "{{url_file}}"
-                            }
-                          extra_pushover:
-                            {
-                              "{{'attachment' if 'http' not in url_file else 'url'}}": "{{url_file}}",
-                              "sound": "siren",
-                            }
-                          extra_telegram:
-                            {
-                              "photo":
-                                {
-                                  "{{'url' if url is defined else 'file'}}": "{{url_file}}",
-                                  "caption": "{{title}}\n{{message}}",
-                                  "timeout": 90,
-                                },
-                            }
-                      - alias: "Repeat Image notify"
+                          local_remote: "{{ file if file is defined else url }}"
+
+                      - alias: "REPEAT Image notify"
                         repeat:
-                          while:
-                            - condition: template
-                              value_template: "{{ repeat.index <= notify_service|length }}"
+                          while: "{{ repeat.index <= notify_service|length }}"
                           sequence:
                             - variables:
-                                notify_name: "{{ notify_service[repeat.index -1] |replace(' ','_') }}"
-                                extra_data: >-
+                                notify_name: "{{ notify_service[repeat.index -1] |replace(' ','_') |lower }}"
 
-                                  {% if notify_name.find('mobile_app') != -1 %}
-                                    {{extra_mobile_app}}
-                                  {% elif (notify_name).find('pushbullet') != -1 %}
-                                    {{extra_pushbullet}}
-                                  {% elif notify_name.find('pushover') != -1 %}
-                                    {{extra_pushover}}
-                                  {% elif notify_name.find('telegram') != -1 %}
-                                    {{extra_telegram}}
-                                  {% else %}
-                                  {}
-                                  {% endif %}
+                            - alias: FIND PLATFORM
+                              choose:
+                                - alias: DISCORD
+                                  conditions: "{{ 'discord' in notify_name }}"
+                                  sequence:
+                                    - service: "notify.{{ notify_name }}"
+                                      data:
+                                        title: "{{ title }}"
+                                        message: ""
+                                        data:
+                                          embed:
+                                            title: "{{title}}"
+                                            description: "{{ '\n{}\n\n{}'.format(message,link) }}"
+                                            url: "{{link_uri}}"
+                                            color: "{{ color|default(WARNING_SIGN[level|default(0)|int].decimal_color) }}"
+                                            author:
+                                              name: "Mini Centro Notifiche 👨‍✈️"
+                                              url: "{{local_remote if 'http' in local_remote }}"
+                                              icon_url: "{{local_remote if 'http' in local_remote else DEFAULT_MOBILE_APP_ICON_2 }}"
+                                            thumbnail:
+                                              url: "{{local_remote if 'http' in local_remote else DEFAULT_MOBILE_APP_ICON_2 }}"
+                                            footer:
+                                              text: "by HassioHelp"
+                                              icon_url: "{{DEFAULT_MOBILE_APP_ICON_1}}"
+                                          images: "{{[local_remote] if 'http' not in local_remote else [] }}"
 
-                            - service: "notify.{{notify_name}}"
-                              data:
-                                title: "{{ title }}"
-                                message: "{{ 'Message' if (notify_name).find('pushover') != -1 and message == '' else message }}"
-                                # target: []
-                                data: "{{extra_data}}"
-              - alias: NOTIFY MESSAGE
+                                - alias: MOBILE APP
+                                  conditions: "{{ 'mobile_app' in notify_name }}"
+                                  sequence:
+                                    - service: "notify.{{ notify_name }}"
+                                      data:
+                                        title: "{{ title }}"
+                                        message: "{{ message ~ '\n\n{}'.format(link_uri) }}"
+                                        data:
+                                          sticky: true
+                                          clickAction: "{{ link_uri }}"
+                                          url: "{{ link_uri }}"
+                                          image: "{{ local_remote|replace('config/www','local') }}"
+
+                                - alias: PUSHBULLET
+                                  conditions: "{{ 'pushbullet' in notify_name }}"
+                                  sequence:
+                                    - service: "notify.{{ notify_name }}"
+                                      data:
+                                        title: "{{ title }}"
+                                        message: "{{ '{}\n\n{}'.format(message,link_uri) }}"
+                                        data:
+                                          "{{ 'file' if file is defined else 'file_url' }}": "{{ local_remote }}"
+
+                                - alias: PUSHOVER
+                                  conditions: "{{ 'pushover' in notify_name }}"
+                                  sequence:
+                                    - service: "notify.{{ notify_name }}"
+                                      data:
+                                        title: "{{ title }}"
+                                        message: >
+                                          {% set message = 'Image' if message in INVALIDATE else message %}
+
+                                          {% set message_regex = message |regex_replace(find=word_regex_color, 
+                                            replace='<font color="{}">{}</font>'.format(
+                                            color|default(WARNING_SIGN[level|default(0)|int].hex_color),
+                                            "\\1"),
+                                            ignorecase=True) %}
+                                          {{ '{}\n\n<a href={}>{}</a>'.format(message_regex,link_uri,link_alias) }}
+                                        data:
+                                          "{{ 'attachment' if file is defined else 'url' }}": "{{ local_remote }}"
+                                          url_title: "{{ 'Remote Image' if url is defined else '' }}"
+                                          html: 1
+                                          sound: "{{ sound|default('siren') }}"
+
+                                - alias: TELEGRAM
+                                  conditions: "{{ 'telegram' in notify_name }}"
+                                  sequence:
+                                    - service: "notify.{{ notify_name }}"
+                                      data:
+                                        title: "{{ title }}"
+                                        message: "{{message}}"
+                                        data:
+                                          photo:
+                                            "{{ 'file' if file is defined else 'url' }}": "{{ local_remote }}"
+                                            caption: "{{ title }}\n{{ message ~ '\n\n{}'.format(link) }}"
+                                            timeout: 90
+
+                              default:
+                                - service: "notify.{{ notify_name }}"
+                                  data:
+                                    title: "{{ title }}"
+                                    message: "{{'\n{}\n{}'.format(message,link_uri) }}"
+                                    data: "{{ data|default({}) }}"
+
+
+              - alias: NOTIFY TEXT
                 choose:
                   - alias: IF MESSAGGE AND NOT URL OR FILE
                     conditions:
-                      - "{{message|length > 0}}"
-                      - "{{file|default in INVALIDATE and url|default in INVALIDATE}}"
+                      - "{{ message|length > 0 }}"
+                      - "{{ file|default in INVALIDATE and url|default in INVALIDATE }}"
                     sequence:
                       - variables:
+                          extra_discord:
+                            embed:
+                              title: "{{ title }}"
+                              description: "{{ '\n{}\n\n{}'.format(message,link) }}"
+                              url: "{{ link_uri }}"
+                              color: "{{ color|default(WARNING_SIGN[level|default(0)|int].decimal_color) }}"
+                              author:
+                                name: "Mini Centro Notifiche 👨‍✈️"
+                                url: "{{ link_uri }}"
+                                icon_url: "{{ DEFAULT_MOBILE_APP_ICON_1 }}"
+                              thumbnail:
+                                url: "{{ DEFAULT_MOBILE_APP_ICON_1 }}"
+                              # fields:
+                              #   - name: "by HassioHelp"
+                              #     value: "{{ link_uri }}"
+                              footer:
+                                text: "by HassioHelp"
+                                icon_url: "{{ DEFAULT_MOBILE_APP_ICON_1 }}"
                           extra_mobile_app:
-                            {
-                              "sticky": "true",
-                              "color": "#FF4500",
-                              "ledColor": "#FF4500",
-                              "icon_url": "{{DEFAULT_MOBILE_APP_ICON}}",
-                              "clickAction": "{{link|default|regex_replace(find='\\[.*\\]|[()]', replace='')}}",
-                              "url": "{{link|default|regex_replace(find='\\[.*\\]|[()]', replace='')}}",
-                            }
-                          extra_pushbullet:
-                            {
-                              "url": "{{link|default|regex_replace(find='\\[.*\\]|[()]', replace='')}}"
-                            }
+                            sticky: true
+                            clickAction: "{{ link_uri }}"
+                            url: "{{ link_uri }}"
+                            color: "{{ color|default(WARNING_SIGN[level|default(0)|int].hex_color) }}"
+                            ledColor: "{{ color|default(WARNING_SIGN[level|default(0)|int].hex_color) }}"
+                            icon_url: "{{ icon|default(DEFAULT_MOBILE_APP_ICON_1) }}"
+                          extra_pushbullet: { "url": "{{ link_uri }}" }
                           extra_pushover:
-                            {
-                              "url": "{{link|default|regex_replace(find='\\[.*\\]|[()]', replace='')}}",
-                              "url_title": "{{link|default|regex_replace(find='[()].*|\\]|\\[', replace='')}}",
-                              "sound": "siren",
-                            }
+                            url: "{{ link_uri }}"
+                            url_title: "{{ link_alias }}"
+                            html: 1
+                            sound: siren
                           extra_telegram: { "timeout": 90 }
-                      - alias: "Repeat the sequence AS LONG AS the conditions are true"
+                      - alias: "Repeat text notify"
                         repeat:
-                          while:
-                            - condition: template
-                              value_template: "{{ repeat.index <= notify_service|length }}"
+                          while: "{{ repeat.index <= notify_service|length }}"
                           sequence:
                             - variables:
-                                notify_name: "{{ notify_service[repeat.index -1] |replace(' ','_') }}"
-                                extra_data: >-
-
-                                  {% if (notify_name).find('mobile_app') != -1 %}
-                                    {{extra_mobile_app}}
-                                  {% elif (notify_name).find('pushbullet') != -1 %}
-                                    {{extra_pushbullet}}
-                                  {% elif (notify_name).find('pushover') != -1 %}
-                                    {{extra_pushover}}
-                                  {% elif (notify_name).find('telegram') != -1 %}
-                                    {{extra_telegram}}
-                                  {% else %}
-                                    {}
-                                  {% endif %}
-
+                                notify_name: "{{ notify_service[repeat.index -1] |replace(' ','_') |lower }}"
                             - service: "notify.{{ notify_name }}"
                               data:
-                                title: "{{title}}"
-                                message: "{{message ~ '\n\n{}'.format(link|default)
-                                  if (notify_name).find('telegram') != -1 else message }}"
-                                # target: []
-                                data: "{{extra_data}}"
+                                title: "{{ title }}"
+                                message: >
+                                  {% if 'discord' in notify_name %}
+                                  {% elif 'telegram' in notify_name %}
+                                    {{ message ~ '\n\n{}'.format(link) }}
+                                  {% elif 'pushover' in notify_name %}
+                                    {% set message_regex = message |regex_replace(find=word_regex_color, 
+                                      replace='<font color="{}">{}</font>'.format(
+                                      color|default(WARNING_SIGN[level|default(0)|int].hex_color),
+                                      "\\1"),
+                                      ignorecase=True) %}
+                                    {{ message_regex }}
+                                  {% else %}
+                                    {{ message }}
+                                  {% endif %}
+                                data: >-
+                                  {% if 'mobile_app' in notify_name %}
+                                    {{ extra_mobile_app }}
+                                  {% elif 'pushbullet' in notify_name %}
+                                    {{ extra_pushbullet }}
+                                  {% elif 'pushover' in notify_name %}
+                                    {{ extra_pushover }}
+                                  {% elif 'telegram' in notify_name %}
+                                    {{ extra_telegram }}
+                                  {% elif 'discord' in notify_name %}
+                                    {{ extra_discord }}
+                                  {% else %}
+                                    {{ data|default({}) }}
+                                  {% endif %}
       - alias: TTS MESSAGE
         choose:
           - alias: IF TIME AND AUDIO
@@ -1278,12 +1544,14 @@ script:
               - "{{ (DEFAULT_MEDIA_PLAYER_ALEXA not in INVALIDATE and alexa not in INVALIDATE) or
                 (DEFAULT_MEDIA_PLAYER_GOOGLE not in INVALIDATE and google not in INVALIDATE)}}"
               - "{{states('binary_sensor.dnd') != 'on'}}"
-              - "{{expand(states.person)|selectattr('state','eq','home')|list|count > 0}}"
+              # - "{{expand(states.person)|selectattr('state','eq','home')|list|count > 0}}"
             sequence:
               - alias: TTS ALEXA
                 choose:
                   - alias: IF ALEXA
-                    conditions: "{{ DEFAULT_MEDIA_PLAYER_ALEXA not in INVALIDATE and alexa_message|length > 0 }}"
+                    conditions:
+                      - "{{ DEFAULT_MEDIA_PLAYER_ALEXA not in INVALIDATE and alexa_message|length > 0 }}"
+                      - "{{states('input_boolean.alexa_switch') != 'off' }}"
                     sequence:
                       - variables:
                           alexa_sound: "{{alexa['audio']|default }}"
@@ -1309,7 +1577,9 @@ script:
               - alias: TTS GOOGLE
                 choose:
                   - alias: IF GOOGLE
-                    conditions: "{{ DEFAULT_MEDIA_PLAYER_GOOGLE not in INVALIDATE and google_message|length > 0 }}"
+                    conditions:
+                      - "{{ DEFAULT_MEDIA_PLAYER_GOOGLE not in INVALIDATE and google_message|length > 0 }}"
+                      - "{{states('input_boolean.google_switch') != 'off' }}"
                     sequence:
                       - variables:
                           google_sound: "{{google['audio']|default }}"
@@ -1339,17 +1609,11 @@ script:
                         data:
                           entity_id: "{{google_players}}"
                           message: "{{message_tts}}"
-                      # - delay: "00:00:01"
-                      # - delay:
-                      #     seconds: >
-                      #       {{expand(google_players)|selectattr('attributes.media_duration','defined')
-                      #       |map(attribute='attributes.media_duration')|list|first|default(0)|float}}
               - delay:
                   seconds: >-
                     {{ (alexa_message|wordcount, google_message|wordcount)
                         |max|default(message|wordcount, true) // 2
                         +(2 if alexa is boolean or not 'audio' in alexa|default else 9) }}
-
 #######################################-#######################################
 ##                                  LEGEND
 #######################################-#######################################
@@ -1421,7 +1685,6 @@ script:
 # pkg_natural_events_meteoalarm_custom_id: "IT012-Lazio"
 # pkg_natural_events_burze_api_key: "x123456789012xx12xxx12aa345bb6c67890d12e"
 # pkg_natural_events_radius_burze: 25 # Km
-# pkg_natural_events_istat: "058091"
 
 # ###########################################################
 # ## EXAMPLE NATURAL EVENTS SECRETS FILE TEMPLATE OR ENTITY
@@ -1454,7 +1717,6 @@ script:
 # pkg_natural_events_meteoalarm_custom_id: "IT012-Lazio"
 # pkg_natural_events_burze_api_key: "x123456789012xx12xxx12aa345bb6c67890d12e"
 # pkg_natural_events_radius_burze: 25 # Km
-# pkg_natural_events_istat: "058091"
 
 # N.B
 # pkg_natural_events_script: "{{states('input_select.centro_notifiche')}}"
