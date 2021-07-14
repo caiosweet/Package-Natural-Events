@@ -21,7 +21,7 @@ homeassistant:
         package: "Natural_events 🌍"
         site: "hassiohelp.eu 🌐"
         author: "Caio & Gianpi"
-        version: "2021.07.0"
+        version: "2021.7.1"
       ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
       ## DEFAULT
       SCRIPT centro notifiche: &DEFAULT_SCRIPT !secret pkg_natural_events_script
@@ -51,8 +51,7 @@ homeassistant:
       ##--------------------- FINE IMPOSTAZIONI PACKAGE ---------------------##
 
       ##----------------------- HELP SETTINGS BEGIN -------------------------##
-      DEFAULT_MOBILE_APP_ICON_2: 
-        &DEFAULT_MOBILE_APP_ICON_2 "https://hassiohelp.eu/wp-content/uploads/2021/05/icon_forum-750x750-full.png"
+      DEFAULT_MOBILE_APP_ICON_2: &DEFAULT_MOBILE_APP_ICON_2 "https://hassiohelp.eu/wp-content/uploads/2021/05/icon_forum-750x750-full.png"
       DEFAULT_MOBILE_APP_ICON_1:
         &DEFAULT_MOBILE_APP_ICON_1 "https://hassiohelp.eu/wp-content/uploads/2021/05/icon_site-750x750-full.png"
         #"https://hassiohelp.eu/wp-content/uploads/2019/03/hassiohelp-192.png"
@@ -200,7 +199,10 @@ homeassistant:
       friendly_name: "MeteoAlarm Custom Notifiche"
     automation.natural_events_protezione_civile_notifications:
       <<: *CUSTOMIZE
-      friendly_name: "DPC Notifiche"
+      friendly_name: "DPC Notifiche BinarySensor"
+    automation.natural_events_protezione_civile_notifications_sensor:
+      <<: *CUSTOMIZE
+      friendly_name: "DPC Notifiche Sensore"
     automation.natural_events_quake_ingv_notifications:
       <<: *CUSTOMIZE
       friendly_name: "INGV Notifiche"
@@ -687,7 +689,7 @@ automation:
   # BURZE.NET Notifica caduti fulmini nel raggio impostato in radius_meteoalert
   #----------------------------------------------------------------------------------------------------#
   - alias: natural_events_burze_notifications
-    initial_state: true
+    # initial_state: true
     trigger:
       platform: state
       entity_id: binary_sensor.burze_storms_nearby
@@ -732,12 +734,115 @@ automation:
             /config/www/hassiohelp/pkg_natural_events/burze.png{% else %}{% endif %}
 
   #----------------------------------------------------------------------------------------------------#
-  # D. PROTEZIONE CIVILE - Notifica criticità meteo-idro nella provincia impostata - Vedi tabella a fine package
+  # D. PROTEZIONE CIVILE - Notifica criticità meteo-idro Sensor
+  #----------------------------------------------------------------------------------------------------#
+  - alias: natural_events_protezione_civile_notifications_sensor
+    mode: queued
+    max_exceeded: silent
+    # initial_state: true
+    trigger:
+      - platform: state
+        entity_id:
+          - sensor.dpc
+    condition: >-
+      {{ trigger.to_state.state != '0' 
+      and (trigger.to_state.state != trigger.from_state.state 
+      or trigger.to_state.attributes.id != trigger.from_state.attributes.id) }}
+    action:
+      - variables:
+          WARNING_SIGN: *WARNING_SIGN
+          BULLETIN: "https://mappe.protezionecivile.gov.it/it/mappe-rischi/bollettino-di-criticita"
+          WARN_DPC:
+            {
+              none: "❌",
+              "Temporali": "⚡",
+              "Idraulico": "💧",
+              "Idrogeologico": "🌊",
+            }
+          # ENTITY: "{{ trigger.entity_id }}" # if trigger is defined else 'sensor.dpc'
+          ENTITY: sensor.dpc
+      - alias: DPC today tomorrow
+        choose:
+          - alias: Check if events today or tomorrow in sensor
+            # conditions: "{{ 'events_today' in trigger.to_state.attributes or 'events_tomorrow' in trigger.to_state.attributes }}"
+            conditions: "{{ state_attr(ENTITY, 'events_today') is not none or state_attr(ENTITY, 'events_tomorrow') is not none }}"
+            sequence:
+              - alias: DPC today
+                choose:
+                  - alias: Check if events today in sensor
+                    # conditions: "{{ 'events_today' in trigger.to_state.attributes }}"
+                    conditions: "{{ state_attr(ENTITY, 'events_today') is not none }}"
+                    sequence:
+                      - service: *DEFAULT_SCRIPT
+                        data:
+                          call_no_annuncio: 1
+                          title: "DPC"
+                          message: |
+                            {%- set attr = state_attr(ENTITY, 'events_today') %}
+                            Criticità per oggi
+                            {%- for d in attr %}
+                            {{WARNING_SIGN[d['level']].icon_color}} {{ WARN_DPC[d['risk']] }} {{ d['info'] }} per rischio {{ d['risk'] }}. Allerta {{ d['alert'] }}
+                            {%- endfor %}
+                          alexa:
+                            message_tts: &dpc_tts_msg_today >-
+                              {%- set attr = state_attr(ENTITY, 'events_today') %}
+                              Protezione Civile, bollettino di criticità per oggi,
+                              {%- for d in attr %}
+                              {{ d['info'] }} per rischio {{ d['risk'] }}, allerta {{ d['alert'] }},
+                              {%- endfor %}
+                            audio: soundbank://soundlibrary/weather/thunder/thunder_11
+                          google:
+                            message_tts: *dpc_tts_msg_today
+                            audio: "https://d3qhmae9zx9eb.cloudfront.net/weather/thunder/thunder_11.mp3"
+                          url: >
+                            {{ state_attr(ENTITY, 'today').image_url }}
+                          link: >
+                            [Bollettino di criticità]({{ BULLETIN }})
+                          level: >
+                            {{ state_attr(ENTITY, 'today')['level'] |default(0) |int }}
+
+              - alias: DPC tomorrow
+                choose:
+                  - alias: Check if events tomorrow in sensor
+                    # conditions: "{{ 'events_tomorrow' in trigger.to_state.attributes }}"
+                    conditions: "{{ state_attr(ENTITY, 'events_tomorrow') is not none }}"
+                    sequence:
+                      - service: *DEFAULT_SCRIPT
+                        data:
+                          call_no_annuncio: 1
+                          title: "DPC"
+                          message: |
+                            {%- set attr = state_attr(ENTITY, 'events_tomorrow') %}
+                            Criticità per domani
+                            {%- for d in attr %}
+                            {{WARNING_SIGN[d['level']].icon_color}} {{ WARN_DPC[d['risk']] }} {{ d['info'] }} per rischio {{ d['risk'] }}. Allerta {{ d['alert'] }}
+                            {%- endfor %}
+                          alexa:
+                            message_tts: &dpc_tts_msg_tomorrow >-
+                              {%- set attr = state_attr(ENTITY, 'events_tomorrow') %}
+                              Protezione Civile, bollettino di criticità per domani,
+                              {%- for d in attr %}
+                              {{ d['info'] }} per rischio {{ d['risk'] }}, allerta {{ d['alert'] }},
+                              {%- endfor %}
+                            audio: soundbank://soundlibrary/weather/thunder/thunder_11
+                          google:
+                            message_tts: *dpc_tts_msg_tomorrow # "{{dpc_tts_msg}}"
+                            audio: "https://d3qhmae9zx9eb.cloudfront.net/weather/thunder/thunder_11.mp3"
+                          url: >
+                            {{ state_attr(ENTITY, 'tomorrow').image_url }}
+                          link: >
+                            [Bollettino di criticità]({{ BULLETIN }})
+                          level: >
+                            {{ state_attr(ENTITY, 'tomorrow')['level'] |default(0) |int }}
+        default: []
+
+  #----------------------------------------------------------------------------------------------------#
+  # D. PROTEZIONE CIVILE - Notifica criticità meteo-idro Binary Sensor
   #----------------------------------------------------------------------------------------------------#
   - alias: natural_events_protezione_civile_notifications
     mode: queued
     max_exceeded: silent
-    initial_state: true
+    # initial_state: true
     trigger:
       - platform: state
         entity_id:
@@ -755,7 +860,6 @@ automation:
           WARNING_SIGN: *WARNING_SIGN
           BULLETIN: "https://mappe.protezionecivile.gov.it/it/mappe-rischi/bollettino-di-criticita"
           PREVIEW: "https://raw.githubusercontent.com/pcm-dpc/DPC-Bollettini-Criticita-Idrogeologica-Idraulica/master/files/preview/{}_{}.png"
-          # attr: "{{ trigger.event.data.new_state.attributes if trigger.event is defined else ({}) }}"
           attr: "{{ trigger.to_state.attributes if trigger.to_state is defined else ({}) }}"
           dpc_tts_msg: >- 
             {% set attr = trigger.to_state.attributes if trigger.to_state is defined else ({}) %}
@@ -784,7 +888,7 @@ automation:
             [Bollettino di criticità]({{attr.get('link', BULLETIN)}})
           level: >
             {% set attr = trigger.to_state.attributes if trigger.to_state is defined else ({}) %}
-            {{attr.get('level', 0)}}"
+            {{attr.get('level', 0)}}
           url: >
             {% set attr = trigger.to_state.attributes if trigger.to_state is defined else ({}) %}
             {{attr.get('image_url', PREVIEW.format('20210702_1500', 'domani'))}}
@@ -794,7 +898,7 @@ automation:
   #----------------------------------------------------------------------------------------------------#
   - alias: natural_events_meteoalarm_notifications
     mode: queued
-    initial_state: true
+    # initial_state: true
     trigger:
       platform: state
       entity_id: binary_sensor.meteoalarm
@@ -841,7 +945,7 @@ automation:
   #----------------------------------------------------------------------------------------------------#
   - alias: natural_events_meteoalarm_custom_notifications
     mode: queued
-    initial_state: true
+    # initial_state: true
     trigger:
       platform: state
       entity_id: sensor.meteoalarm_custom
@@ -920,7 +1024,7 @@ automation:
   - alias: natural_events_quake_ingv_notifications
     mode: queued
     max_exceeded: silent
-    initial_state: true
+    # initial_state: true
     trigger:
       - platform: geo_location
         source: "ingv_centro_nazionale_terremoti"
@@ -1027,7 +1131,7 @@ automation:
   - alias: natural_events_quake_usgs_notifications
     mode: queued
     max_exceeded: silent
-    initial_state: true
+    # initial_state: true
     trigger:
       - platform: geo_location
         source: usgs_earthquakes_feed
@@ -1075,7 +1179,7 @@ automation:
   - alias: natural_events_gdacs_notifications
     mode: queued
     max_exceeded: silent
-    initial_state: true
+    # initial_state: true
     trigger:
       - platform: geo_location
         source: "gdacs"
@@ -1295,7 +1399,6 @@ script:
                                       data:
                                         title: "{{ title }}"
                                         message: "{{ message ~ '\n\n{}'.format(link_uri) }}"
-                                        # "{{'target' if target|length > 0 else 'title' }}": "{{target|default if target|length > 0 else title}}"
                                         data:
                                           sticky: true
                                           clickAction: "{{ link_uri }}"
@@ -1351,7 +1454,6 @@ script:
                                   data:
                                     title: "{{ title }}"
                                     message: "{{'\n{}\n{}'.format(message,link_uri) }}"
-                                    # target: []
                                     data: "{{ data|default({}) }}"
 
 
