@@ -315,7 +315,7 @@ cards:
                 state_color: true
               group_config:
                 state_color: true
-                secondary_info: last-changed
+                secondary_info: last-updated
                 card_mod:
                   style: |
                     :host {
@@ -346,7 +346,7 @@ cards:
                 state_color: true
               group_config:
                 state_color: true
-                secondary_info: last-changed
+                secondary_info: last-updated
                 card_mod:
                   style: |
                     :host {
@@ -358,7 +358,7 @@ cards:
                         {% if 'gdacs' in config.entity and states(config.entity) > '0' %} --paper-item-icon-color: var(--paper-item-icon-active-color);{% endif %}
                     }
   #################################################################
-  ## * BUTTONS MAPS (Escluso dalla light AUTO-ENTITIES SENSORS ON) *
+  ## * BUTTONS MAPS (AUTO-ENTITIES SENSORS ON Escluso dalla light) *
   #################################################################
   - type: conditional # CARDS VISUALIZZATE SOLO SE INPUT BOOLEAN NATURAL EVENTS OFF!!
     conditions:
@@ -480,7 +480,7 @@ cards:
                 color: var(--paper-item-icon-color)
 
   #################################################################
-  ## INFO
+  ## INFO - Da qui in poi uguale per light e picture menu
   #################################################################
   - type: conditional # CARDS VISUALIZZATE SOLO SE INPUT BOOLEAN NATURAL EVENTS ON!!
     conditions:
@@ -503,7 +503,7 @@ cards:
                 ha-card {background: none; border-radius: 0px; box-shadow: none;}
             content: >-
               {%- set mycolor = 'var(--error-color)' -%}
-              {%- set color2 = 'Yellow' -%}
+              {%- set color2 = 'Gold' -%}
               ___
 
               #### TEMPORALI
@@ -527,28 +527,109 @@ cards:
               - entity_id: binary_sensor.*
                 state: "on"
                 attributes:
-                  integration: "dpc"
+                  integration: dpc
+              - entity_id: sensor.*
+                # state: ">0"
+                attributes:
+                  integration: dpc
+                  total_alerts: ">0"
           card:
+            # type: markdown
+            # # entity_id: this.entity_id
+            # card_mod:
+            #   style: |
+            #     ha-card {background: none; border-radius: 0px; box-shadow: none;}
+            # content: >
+            #   ___
+
+            #   #### PROTEZIONE CIVILE
+
+            #   {% set color = {0:'White', 1:'Green', 2:'Gold', 3:'Orange', 4:'Red'} %}
+            #   {% for state in states.binary_sensor %}
+            #   {% if is_state_attr(state.entity_id, 'integration', 'dpc') and state.state == 'on' %}
+
+            #   <font color= {{color[state.attributes.level|int]}}> <ha-icon icon="{{ 'mdi:numeric-' ~ state.attributes.level|int ~ '-box'}}" style="width: 36px; height: 36px;"></ha-icon>
+            #   {{state.name}} - {{state.attributes.alert}} {{state.attributes.info}}</font>
+            #   {% endif %} {% endfor %}
+
+            #   [Protezione Civile](https://www.protezionecivile.gov.it/it/) ~ [Vigilanza Meteo](https://mappe.protezionecivile.it/it/mappe-rischi/bollettino-di-vigilanza)
+            #   ~ [Criticità Idro](https://mappe.protezionecivile.gov.it/it/mappe-rischi/bollettino-di-criticita) ~ [Radar](https://mappe.protezionecivile.it/it/mappe-rischi/piattaforma-radar)
+
+            #################################################################
+            ## DPC SENSOR CRITICITA - VIGILANZA
+            #################################################################
             type: markdown
-            # entity_id: this.entity_id
             card_mod:
               style: |
                 ha-card {background: none; border-radius: 0px; box-shadow: none;}
-            content: >
+            # card_size: 4
+            content: |-
+
               ___
 
-              #### PROTEZIONE CIVILE
+              {% set entity = 'sensor.dpc_alert' %}
 
-              {% set color = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} %} 
-              {% for state in states.binary_sensor %} 
-              {%- if is_state_attr(state.entity_id, 'integration', 'dpc') and state.state == 'on' %} 
+              #### PROTEZIONE CIVILE - [CRITICITA](https://mappe.protezionecivile.gov.it/it/mappe-rischi/bollettino-di-criticita)
 
-              <font color= {{color[state.attributes.level|int]}}> <ha-icon icon="{{ 'mdi:numeric-' ~ state.attributes.level|int ~ '-box'}}" style="width: 36px; height: 36px;"></ha-icon>  
-              {{state.name}} - {{state.attributes.alert}} {{state.attributes.info}}</font> 
-              {%- endif -%} {% endfor %}
+              ##### ZONA {{state_attr(entity, 'zone_name')}}
 
-              [Protezione Civile](https://www.protezionecivile.gov.it/it/) ~ [Vigilanza Meteo](https://mappe.protezionecivile.it/it/mappe-rischi/bollettino-di-vigilanza)
-              ~ [Criticità Idro](https://mappe.protezionecivile.gov.it/it/mappe-rischi/bollettino-di-criticita) ~ [Radar](https://mappe.protezionecivile.it/it/mappe-rischi/piattaforma-radar)
+
+              {% set color = {0:'White', 1:'Green', 2:'Gold', 3:'Orange', 4:'Red'} %}
+              {% set days_map = {'today':'Oggi.', 'tomorrow':'Domani.', 'aftertomorrow': 'Dopodomani.'} %} 
+              {%- for day in ['today', 'tomorrow'] %}
+              {% set d = state_attr(entity, day) %}
+              {%- set events = state_attr(entity, 'events_'+day) %}
+              {%- if d %} 
+              {%- if  d['level'] >= 1 %}
+
+              |   |   |
+              |:--|:--|
+              | <font color="{{ color.get(d['level']) }}"/> <ha-icon icon="{{ 'mdi:numeric-' ~ d['level'] ~ '-box'}}"/></ha-icon> | {{ days_map[day] }} {{d['info']}} {{d['alert']}}</font> |
+              {% endif %}
+              {%- endif %}
+              {%- if events %} 
+              {%- for ev in events %}
+
+              |   |   |   |
+              |:--|:--|:--|
+              | <font color="{{ color.get(ev['level']) }}"/> <ha-icon icon="{{ 'mdi:numeric-' ~ ev['level'] }}"/> | <font color="{{ color.get(ev['level']) }}"/> <ha-icon icon="{{ ev['icon'] }}"/> | {{ ev['alert'] }} {{ ev['info'] }} criticità per rischio {{ ev['risk'] }} |
+
+              {%- endfor %} 
+              {%- endif %}
+              {%- endfor %}
+
+              ___
+
+              {% set entity = 'sensor.dpc_vigilance' %}
+
+              #### PROTEZIONE CIVILE - [VIGILANZA METEO](https://mappe.protezionecivile.it/it/mappe-rischi/bollettino-di-vigilanza)
+
+              ##### ZONA {{state_attr(entity, 'zone_name')}}
+
+              {% set color = {0:'White', 1:'Green', 2:'Gold', 3:'Orange', 4:'Red', 5: 'BlueViolet'} %}
+              {# set color_vigilance = {0:'#FFFFFF', 1:'#008000', 2:'#C3FFFE', 3:'#50FFFF', 4:'#508BFF', 5: '#A040FF'} #}
+              {% set color_v = {0:'White', 1:'Green', 2:'LightCyan', 3:'BabyBlue', 4:'CornflowerBlue', 5: 'BlueViolet'} %}
+              {% set day = {'today':'Oggi.', 'tomorrow':'Domani.', 'aftertomorrow': 'Dopodomani.'} %} 
+              {%- for status in ['today', 'tomorrow','aftertomorrow'] %}
+              {% set v = state_attr(entity, status) %}
+              {%- if v %} 
+              {%- if v['level'] >= 1 %}
+              <font color="{{ color_v.get(v['level']) }}"/> <ha-icon icon="{{ v['icon'] }}"/></ha-icon> {{ day[status] }} Quantitativi previsti {{ v['precipitation'] }} </font>
+              {%- endif %}
+              {%- if v.phenomena %} 
+              {% for d in v.phenomena %}
+
+              |   |   |
+              |:--|:--|
+              | <ha-icon icon="{{ d['icon'] }}"/> |{{ d['event'] }} {{ d['value'] }} [{{ d['distance'] }} Km {{ d['direction'] }}] |
+
+              {%- endfor %}
+              {%- endif %}
+              {%- endif %}
+              {%- endfor %}
+
+              [Sito Web Protezione Civile](https://www.protezionecivile.gov.it/it/) ~ [Radar](https://mappe.protezionecivile.it/it/mappe-rischi/piattaforma-radar)
+
         #################################################################
         ## METEOALARM
         #################################################################
@@ -569,8 +650,8 @@ cards:
               {% set mycolor = 'var(--primary-text-color)' %}
 
               {% set global = 'binary_sensor.global_natural_alert' %}
-              {% set l = state_attr('binary_sensor.meteoalarm', 'awareness_level')%}
-              {% set t = state_attr('binary_sensor.meteoalarm', 'awareness_type')%}
+              {% set l = state_attr('binary_sensor.meteoalarm', 'awareness_level') %}
+              {% set t = state_attr('binary_sensor.meteoalarm', 'awareness_type') %}
               <font color="{{state_attr(global,'meteoalarm_level')}}"> <ha-icon icon="{{state_attr(global, 'meteoalarm_level_icon')}}"></ha-icon></font>
               <font color="{{state_attr(global,'meteoalarm_level')}}"> <ha-icon icon="{{state_attr(global, 'meteoalarm_type_icon')}}"></ha-icon></font>
               <font color="{{state_attr(global,'meteoalarm_level')}}"> {{state_attr('binary_sensor.meteoalarm', 'event')}}
@@ -672,7 +753,7 @@ cards:
                   {%- set id = state_attr(entityid, 'event_id') -%}
                   {%- set data_utc = state_attr(entityid, 'publication_date') -%}
                   {%- set magnitudo = (state_attr(entityid, 'magnitude')|float) if not none else '0' -%}
-                  {%- set code = {0:'White', 1:'Green', 2:'Yellow', 3:'Orange', 4:'Red'} -%}
+                  {%- set code = {0:'White', 1:'Green', 2:'Gold', 3:'Orange', 4:'Red'} -%}
                   {%- set color = code[state_attr('binary_sensor.lastquake', 'level')|int] -%}
                   {%- set lat = state_attr(entityid, 'lat') -%}
                   {%- set long = state_attr(entityid, 'long') -%}
@@ -784,7 +865,7 @@ cards:
   - type: conditional # METEO
     conditions:
       - entity: input_select.meteo_map
-        state_not: "Nessuna"
+        state_not: Nessuna
     card:
       type: picture-entity
       card_mod:
@@ -808,25 +889,25 @@ cards:
         service_data:
           entity_id: input_select.meteo_map
       state_image:
-        "Nuvole e Sole": https://api.sat24.com/animated/IT/visual/3/
-        "Nuvole Infrared": https://api.sat24.com/animated/IT/infraPolair/3/
-        "Temperatura Nuvole Infrared": https://www.meteo60.fr/satellites/animation-satellite-ir-france.gif
-        "Pioggia": https://api.sat24.com/animated/IT/rainTMC/3/
-        "Neve": https://api.sat24.com/animated/EU/snow/3/
-        "Il Meteo": http://cdn-radar.ilmeteo.it/italy.gif
-        "Burze": https://burze.dzis.net/italia_fulmine_lebhaft.gif
-        "Burze Nord Ovest": https://burze.dzis.net/italia_fulmine_lebhaft_gruppi_nw.gif
-        "Burze Nord Est": https://burze.dzis.net/italia_fulmine_lebhaft_gruppi_ne.gif
-        "Burze Sud Ovest": https://burze.dzis.net/italia_fulmine_lebhaft_gruppi_sw.gif
-        "Burze Sud Est": https://burze.dzis.net/italia_fulmine_lebhaft_gruppi_se.gif
-        "WWLLN": https://wwlln.net/WWLLN_movies/Movie_of_Lightning_in_EurAfrica_BIG.gif
+        Nuvole e Sole: https://api.sat24.com/animated/IT/visual/3/
+        Nuvole Infrared: https://api.sat24.com/animated/IT/infraPolair/3/
+        Temperatura Nuvole Infrared: https://www.meteo60.fr/satellites/animation-satellite-ir-france.gif
+        Pioggia: https://api.sat24.com/animated/IT/rainTMC/3/
+        Neve: https://api.sat24.com/animated/EU/snow/3/
+        Il Meteo: http://cdn-radar.ilmeteo.it/italy.gif
+        Burze: https://burze.dzis.net/italia_fulmine_lebhaft.gif
+        Burze Nord Ovest: https://burze.dzis.net/italia_fulmine_lebhaft_gruppi_nw.gif
+        Burze Nord Est: https://burze.dzis.net/italia_fulmine_lebhaft_gruppi_ne.gif
+        Burze Sud Ovest: https://burze.dzis.net/italia_fulmine_lebhaft_gruppi_sw.gif
+        Burze Sud Est: https://burze.dzis.net/italia_fulmine_lebhaft_gruppi_se.gif
+        WWLLN: https://wwlln.net/WWLLN_movies/Movie_of_Lightning_in_EurAfrica_BIG.gif
       entities:
         - entity: input_select.meteo_map
 
   - type: conditional # GEO
     conditions:
       - entity: input_select.geo_map
-        state: "Posizione Geografica"
+        state: Posizione Geografica
     card:
       type: map
       card_mod:
@@ -849,7 +930,7 @@ cards:
   - type: conditional # IFRAME
     conditions:
       - entity: input_select.meteo_iframe
-        state: "Windy Alert"
+        state: Windy Alert
     card:
       type: iframe
       card_mod:
@@ -866,7 +947,7 @@ cards:
   - type: conditional # DPC
     conditions:
       - entity: input_select.meteo_iframe
-        state: "DPC Radar"
+        state: DPC Radar
     card:
       type: iframe
       card_mod:
@@ -882,13 +963,13 @@ cards:
   - type: conditional
     conditions:
       - entity: input_select.meteo_iframe
-        state: "DPC Bollettino Criticità"
+        state: DPC Bollettino Criticità
     card:
-      type: "custom:config-template-card"
+      type: custom:config-template-card
       entities:
         - sensor.date
       card:
-        type: "custom:hui-iframe-card"
+        type: custom:hui-iframe-card
         card_mod:
           style: |
             ha-card {
@@ -902,18 +983,18 @@ cards:
           ${'https://servizio-mappe.protezionecivile.it/#/view/dashboard?x=11.756&y=41.495&
           zoom=5.8&basemap=BING_AERIAL&appname=BollettinodiCriticità&file=
           https://raw.githubusercontent.com/pcm-dpc/DPC-Bollettini-Criticita-Idrogeologica-Idraulica/master/files/'
-          +states['binary_sensor.dpc_temporali_oggi'].attributes.id+'.json&hidden=info,minimap&fase=today'}
+          +states['sensor.dpc_alert'].attributes.id+'.json&hidden=info,minimap&fase=today'}
   #
   - type: conditional
     conditions:
       - entity: input_select.meteo_iframe
-        state: "DPC Vigilanza Meteo"
+        state: DPC Vigilanza Meteo
     card:
-      type: "custom:config-template-card"
+      type: custom:config-template-card
       entities:
         - sensor.date
       card:
-        type: "custom:hui-iframe-card"
+        type: custom:hui-iframe-card
         card_mod:
           style: |
             ha-card {
@@ -926,7 +1007,7 @@ cards:
           ${'https://servizio-mappe.protezionecivile.it/#/view/dashboard?x=11.756&y=41.495&
           zoom=5.8&basemap=OPEN_STREET_MAP&appname=Bollettino di Vigilanza&file=
           https://raw.githubusercontent.com/pcm-dpc/DPC-Bollettini-Vigilanza-Meteorologica/master/files/'
-          +(states['binary_sensor.dpc_temporali_oggi'].attributes.id).split("_")[0]+'.json&hidden=minimap,info&fase=today'}
+          +states['sensor.dpc_vigilance'].attributes.id+'.json&hidden=minimap,info&fase=today'}
 
   - type: conditional # Blitzortung
     conditions:
@@ -941,12 +1022,12 @@ cards:
             margin-top: 8px;
           }
       aspect_ratio: 100%
-      url: "https://map.blitzortung.org/#5.11/42.5/12.51" # Il Centro geografico d'Italia
+      url: https://map.blitzortung.org/#5.11/42.5/12.51 # Il Centro geografico d'Italia
       # <img src="http://terremoti.ingv.it/images/ingv_logo_colore.png" background="white"/><br>
   - type: conditional # Radareu
     conditions:
       - entity: input_select.meteo_iframe
-        state: "Radareu"
+        state: Radareu
     card:
       type: iframe
       card_mod:
@@ -956,11 +1037,11 @@ cards:
             margin-top: 8px;
           }
       aspect_ratio: 100%
-      url: "http://www.radareu.cz/?lng=uk&core"
+      url: http://www.radareu.cz/?lng=uk&core
   - type: conditional # Volcanodiscovery
     conditions:
       - entity: input_select.meteo_iframe
-        state: "Volcanodiscovery"
+        state: Volcanodiscovery
     card:
       type: iframe
       card_mod:
@@ -970,4 +1051,4 @@ cards:
             margin-top: 8px;
           }
       aspect_ratio: 100%
-      url: "https://earthquakes.volcanodiscovery.com/?L=12&zoom=6&lat=41&lon=13&minMag=3"
+      url: https://earthquakes.volcanodiscovery.com/?L=12&zoom=6&lat=41&lon=13&minMag=3
