@@ -21,7 +21,7 @@ homeassistant:
         package: "Natural_events 🌍"
         site: "hassiohelp.eu 🌐"
         author: "Caio & Gianpi"
-        version: "2021.8.0"
+        version: "2021.8.1"
       ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
       ## DEFAULT
       SCRIPT centro notifiche: &DEFAULT_SCRIPT !secret pkg_natural_events_script
@@ -52,9 +52,8 @@ homeassistant:
 
       ##----------------------- HELP SETTINGS BEGIN -------------------------##
       DEFAULT_MOBILE_APP_ICON_2: &DEFAULT_MOBILE_APP_ICON_2 "https://hassiohelp.eu/wp-content/uploads/2021/05/icon_forum-750x750-full.png"
-      DEFAULT_MOBILE_APP_ICON_1:
-        &DEFAULT_MOBILE_APP_ICON_1 "https://hassiohelp.eu/wp-content/uploads/2021/05/icon_site-750x750-full.png"
-        #"https://hassiohelp.eu/wp-content/uploads/2019/03/hassiohelp-192.png"
+      DEFAULT_MOBILE_APP_ICON_1: &DEFAULT_MOBILE_APP_ICON_1 "https://hassiohelp.eu/wp-content/uploads/2021/05/icon_site-750x750-full.png"
+      #"https://hassiohelp.eu/wp-content/uploads/2019/03/hassiohelp-192.png"
 
       CARDINAL:
         &CARDINAL {
@@ -461,196 +460,6 @@ binary_sensor:
     country: "italy"
     province: *CONF_METEOALARM_REGION
     language: "it"
-  #-------------------------------------
-  # LAST QUAKE
-  #-------------------------------------
-  - platform: template
-    sensors:
-      lastquake:
-        friendly_name: Evento terremoto
-        device_class: vibration
-        # availability_template: False
-        value_template: >-
-          {% set last_date = states.geo_location
-            | selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-            | sort(attribute='attributes.publication_date')
-            | map(attribute='attributes.publication_date') |list|last|default %}
-          {{ ((as_timestamp(utcnow())-as_timestamp(last_date))/3600) <= 24 if last_date else False }}
-        attribute_templates:
-          distance: >-
-            {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='state')|list|last|default}}
-          lat: >-
-            {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.latitude')|list|last|default(0)}}
-          long: >-
-            {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.longitude')|list|last|default(0)}}
-          title: >-
-            {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.title')|list|last|default}}
-          region: >-
-            {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.region')|list|last|default}}
-          magnitude: >-
-            {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.magnitude')|list|last|default(0)}}
-          publication_date: >-
-            {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.publication_date')|list|last|default}}
-          event_id: >-
-            {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.event_id')|list|last|default}}
-          image_url: >-
-            {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.image_url')|list|last|default}}
-          attribution: >-
-            {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.attribution')|list|last|default}}
-          level: >-
-            {%set m = states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-              |sort(attribute='attributes.publication_date')|map(attribute='attributes.magnitude')|list|last|default(0)%}
-              {% set m = m|float %}
-              {%if 0<=m<=1.9%}0{%elif 2<=m<=2.9%}1{%elif 3<=m<=3.9%}2{%elif 4<=m<=5.9%}3{%else%}4{%endif%}
-          external_id: >-
-            {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
-            |sort(attribute='attributes.publication_date')|map(attribute='attributes.external_id')|list|last|default|replace('smi:','')}}
-  #-------------------------------------
-  # GLOBAL NATURAL ALERT PACKAGE
-  #-------------------------------------
-  - platform: template
-    sensors:
-      global_natural_alert:
-        # availability_template: False
-        friendly_name: Eventi Naturali
-        device_class: safety
-        value_template: >
-          {{is_state('group.natural_events', 'on') or not is_state('sensor.meteoalarm_custom', '0')}}
-        attribute_templates:
-          burze_direction: >-
-            {% set direction = state_attr('binary_sensor.burze_storms_nearby', 'direction') %}
-            {% set cardinal = {
-              'N':'Nord',
-              'NE':'Nord Est',
-              'E':'Est',
-              'SE':'Sud Est',
-              'S':'Sud',
-              'SW':'Sud Ovest',
-              'W':'Ovest',
-              'NW':'Nord Ovest', } %}
-            {{ cardinal[direction] if direction in cardinal else direction }}
-          burze_direction_icon: >-
-            {% set direction = state_attr('binary_sensor.burze_storms_nearby', 'direction') %}
-            {% set cardinal = {
-              'N':'arrow-up',
-              'NE':'arrow-top-right',
-              'E':'arrow-left',
-              'SE':'arrow-bottom-right',
-              'S':'arrow-down',
-              'SW':'arrow-bottom-left',
-              'W':'arrow-left',
-              'NW':'arrow-top-left', } %}
-            mdi:{{ cardinal[direction] if direction in cardinal else 'arrow-left-right' }}-bold-outline
-          meteoalarm_type: >-
-            {% set type = state_attr('binary_sensor.meteoalarm', 'awareness_type') %}
-            {% set warning_texts = [
-              'Nessun Avviso',
-              'Vento','Neve-Ghiaccio',
-              'Temporali','Nebbia',
-              'Temperature massime estreme',
-              'Temperature minime estreme',
-              'Eventi Costieri',
-              'Incendi boschivi',
-              'Valanghe','Pioggia',
-              'Non disponibile',
-              'Alluvione',
-              'Pioggia-Alluvione'] %}
-            {{ 'Non disponibile' if type is none else warning_texts[type.split(';')[0]|int] }}
-          meteoalarm_type_icon: >-
-            {% set type = state_attr('binary_sensor.meteoalarm', 'awareness_type') %}
-            {% set warning_icons = {
-              0  : "shield-outline",
-              1  : "weather-windy",
-              2  : "snowflake-alert",
-              3  : "weather-lightning",
-              4  : "weather-fog",
-              5  : "thermometer-plus",
-              6  : "thermometer-minus",
-              7  : "sailing",
-              8  : "fire",
-              9  : "shovel",
-              10 : "weather-pouring",
-              11 : "help-circle",
-              12 : "waves",
-              13 : "home-flood", } %}
-            {{ 'mdi:help-circle' if type is none else 'mdi:' ~ warning_icons[type.split(';')[0]|int]}}
-          meteoalarm_level: >
-            {% set level = state_attr('binary_sensor.meteoalarm', 'awareness_level') %}
-            {{ 'White' if level is none else level.split(';')[1]|title |replace('Yellow', 'Gold') }}
-          meteoalarm_level_icon: >
-            {% set level = state_attr('binary_sensor.meteoalarm','awareness_level') %}
-            {{'mdi:numeric-0-box' if level is none else 'mdi:numeric-' ~ level.split(';')[0] ~ '-box'}}
-          level: >- #Text color
-            {% set color_texts = {'0':'White', '1':'Green', '2':'Yellow', '3':'Orange', '4':'Red'} %}
-            {% set color_codes = {'White':'0','Green':'1','Yellow':'2','Orange':'3','Red':'4'} %}
-            {% set ma_level = state_attr('binary_sensor.meteoalarm','awareness_level') %}
-            {% set lev1 = '0' if not ma_level else ma_level.split(';')[0] %}
-            {% set lev2 = expand('group.natural_events')
-              | selectattr("attributes.level", 'defined')
-              | join(', ', attribute='attributes.level')|default('0', True)|max %}
-            {% macro custom_code() %}
-              {%- for s  in ['today', 'tomorrow'] if not is_state('sensor.meteoalarm_custom', '0') -%}
-                {% set v = state_attr('sensor.meteoalarm_custom', s) -%}
-                  {% if v -%}
-                    {% for d in v -%}
-                      {{color_codes[d['code']]}}
-                    {% endfor -%}
-                  {% endif -%}
-              {%- endfor -%}
-            {% endmacro -%}
-            {% set lev3 = '0' if not custom_code() else custom_code() -%}
-            {% set lev_color = [lev1,lev2,lev3]|max %}
-            {{ color_texts.get(lev_color|max) }}
-          code: >- #Code color
-            {% set color_codes = {'White':'0','Green':'1','Yellow':'2','Orange':'3','Red':'4'} %}
-            {% set ma_level = state_attr('binary_sensor.meteoalarm','awareness_level') %}
-            {% set lev1 = '0' if not ma_level else ma_level.split(';')[0] %}
-            {% set lev2 = expand('group.natural_events')
-              | selectattr("attributes.level", 'defined')
-              | join(', ', attribute='attributes.level')|default('0', True)|max %}
-            {% macro custom_code() %}
-              {%- for s  in ['today', 'tomorrow'] if not is_state('sensor.meteoalarm_custom', '0') -%}
-                {% set v = state_attr('sensor.meteoalarm_custom', s) -%}
-                  {% if v -%}
-                    {% for d in v -%}
-                      {{color_codes[d['code']]}}
-                    {% endfor -%}
-                  {% endif -%}
-              {%- endfor -%}
-            {% endmacro -%}
-            {% set lev3 = '0' if not custom_code() else custom_code() -%}
-            {% set lev_color = [lev1,lev2,lev3]|max %}
-            {{ lev_color|max }}
-          icon: >- #Icon code color
-            {% set color_codes = {'White':'0','Green':'1','Yellow':'2','Orange':'3','Red':'4'} %}
-            {% set ma_level = state_attr('binary_sensor.meteoalarm','awareness_level') %}
-            {% set lev1 = '0' if not ma_level else ma_level.split(';')[0] %}
-            {% set lev2 = expand('group.natural_events')
-              | selectattr("attributes.level", 'defined')
-              | join(', ', attribute='attributes.level')|default('0', True)|max %}
-            {% macro custom_code() %}
-              {%- for s  in ['today', 'tomorrow'] if not is_state('sensor.meteoalarm_custom', '0') -%}
-                {% set v = state_attr('sensor.meteoalarm_custom', s) -%}
-                  {% if v -%}
-                    {% for d  in v -%}
-                      {{color_codes[d['code']]}}
-                    {% endfor -%}
-                  {% endif -%}
-              {%- endfor -%}
-            {% endmacro -%}
-            {% set lev3 = '0' if not custom_code() else custom_code() -%}
-            {% set lev_color = [lev1,lev2,lev3]|max %}
-            mdi:numeric-{{ lev_color|max }}-box
 #######################################-#######################################
 ##                                  SENSOR
 #######################################-#######################################
@@ -662,21 +471,212 @@ sensor:
     id: *CONF_METEOALARM_CUSTOM_ID
     name: meteoalarm_custom
     scan_interval: 1800
-  #-------------------------------------
-  # SENSOR FOR CARD PICTURE ELEMENTS
-  #-------------------------------------
-  - platform: template
-    sensors:
-      ## METEOALARM TEMPLATE TYPE SENSOR
-      meteoalarm_type:
-        friendly_name: Meteoalarm type
-        value_template: "{{state_attr('binary_sensor.global_natural_alert', 'meteoalarm_type')}}"
-        icon_template: "{{state_attr('binary_sensor.global_natural_alert', 'meteoalarm_type_icon')}}"
-      ## METEOALARM TEMPLATE LEVEL SENSOR
-      meteoalarm_level:
-        friendly_name: Meteoalarm level
-        value_template: "{{state_attr('binary_sensor.global_natural_alert', 'meteoalarm_level')}}"
-        icon_template: "{{state_attr('binary_sensor.global_natural_alert', 'meteoalarm_level_icon')}}"
+#######################################-#######################################
+##                                 TEMPLATE
+#######################################-#######################################
+template:
+  binary_sensor:
+    #-------------------------------------
+    # LAST QUAKE
+    #-------------------------------------
+    - name: "LastQuake"
+      unique_id: lastquake
+      # auto_off:
+      #   minutes: xxx
+      device_class: vibration
+      # availability_template: False
+      state: >-
+        {% set last_date = states.geo_location
+          | selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
+          | sort(attribute='attributes.publication_date')
+          | map(attribute='attributes.publication_date') |list|last|default %}
+        {{ ((as_timestamp(utcnow())-as_timestamp(last_date))/3600) <= 24 if last_date else False }}
+      attributes:
+        distance: >-
+          {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
+            |sort(attribute='attributes.publication_date')|map(attribute='state')|list|last|default}}
+        lat: >-
+          {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
+            |sort(attribute='attributes.publication_date')|map(attribute='attributes.latitude')|list|last|default(0)}}
+        long: >-
+          {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
+            |sort(attribute='attributes.publication_date')|map(attribute='attributes.longitude')|list|last|default(0)}}
+        title: >-
+          {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
+            |sort(attribute='attributes.publication_date')|map(attribute='attributes.title')|list|last|default}}
+        region: >-
+          {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
+            |sort(attribute='attributes.publication_date')|map(attribute='attributes.region')|list|last|default}}
+        magnitude: >-
+          {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
+            |sort(attribute='attributes.publication_date')|map(attribute='attributes.magnitude')|list|last|default(0)}}
+        publication_date: >-
+          {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
+            |sort(attribute='attributes.publication_date')|map(attribute='attributes.publication_date')|list|last|default}}
+        event_id: >-
+          {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
+            |sort(attribute='attributes.publication_date')|map(attribute='attributes.event_id')|list|last|default}}
+        image_url: >-
+          {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
+            |sort(attribute='attributes.publication_date')|map(attribute='attributes.image_url')|list|last|default}}
+        attribution: >-
+          {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
+            |sort(attribute='attributes.publication_date')|map(attribute='attributes.attribution')|list|last|default}}
+        level: >-
+          {%set m = states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
+            |sort(attribute='attributes.publication_date')|map(attribute='attributes.magnitude')|list|last|default(0)%}
+            {% set m = m|float %}
+            {%if 0<=m<=1.9%}0{%elif 2<=m<=2.9%}1{%elif 3<=m<=3.9%}2{%elif 4<=m<=5.9%}3{%else%}4{%endif%}
+        external_id: >-
+          {{states.geo_location|selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
+          |sort(attribute='attributes.publication_date')|map(attribute='attributes.external_id')|list|last|default|replace('smi:','')}}
+    #-------------------------------------
+    # GLOBAL NATURAL ALERT PACKAGE
+    #-------------------------------------
+    - name: Global Natural Alert
+      unique_id: global_natural_alert
+      device_class: safety
+      # availability_template: False
+      state: >
+        {{is_state('group.natural_events', 'on') or not is_state('sensor.meteoalarm_custom', '0')}}
+      attributes:
+        burze_direction: >-
+          {% set direction = state_attr('binary_sensor.burze_storms_nearby', 'direction') %}
+          {% set cardinal = {
+            'N':'Nord',
+            'NE':'Nord Est',
+            'E':'Est',
+            'SE':'Sud Est',
+            'S':'Sud',
+            'SW':'Sud Ovest',
+            'W':'Ovest',
+            'NW':'Nord Ovest', } %}
+          {{ cardinal[direction] if direction in cardinal else direction }}
+        burze_direction_icon: >-
+          {% set direction = state_attr('binary_sensor.burze_storms_nearby', 'direction') %}
+          {% set cardinal = {
+            'N':'arrow-up',
+            'NE':'arrow-top-right',
+            'E':'arrow-left',
+            'SE':'arrow-bottom-right',
+            'S':'arrow-down',
+            'SW':'arrow-bottom-left',
+            'W':'arrow-left',
+            'NW':'arrow-top-left', } %}
+          mdi:{{ cardinal[direction] if direction in cardinal else 'arrow-left-right' }}-bold-outline
+        meteoalarm_type: >-
+          {% set type = state_attr('binary_sensor.meteoalarm', 'awareness_type') %}
+          {% set warning_texts = [
+            'Nessun Avviso',
+            'Vento','Neve-Ghiaccio',
+            'Temporali','Nebbia',
+            'Temperature massime estreme',
+            'Temperature minime estreme',
+            'Eventi Costieri',
+            'Incendi boschivi',
+            'Valanghe','Pioggia',
+            'Non disponibile',
+            'Alluvione',
+            'Pioggia-Alluvione'] %}
+          {{ 'Non disponibile' if type is none else warning_texts[type.split(';')[0]|int] }}
+        meteoalarm_type_icon: >-
+          {% set type = state_attr('binary_sensor.meteoalarm', 'awareness_type') %}
+          {% set warning_icons = {
+            0  : "shield-outline",
+            1  : "weather-windy",
+            2  : "snowflake-alert",
+            3  : "weather-lightning",
+            4  : "weather-fog",
+            5  : "thermometer-plus",
+            6  : "thermometer-minus",
+            7  : "sailing",
+            8  : "fire",
+            9  : "shovel",
+            10 : "weather-pouring",
+            11 : "help-circle",
+            12 : "waves",
+            13 : "home-flood", } %}
+          {{ 'mdi:help-circle' if type is none else 'mdi:' ~ warning_icons[type.split(';')[0]|int]}}
+        meteoalarm_level: >
+          {% set level = state_attr('binary_sensor.meteoalarm', 'awareness_level') %}
+          {{ 'White' if level is none else level.split(';')[1]|title |replace('Yellow', 'Gold')}}
+        meteoalarm_level_icon: >
+          {% set level = state_attr('binary_sensor.meteoalarm','awareness_level') %}
+          {{'mdi:numeric-0-box' if level is none else 'mdi:numeric-' ~ level.split(';')[0] ~ '-box'}}
+        level: >- #Text color
+          {% set color_texts = {'0':'White', '1':'Green', '2':'Gold', '3':'Orange', '4':'Red'} %}
+          {% set color_codes = {'White':'0','Green':'1','Yellow':'2','Orange':'3','Red':'4'} %}
+          {% set ma_level = state_attr('binary_sensor.meteoalarm','awareness_level') %}
+          {% set lev1 = '0' if not ma_level else ma_level.split(';')[0] %}
+          {% set lev2 = expand('group.natural_events')
+            | selectattr("attributes.level", 'defined')
+            | join(', ', attribute='attributes.level')|default('0', True)|max %}
+          {% macro custom_code() %}
+            {%- for s  in ['today', 'tomorrow'] if not is_state('sensor.meteoalarm_custom', '0') -%}
+              {% set v = state_attr('sensor.meteoalarm_custom', s) -%}
+                {% if v -%}
+                  {% for d in v -%}
+                    {{color_codes[d['code']]}}
+                  {% endfor -%}
+                {% endif -%}
+            {%- endfor -%}
+          {% endmacro -%}
+          {% set lev3 = '0' if not custom_code() else custom_code() -%}
+          {% set lev_color = [lev1,lev2,lev3]|max %}
+          {{ color_texts.get(lev_color|max) }}
+        code: >- #Code color
+          {% set color_codes = {'White':'0','Green':'1','Yellow':'2','Orange':'3','Red':'4'} %}
+          {% set ma_level = state_attr('binary_sensor.meteoalarm','awareness_level') %}
+          {% set lev1 = '0' if not ma_level else ma_level.split(';')[0] %}
+          {% set lev2 = expand('group.natural_events')
+            | selectattr("attributes.level", 'defined')
+            | join(', ', attribute='attributes.level')|default('0', True)|max %}
+          {% macro custom_code() %}
+            {%- for s  in ['today', 'tomorrow'] if not is_state('sensor.meteoalarm_custom', '0') -%}
+              {% set v = state_attr('sensor.meteoalarm_custom', s) -%}
+                {% if v -%}
+                  {% for d in v -%}
+                    {{color_codes[d['code']]}}
+                  {% endfor -%}
+                {% endif -%}
+            {%- endfor -%}
+          {% endmacro -%}
+          {% set lev3 = '0' if not custom_code() else custom_code() -%}
+          {% set lev_color = [lev1,lev2,lev3]|max %}
+          {{ lev_color|max }}
+        icon: >- #Icon code color
+          {% set color_codes = {'White':'0','Green':'1','Yellow':'2','Orange':'3','Red':'4'} %}
+          {% set ma_level = state_attr('binary_sensor.meteoalarm','awareness_level') %}
+          {% set lev1 = '0' if not ma_level else ma_level.split(';')[0] %}
+          {% set lev2 = expand('group.natural_events')
+            | selectattr("attributes.level", 'defined')
+            | join(', ', attribute='attributes.level')|default('0', True)|max %}
+          {% macro custom_code() %}
+            {%- for s  in ['today', 'tomorrow'] if not is_state('sensor.meteoalarm_custom', '0') -%}
+              {% set v = state_attr('sensor.meteoalarm_custom', s) -%}
+                {% if v -%}
+                  {% for d  in v -%}
+                    {{color_codes[d['code']]}}
+                  {% endfor -%}
+                {% endif -%}
+            {%- endfor -%}
+          {% endmacro -%}
+          {% set lev3 = '0' if not custom_code() else custom_code() -%}
+          {% set lev_color = [lev1,lev2,lev3]|max %}
+          mdi:numeric-{{ lev_color|max }}-box
+
+  sensor:
+    #-------------------------------------
+    # SENSOR FOR CARD PICTURE ELEMENTS
+    #-------------------------------------
+    - name: meteoalarm type
+      unique_id: meteoalarm_type
+      state: "{{state_attr('binary_sensor.global_natural_alert', 'meteoalarm_type')}}"
+      icon: "{{state_attr('binary_sensor.global_natural_alert', 'meteoalarm_type_icon')}}"
+    - name: meteoalarm level
+      unique_id: meteoalarm_level
+      state: "{{state_attr('binary_sensor.global_natural_alert', 'meteoalarm_level')}}"
+      icon: "{{state_attr('binary_sensor.global_natural_alert', 'meteoalarm_level_icon')}}"
 
 #######################################-#######################################
 ##                                 AUTOMATION
@@ -787,7 +787,6 @@ automation:
           GIORNI: { 1: "oggi", 2: "domani" }
       - repeat:
           while:
-            # - "{{ state_attr(ENTITY, DAYS[repeat.index]) is not none }}"
             - "{{ repeat.index <= DAYS|length }}"
           sequence:
             - variables:
@@ -798,34 +797,34 @@ automation:
                 - conditions:
                     - "{{ state_attr(ENTITY, event) is not none }}"
                   sequence:
-            - service: *DEFAULT_SCRIPT
-              data:
-                call_no_annuncio: 1
-                title: "DPC Criticità"
-                message: |
-                  {% set attr = state_attr(ENTITY, event) %}
-                  Criticità per {{giorno}}
-                  {%- for d in attr %}
-                  {{WARNING_SIGN[d['level']].icon_color}} {{ WARN_DPC[d['risk']] }} {{ d['info'] }} {{ d['alert'] }} per rischio {{ d['risk'] }}.
-                  {%- endfor %}
-                  Zona: {{ state_attr(ENTITY, 'zone_name') }}
-                alexa:
-                  message_tts: &dpc_criticita_tts_msg >-
-                    {%- set attr = state_attr(ENTITY, event) %}
-                    Protezione Civile, bollettino di criticità per {{giorno}},
-                    {%- for d in attr %}
-                    {{ d['info'] }} {{ d['alert'] }}, per rischio {{ d['risk'] }},
-                    {%- endfor %}
-                  audio: soundbank://soundlibrary/weather/thunder/thunder_11
-                google:
-                  message_tts: *dpc_criticita_tts_msg
-                  audio: "https://d3qhmae9zx9eb.cloudfront.net/nature/amzn_sfx_rain_01.mp3"
-                url: >
-                  {{ state_attr(ENTITY, day).image_url |default("", true) }}
-                link: >
-                  [Bollettino di criticità]({{ BULLETIN }})
-                level: >
-                  {{ state_attr(ENTITY, event)['level'] |default(0) |int }}
+                    - service: *DEFAULT_SCRIPT
+                      data:
+                        call_no_annuncio: 1
+                        title: "DPC Criticità"
+                        message: |
+                          {% set attr = state_attr(ENTITY, event) %}
+                          Criticità per {{giorno}}
+                          {%- for d in attr %}
+                          {{WARNING_SIGN[d['level']].icon_color}} {{ WARN_DPC[d['risk']] }} {{ d['info'] }} {{ d['alert'] }} per rischio {{ d['risk'] }}.
+                          {%- endfor %}
+                          Zona: {{ state_attr(ENTITY, 'zone_name') }}
+                        alexa:
+                          message_tts: &dpc_criticita_tts_msg >-
+                            {%- set attr = state_attr(ENTITY, event) %}
+                            Protezione Civile, bollettino di criticità per {{giorno}},
+                            {%- for d in attr %}
+                            {{ d['info'] }} {{ d['alert'] }}, per rischio {{ d['risk'] }},
+                            {%- endfor %}
+                          audio: soundbank://soundlibrary/weather/thunder/thunder_11
+                        google:
+                          message_tts: *dpc_criticita_tts_msg
+                          audio: "https://d3qhmae9zx9eb.cloudfront.net/nature/amzn_sfx_rain_01.mp3"
+                        url: >
+                          {{ state_attr(ENTITY, day).image_url |default("", true) }}
+                        link: >
+                          [Bollettino di criticità]({{ BULLETIN }})
+                        level: >
+                          {{ state_attr(ENTITY, event)['level'] |default(0) |int }}
 
   #----------------------------------------------------------------------------------------------------#
   # D. PROTEZIONE CIVILE - Notifica Vigilanza Meteo Sensor
@@ -853,7 +852,6 @@ automation:
           GIORNI: { 1: "oggi", 2: "domani", 3: "dopodomani" }
       - repeat:
           while:
-            # - "{{ state_attr(ENTITY, DAYS[repeat.index]) is not none }}"
             - "{{ repeat.index <= DAYS|length }}"
           sequence:
             - variables:
@@ -862,47 +860,54 @@ automation:
             - choose:
                 - conditions:
                     - "{{ state_attr(ENTITY, day) is not none }}"
-                    - "{{ state_attr(ENTITY, day).level|default|int > 1 }}"
                   sequence:
-            - service: *DEFAULT_SCRIPT
-              data:
-                call_no_annuncio: 1
-                title: "DPC Vigilanza Meteo"
-                message: |
-                  {% set attr = state_attr(ENTITY, day) %}
-                  Vigilanza meteo per {{giorno}}
-                  {{WARNING_SIGN[attr['level']].icon_color}} Quantitativi previsti {{attr['precipitation']}}
-                  {% if 'phenomena' in attr %}
-                  Fenomeni nelle vicinanze:
-                  {% for f in attr['phenomena'] %}
-                  ➡️ {{f.event}}: {{f.value}} in direzione {{CARDINAL[f.direction]}} alla distanza di {{f.distance}}km.
-                  {% endfor %}
-                  {% endif %}
+                    - service: *DEFAULT_SCRIPT
+                      data:
+                        call_no_annuncio: 1
+                        title: "DPC Vigilanza Meteo"
+                        message: |
+                          {% set attr = state_attr(ENTITY, day) %}
+                          Vigilanza meteo per {{giorno}}
+                          {{WARNING_SIGN[attr['level']].icon_color}} Quantitativi previsti {{attr['precipitation']}}
+                          {% if attr.phenomena|length > 0 %}
+                          Fenomeni nelle vicinanze:
+                          {% for p in attr['phenomena'] %}
+                          ➡️ {{p.event}}: {{p.value}} in direzione {{CARDINAL[p.direction]}} alla distanza di {{p.distance}}km.
+                          {% endfor %}
+                          {% endif %}
 
-                  Zona: {{ state_attr(ENTITY, 'zone_name') }}
-                alexa:
-                  message_tts: &dpc_vigilance_tts_msg >-
-                    {% if repeat.first %}
-                      Vigilanza meteo, Quantitativi previsti per 
-                      {%- for day in DAYS.values() %}
-                      {% set v = state_attr(ENTITY, day) %}
-                      {%- if v %}
-                      {%- if v['level'] > 1 %}
-                      {{ GIORNI[loop.index] }}, {{ v['precipitation'] }}.
-                      {%- endif %}
-                      {%- endif %}
-                      {%- endfor %}
-                    {% endif %}
-                  audio: soundbank://soundlibrary/nature/amzn_sfx_rain_01
-                google:
-                  message_tts: *dpc_vigilance_tts_msg
-                  audio: "https://d3qhmae9zx9eb.cloudfront.net/nature/amzn_sfx_rain_01.mp3"
-                url: >
-                  {{ state_attr(ENTITY, day).image_url |default("", true) }}
-                link: >
-                  [Bollettino di criticità]({{ BULLETIN }})
-                level: >
-                  {{ state_attr(ENTITY, day)['level'] |default(0) |int }}
+                          Zona: {{ state_attr(ENTITY, 'zone_name') }}
+                        alexa:
+                          message_tts: &dpc_vigilance_tts_msg >- # mapday[day]
+                            {% if repeat.index == DAYS|length %}
+                              {# % set mapday = {'today':'Oggi', 'tomorrow':'Domani', 'aftertomorrow': 'Dopodomani'} % #} 
+                              Vigilanza meteo, 
+                                {%- for day in DAYS.values() %}
+                                  {% set v = state_attr(ENTITY, day) %}
+                                  {%- if v and (v.level > 1 or v.phenomena|length > 0) %}
+                                    per {{ GIORNI[loop.index] }}, 
+                                    {% if v.level > 1 %}
+                                      Quantitativi previsti {{ v['precipitation'] }}.
+                                    {% endif %}
+                                    {% if v.phenomena|length > 0 %}
+                                      Fenomeni nelle vicinanze:
+                                      {% for p in v['phenomena'] %}
+                                        {{p.event}} {{p.value}} in direzione {{CARDINAL[p.direction]}} a circa {{p.distance}}km,
+                                      {% endfor %}
+                                    {% endif %}
+                                  {%- endif %}
+                                {%- endfor %}
+                            {% endif %}
+                          audio: soundbank://soundlibrary/nature/amzn_sfx_rain_01
+                        google:
+                          message_tts: *dpc_vigilance_tts_msg
+                          audio: "https://d3qhmae9zx9eb.cloudfront.net/nature/amzn_sfx_rain_01.mp3"
+                        url: >
+                          {{ state_attr(ENTITY, day).image_url |default("", true) }}
+                        link: >
+                          [Bollettino di criticità]({{ BULLETIN }})
+                        level: >
+                          {{ state_attr(ENTITY, day)['level'] |default(0) |int }}
 
   #----------------------------------------------------------------------------------------------------#
   # D. PROTEZIONE CIVILE - Notifica criticità meteo-idro Binary Sensor
@@ -930,9 +935,8 @@ automation:
           WARNING_SIGN: *WARNING_SIGN
           BULLETIN: "https://mappe.protezionecivile.gov.it/it/mappe-rischi/bollettino-di-criticita"
           PREVIEW: "https://raw.githubusercontent.com/pcm-dpc/DPC-Bollettini-Criticita-Idrogeologica-Idraulica/master/files/preview/{}_{}.png"
-          # attr: "{{ trigger.event.data.new_state.attributes if trigger.event is defined else ({}) }}"
-          attr: "{{ trigger.to_state.attributes if trigger.to_state is defined else ({}) }}"
-          dpc_tts_msg: >- 
+          # attr: "{{ trigger.to_state.attributes if trigger.to_state is defined else ({}) }}"
+          dpc_tts_msg: >-
             {% set attr = trigger.to_state.attributes if trigger.to_state is defined else ({}) %}
             Attenzione. {{attr.get('friendly_name', 'Test DPC')}}. 
             {{attr.get('info', 'Nessuna info')}}. {{attr.get('alert', 'Valutazione non trasmessa')}}
@@ -1027,8 +1031,7 @@ automation:
           WARNING_SIGN: *WARNING_SIGN
           METEOALARM_SIGN: *METEOALARM_SIGN
           day: { "today": "Oggi", "tomorrow": "Domani" }
-          level:
-            { "White": 0, "Green": 1, "Yellow": 2, "Orange": 3, "Red": 4 }
+          level: { "White": 0, "Green": 1, "Yellow": 2, "Orange": 3, "Red": 4 }
           type_index:
             {
               "No-warnings": 0,
@@ -1118,12 +1121,8 @@ automation:
             Rilevato terremoto a {{trigger.to_state.state}} km,
             di magnitudo {{trigger.to_state.attributes.magnitude}},
             con epicentro {{trigger.to_state.attributes.region}}.
-          # image_url: >- ## Manual setting
-          #   {% set eventid = trigger.to_state.attributes.event_id %}
-          #   {{'http://shakemap.rm.ingv.it/shake4/data/{}/current/products/intensity.jpg'.format(eventid)
-          #   if trigger.to_state.attributes.magnitude >= 3 }}
 
-      # NOTIFICA WITHOUT IMAGE
+      # NTIFICATION WITHOUT IMAGE
       - service: *DEFAULT_SCRIPT
         data:
           call_no_annuncio: 1
@@ -1390,7 +1389,7 @@ script:
                 else google['message'] if 'message' in google)|default(message) }}
             {% endif %}
 
-      - alias: PERSISTENT 
+      - alias: PERSISTENT
         choose:
           - alias: IF DPERSISTENT
             conditions:
@@ -1400,11 +1399,10 @@ script:
               - service: persistent_notification.create
                 data:
                   title: "Mini Centro Notifiche"
-                  message: 
-                    | #  {% set image = file|default('none') %} ![image](/local/my_image.jpg)
+                  message: |
                     {% set timestamp = now().strftime("%H:%M:%S") %}
                     {% set old_message = state_attr('persistent_notification.mini_centro_notifiche','message') %}
-                    {% set message = "\n`{}` - {}\n{}".format(timestamp,message,link) %}
+                    {% set message = "{} - {}\n{}".format(timestamp,message,link) %}
                     {% set persistent_message = "{}\n{}".format(old_message,message) %}
                     {{ persistent_message if old_message is not none and old_message|length < 2000 else message }}
                   notification_id: "mini_centro_notifiche"
@@ -1419,7 +1417,7 @@ script:
                   ### Split link from markdown format [alias](url)
                   link_uri: "{{ link|regex_replace(find='\\[.*\\]|[()]', replace='') }}"
                   link_alias: "{{ link|regex_replace(find='[()].*|\\]|\\[', replace='') }}"
-                  word_regex_color: 
+                  word_regex_color:
                     "(magnitudo\\b|epicentro\\b|\\ballerta\\b|\\balert\\b
                     |\\bverde\\b|\\bgiall.\\b|\\barancione\\b|\\bross.\\b)"
               - alias: NOTIFY IMAGE
@@ -1430,14 +1428,12 @@ script:
                     sequence:
                       - variables:
                           local_remote: "{{ file if file is defined else url }}"
-
                       - alias: "REPEAT Image notify"
                         repeat:
                           while: "{{ repeat.index <= notify_service|length }}"
                           sequence:
                             - variables:
                                 notify_name: "{{ notify_service[repeat.index -1] |replace(' ','_') |lower }}"
-
                             - alias: FIND PLATFORM
                               choose:
                                 - alias: DISCORD
@@ -1463,7 +1459,6 @@ script:
                                               text: "by HassioHelp"
                                               icon_url: "{{DEFAULT_MOBILE_APP_ICON_1}}"
                                           images: "{{[local_remote] if 'http' not in local_remote else [] }}"
-
                                 - alias: MOBILE APP
                                   conditions: "{{ 'mobile_app' in notify_name }}"
                                   sequence:
@@ -1471,13 +1466,11 @@ script:
                                       data:
                                         title: "{{ title }}"
                                         message: "{{ message ~ '\n\n{}'.format(link_uri) }}"
-                                        # "{{'target' if target|length > 0 else 'title' }}": "{{target|default if target|length > 0 else title}}"
                                         data:
                                           sticky: true
                                           clickAction: "{{ link_uri }}"
                                           url: "{{ link_uri }}"
                                           image: "{{ local_remote|replace('config/www','local') }}"
-
                                 - alias: PUSHBULLET
                                   conditions: "{{ 'pushbullet' in notify_name }}"
                                   sequence:
@@ -1487,7 +1480,6 @@ script:
                                         message: "{{ '{}\n\n{}'.format(message,link_uri) }}"
                                         data:
                                           "{{ 'file' if file is defined else 'file_url' }}": "{{ local_remote }}"
-
                                 - alias: PUSHOVER
                                   conditions: "{{ 'pushover' in notify_name }}"
                                   sequence:
@@ -1496,7 +1488,6 @@ script:
                                         title: "{{ title }}"
                                         message: >
                                           {% set message = 'Image' if message in INVALIDATE else message %}
-
                                           {% set message_regex = message |regex_replace(find=word_regex_color, 
                                             replace='<font color="{}">{}</font>'.format(
                                             color|default(WARNING_SIGN[level|default(0)|int].hex_color),
@@ -1508,7 +1499,6 @@ script:
                                           url_title: "{{ 'Remote Image' if url is defined else '' }}"
                                           html: 1
                                           sound: "{{ sound|default('siren') }}"
-
                                 - alias: TELEGRAM
                                   conditions: "{{ 'telegram' in notify_name }}"
                                   sequence:
@@ -1521,7 +1511,6 @@ script:
                                             "{{ 'file' if file is defined else 'url' }}": "{{ local_remote }}"
                                             caption: "{{ title }}\n{{ message ~ '\n\n{}'.format(link) }}"
                                             timeout: 90
-
                               default:
                                 - service: "notify.{{ notify_name }}"
                                   data:
@@ -1529,7 +1518,6 @@ script:
                                     message: "{{'\n{}\n{}'.format(message,link_uri) }}"
                                     # target: []
                                     data: "{{ data|default({}) }}"
-
 
               - alias: NOTIFY TEXT
                 choose:
@@ -1688,6 +1676,7 @@ script:
                     {{ (alexa_message|wordcount, google_message|wordcount)
                         |max|default(message|wordcount, true) // 2
                         +(2 if alexa is boolean or not 'audio' in alexa|default else 9) }}
+
 #######################################-#######################################
 ##                                  LEGEND
 #######################################-#######################################

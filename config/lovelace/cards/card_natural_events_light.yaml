@@ -273,16 +273,20 @@ cards:
             type: divider
       # sort:
       #   method: entity_id
+      unique: entity
       filter:
         exclude:
           - entity_id: "binary_sensor.global_natural_alert"
           # - entity_id: 'binary_sensor.shakemap'
         include:
           - entity_id: sensor.*
-            # state: ">1"
-            attributes:
-              integration: dpc
-              total_alerts: ">0"
+            or:
+              - attributes:
+                  integration: dpc
+                  total_phenomena: ">0"
+              - attributes:
+                  integration: dpc
+                  total_alerts: ">0"
             options:
               entity: this.entity_id
               secondary_info: last-updated
@@ -296,7 +300,6 @@ cards:
                     color: var(--color);
                     --paper-item-icon-color: var(--paper-item-icon-active-color); ##var(--color);
                   }
-
           - entity_id: "binary_sensor.*"
             state: "on"
             attributes:
@@ -394,37 +397,15 @@ cards:
           show_empty: false
           filter:
             include:
-              - entity_id: binary_sensor.*
-                state: "on"
-                attributes:
-                  integration: dpc
               - entity_id: sensor.*
-                # state: ">0"
-                attributes:
-                  integration: dpc
-                  total_alerts: ">0"
+                or:
+                  - attributes:
+                      integration: dpc
+                      total_phenomena: ">0"
+                  - attributes:
+                      integration: dpc
+                      total_alerts: ">0"
           card:
-            # type: markdown
-            # # entity_id: this.entity_id
-            # card_mod:
-            #   style: |
-            #     ha-card {background: none; border-radius: 0px; box-shadow: none;}
-            # content: >
-            #   ___
-
-            #   #### PROTEZIONE CIVILE
-
-            #   {% set color = {0:'White', 1:'Green', 2:'Gold', 3:'Orange', 4:'Red'} %}
-            #   {% for state in states.binary_sensor %}
-            #   {% if is_state_attr(state.entity_id, 'integration', 'dpc') and state.state == 'on' %}
-
-            #   <font color= {{color[state.attributes.level|int]}}> <ha-icon icon="{{ 'mdi:numeric-' ~ state.attributes.level|int ~ '-box'}}" style="width: 36px; height: 36px;"></ha-icon>
-            #   {{state.name}} - {{state.attributes.alert}} {{state.attributes.info}}</font>
-            #   {% endif %} {% endfor %}
-
-            #   [Protezione Civile](https://www.protezionecivile.gov.it/it/) ~ [Vigilanza Meteo](https://mappe.protezionecivile.it/it/mappe-rischi/bollettino-di-vigilanza)
-            #   ~ [Criticità Idro](https://mappe.protezionecivile.gov.it/it/mappe-rischi/bollettino-di-criticita) ~ [Radar](https://mappe.protezionecivile.it/it/mappe-rischi/piattaforma-radar)
-
             #################################################################
             ## DPC SENSOR CRITICITA - VIGILANZA
             #################################################################
@@ -484,7 +465,7 @@ cards:
               {% set v = state_attr(entity, status) %}
               {%- if v %} 
               {%- if v['level'] >= 1 %}
-              <font color="{{ color_v.get(v['level']) }}"/> <ha-icon icon="{{ v['icon'] }}"/></ha-icon> {{ day[status] }} Quantitativi previsti {{ v['precipitation'] }} </font>
+              <font color="{{ color.get(v['level']) }}"/> <ha-icon icon="{{ v['icon'] }}"/></ha-icon> {{ day[status] }} Quantitativi previsti {{ v['precipitation'] }} </font>
               {%- endif %}
               {%- if v.phenomena %} 
               {% for d in v.phenomena %}
@@ -839,7 +820,7 @@ cards:
       entities:
         - sensor.date
       card:
-        type: custom:hui-iframe-card
+        type: iframe #custom:hui-iframe-card
         card_mod:
           style: |
             ha-card {
@@ -864,7 +845,7 @@ cards:
       entities:
         - sensor.date
       card:
-        type: custom:hui-iframe-card
+        type: iframe #custom:hui-iframe-card
         card_mod:
           style: |
             ha-card {
