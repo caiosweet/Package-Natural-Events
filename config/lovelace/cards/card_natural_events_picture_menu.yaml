@@ -643,7 +643,7 @@ cards:
               **Titolo**<br>
               <font color="{{mycolor}}"> {{state_attr('binary_sensor.meteoalarm', 'headline')}} </font><br><br>
               **Descrizione**<br>
-              <font color="{{mycolor}}"> {{state_attr('binary_sensor.meteoalarm', 'description')}} </font><br><br>
+              <font color="{{mycolor}}"> {{state_attr('binary_sensor.meteoalarm', 'description').split('(DISCLAIMER')[0]}} </font><br>
               **Istruzioni**<br>
               <font color="{{mycolor}}"> {{state_attr('binary_sensor.meteoalarm', 'instruction')}} </font><br><br>
               [MeteoAlarm]({{state_attr('binary_sensor.meteoalarm', 'web')|replace('http://','https://')}})
