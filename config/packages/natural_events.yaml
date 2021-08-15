@@ -21,7 +21,7 @@ homeassistant:
         package: "Natural_events 🌍"
         site: "hassiohelp.eu 🌐"
         author: "Caio & Gianpi"
-        version: "2021.8.1"
+        version: "2021.8.2"
       ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
       ## DEFAULT
       SCRIPT centro notifiche: &DEFAULT_SCRIPT !secret pkg_natural_events_script
@@ -991,7 +991,8 @@ automation:
       type: "{{attr.get('awareness_type')|regex_replace(find='(\\D)')|int}}" #|regex_replace(find="[^\d][^;]*")|int
       meteoalarm_tts_msg: >
         {{("oh no! ", "accipicchia! ", "accidenti! ", "attenzione! ", "come non detto! ") |random }}
-        per {{WEEKDAYS[day]}}, {{attr.get('headline','Test Intestazione')}}, {{attr.get('description', 'Test Descrizione')}}
+        per {{WEEKDAYS[day]}}, {{attr.get('headline','Test Intestazione')}}, 
+        {{attr.get('description', 'Test Descrizione').split('(DISCLAIMER')[0]}}
     action:
       - service: *DEFAULT_SCRIPT
         data:
@@ -1002,7 +1003,7 @@ automation:
           message: |
             Per {{WEEKDAYS[day]}}
             {{WARNING_SIGN[level].icon_color}} {{(METEOALARM_SIGN[type].text)|upper}}. Allerta {{WARNING_SIGN[level].text}}
-            Descrizione: {{attr.get('description','Test Descrizione')}}
+            Descrizione: {{attr.get('description','Test Descrizione').split('(DISCLAIMER')[0]}}
             {{as_timestamp(attr.get('effective'))|timestamp_custom('Valido dalle ore %H:%M del %d/%m')|default(now(),true)}}
             {{as_timestamp(attr.get('expires'))|timestamp_custom(' alle ore %H:%M del %d/%m')|default(now(),true)}}
           file: >-
