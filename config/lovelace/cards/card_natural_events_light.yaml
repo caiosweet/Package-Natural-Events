@@ -276,8 +276,8 @@ cards:
       unique: entity
       filter:
         exclude:
-          - entity_id: "binary_sensor.global_natural_alert"
-          # - entity_id: 'binary_sensor.shakemap'
+          - entity_id: binary_sensor.global_natural_alert
+          - entity_id: binary_sensor.download_file
         include:
           - entity_id: sensor.*
             or:
@@ -516,7 +516,7 @@ cards:
               **Titolo**<br>
               <font color="{{mycolor}}"> {{state_attr('binary_sensor.meteoalarm', 'headline')}} </font><br><br>
               **Descrizione**<br>
-              <font color="{{mycolor}}"> {{state_attr('binary_sensor.meteoalarm', 'description').split('(DISCLAIMER')[0]}} </font><br>
+              <font color="{{mycolor}}"> {{(state_attr('binary_sensor.meteoalarm', 'description')|default('',true)).split('(DISCLAIMER')[0]}} </font><br>
               **Istruzioni**<br>
               <font color="{{mycolor}}"> {{state_attr('binary_sensor.meteoalarm', 'instruction')}} </font><br><br>
               [MeteoAlarm]({{state_attr('binary_sensor.meteoalarm', 'web')|replace('http://','https://')}})
@@ -636,7 +636,7 @@ cards:
                     [![](/local/hassiohelp/downloads/lastquake.jpg)](http://shakemap.rm.ingv.it/shake4/viewLeaflet.html?eventid={{id}})
                   -->
 
-                  {% if is_state('binary_sensor.check_url', 'on') %}
+                  {% if is_state('binary_sensor.download_file', 'on') %}
                   <a href="http://shakemap.rm.ingv.it/shake4/view.html?eventid={{id}}"><img src="/local/hassiohelp/downloads/lastquake.jpg?t='{{now().timestamp()}}'"></a>
                   {% else %}
                   <a href="http://shakemap.rm.ingv.it/shake4/view.html?eventid={{id}}"><img src="http://shakemap.rm.ingv.it/shake4/data/{{id}}/current/products/pga.jpg"></a>

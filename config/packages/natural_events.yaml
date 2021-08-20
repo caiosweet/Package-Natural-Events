@@ -21,7 +21,7 @@ homeassistant:
         package: "Natural_events 🌍"
         site: "hassiohelp.eu 🌐"
         author: "Caio & Gianpi"
-        version: "2021.8.2"
+        version: "2021.8.3"
       ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
       ## DEFAULT
       SCRIPT centro notifiche: &DEFAULT_SCRIPT !secret pkg_natural_events_script
@@ -53,7 +53,7 @@ homeassistant:
       ##----------------------- HELP SETTINGS BEGIN -------------------------##
       DEFAULT_MOBILE_APP_ICON_2: &DEFAULT_MOBILE_APP_ICON_2 "https://hassiohelp.eu/wp-content/uploads/2021/05/icon_forum-750x750-full.png"
       DEFAULT_MOBILE_APP_ICON_1: &DEFAULT_MOBILE_APP_ICON_1 "https://hassiohelp.eu/wp-content/uploads/2021/05/icon_site-750x750-full.png"
-      #"https://hassiohelp.eu/wp-content/uploads/2019/03/hassiohelp-192.png"
+      # "https://hassiohelp.eu/wp-content/uploads/2019/03/hassiohelp-192.png"
 
       CARDINAL:
         &CARDINAL {
@@ -248,7 +248,7 @@ homeassistant:
       <<: *CUSTOMIZE
       friendly_name: Scossa Terremoto
       icon: mdi:pulse
-    binary_sensor.check_url:
+    binary_sensor.download_file:
       <<: *CUSTOMIZE
       friendly_name: Check URL
       icon: mdi:link
@@ -417,6 +417,10 @@ input_select:
 input_boolean:
   natural_events:
   natural_events_send_image:
+input_text:
+  ingv_path_image:
+    max: 255
+    initial: "path image"
 #######################################-#######################################
 ##                                   GROUP
 #######################################-#######################################
@@ -460,6 +464,26 @@ binary_sensor:
     country: "italy"
     province: *CONF_METEOALARM_REGION
     language: "it"
+
+  #-------------------------------------
+  # LAST QUAKE
+  #-------------------------------------
+  - platform: command_line # check URL
+    name: download_file #shakemap
+    device_class: connectivity
+    # command: response=$(curl -LIk -m 3 "{{state_attr('binary_sensor.lastquake', 'image_url')}}" -o /dev/null -w "%{http_code}\n" -s); test "$response" -eq 200 && echo "ON" || echo "OFF"
+    # command: 'rm -f "{{state_attr(''binary_sensor.lastquake'', ''download_dir'')}}lastquake.jpg";
+    #   wget --spider "{{state_attr(''binary_sensor.lastquake'', ''image_url'')}}" &&
+    #   curl -Lk -f -m 5 "{{state_attr(''binary_sensor.lastquake'', ''image_url'')}}" 
+    #   --create-dirs -o "{{state_attr(''binary_sensor.lastquake'', ''download_dir'')}}lastquake.jpg" &&
+    #   echo "ON" || echo "OFF"'
+    command: 'rm -f "{{states(''input_text.ingv_path_image'').split()[0]}}";
+      wget --spider "{{states(''input_text.ingv_path_image'').split()[1]}}" &&
+      curl -Lk -f -m 5 "{{states(''input_text.ingv_path_image'').split()[1]}}" 
+      --create-dirs -o "{{states(''input_text.ingv_path_image'').split()[0]}}" &&
+      echo "ON" || echo "OFF"'
+    scan_interval: 525600 # 1 year
+    value_template: '{{ value }}'
 #######################################-#######################################
 ##                                  SENSOR
 #######################################-#######################################
@@ -1123,7 +1147,7 @@ automation:
             di magnitudo {{trigger.to_state.attributes.magnitude}},
             con epicentro {{trigger.to_state.attributes.region}}.
 
-      # NTIFICATION WITHOUT IMAGE
+      # NOTIFICATION WITHOUT IMAGE
       - service: *DEFAULT_SCRIPT
         data:
           call_no_annuncio: 1
@@ -1135,7 +1159,6 @@ automation:
             Epicentro: {{trigger.to_state.attributes.region}}
             {% set data_utc = trigger.to_state.attributes.publication_date %}
             {{as_timestamp(data_utc)|timestamp_custom('%H:%M:%S - %d/%m/%Y')}}
-
             {% set state_dict = {'home': 'casa', 'not_home': 'fuori casa', 'unknown': '❓'} %}
             {%- for person in expand(states.person)|sort(attribute='name') -%}
             {% if 'latitude' in person.attributes -%}
@@ -1160,28 +1183,36 @@ automation:
           - alias: Check if url exists and download the file
             conditions: "{{ image_url|length > 0 }}" #{{trigger.to_state.attributes.magnitude >= 3}}"
             sequence:
+              - service: input_text.set_value
+                target:
+                  entity_id: input_text.ingv_path_image
+                data:
+                  value: >-
+                    {{DOWNLOAD_DIR}}lastquake.jpg {{image_url}}
               - repeat:
                   sequence:
-                    - service: hassio.addon_stdin
-                      data:
-                        addon: a0d7b954_ssh
-                        input: >-
-                          rm -f "{{DOWNLOAD_DIR}}lastquake.jpg";
-                          wget --spider "{{image_url}}" &&
-                          curl -Lk -f -m 5 "{{image_url}}" --create-dirs -o "{{DOWNLOAD_DIR}}lastquake.jpg" &&
-                          hass-cli state edit binary_sensor.check_url "on" ||
-                          hass-cli state edit binary_sensor.check_url "off"
+                    - service: homeassistant.update_entity
+                      entity_id: binary_sensor.download_file
+                    # - service: hassio.addon_stdin
+                    #   data:
+                    #     addon: a0d7b954_ssh
+                    #     input: >-
+                    #       rm -f "{{DOWNLOAD_DIR}}lastquake.jpg";
+                    #       wget --spider "{{image_url}}" &&
+                    #       curl -Lk -f -m 5 "{{image_url}}" --create-dirs -o "{{DOWNLOAD_DIR}}lastquake.jpg" &&
+                    #       hass-cli state edit binary_sensor.download_file "on" ||
+                    #       hass-cli state edit binary_sensor.download_file "off"
                     - wait_for_trigger:
                         - platform: state
-                          entity_id: binary_sensor.check_url
+                          entity_id: binary_sensor.download_file
                           to: "on"
                       timeout: "00:00:20" #TODO DYNAMIC TIME
-                  until: "{{ is_state('binary_sensor.check_url', 'on') or repeat.index >= 18 }}"
+                  until: "{{ is_state('binary_sensor.download_file', 'on') or repeat.index >= 18 }}"
               - alias: Send Image
                 choose:
                   - alias: If successful check
                     conditions: >
-                      {{ image_url|length > 0 and is_state('binary_sensor.check_url', 'on') }}
+                      {{ image_url|length > 0 and is_state('binary_sensor.download_file', 'on') }}
                     sequence:
                       - service: *DEFAULT_SCRIPT
                         data:
