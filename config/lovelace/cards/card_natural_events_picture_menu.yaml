@@ -628,8 +628,8 @@ cards:
               {% set mycolor = 'var(--primary-text-color)' %}
 
               {% set global = 'binary_sensor.global_natural_alert' %}
-              {% set l = state_attr('binary_sensor.meteoalarm', 'awareness_level') %}
-              {% set t = state_attr('binary_sensor.meteoalarm', 'awareness_type') %}
+              {% set l = state_attr('binary_sensor.meteoalarm', 'awareness_level')|default %}
+              {% set t = state_attr('binary_sensor.meteoalarm', 'awareness_type')|default %}
               <font color="{{state_attr(global,'meteoalarm_level')}}"> <ha-icon icon="{{state_attr(global, 'meteoalarm_level_icon')}}"></ha-icon></font>
               <font color="{{state_attr(global,'meteoalarm_level')}}"> <ha-icon icon="{{state_attr(global, 'meteoalarm_type_icon')}}"></ha-icon></font>
               <font color="{{state_attr(global,'meteoalarm_level')}}"> {{state_attr('binary_sensor.meteoalarm', 'event')}}
@@ -745,7 +745,7 @@ cards:
 
                   {% set state_dict = {'home': 'casa', 'not_home': 'fuori casa', 'unknown': '❓'} %}
                   {% for person in expand(states.person) %}
-                  {% if 'latitude' in person.attributes %}
+                  {% if 'latitude' in person.attributes and person.attributes.latitude is not none %}
                   {% set distanza = distance(lat|default(0), long|default(0), person.entity_id|default(0)) %}
                   <br>{{"📍{} ({}) a circa {} km dall'epicentro.".format(person.name|upper, state_dict.get(person.state, person.state), distanza|round(1)) }}
                   {% else %}

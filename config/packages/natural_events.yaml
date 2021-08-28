@@ -798,7 +798,7 @@ automation:
           - sensor.dpc_alert
     condition:
       - "{{ trigger.from_state.state not in ['unavailable','unknown'] }}"
-      # - "{{ trigger.to_state.state|int > 0 }}"
+      # - "{{ trigger.to_state.state|int > 1 }}"
       - condition: or
         conditions:
           - "{{ trigger.from_state.attributes.total_alerts != trigger.to_state.attributes.total_alerts }}"
@@ -880,7 +880,7 @@ automation:
           - sensor.dpc_vigilance
     condition:
       - "{{ trigger.from_state.state not in ['unavailable','unknown'] }}"
-      # - "{{ trigger.to_state.state|int > 0 }}"
+      # - "{{ trigger.to_state.state|int > 1 }}"
       - condition: or
         conditions:
           - "{{ trigger.from_state.attributes.total_alerts != trigger.to_state.attributes.total_alerts }}"
@@ -931,7 +931,6 @@ automation:
                           ➡️ {{p.event}}: {{p.value}} in direzione {{CARDINAL[p.direction]}} alla distanza di {{p.distance}}km.
                           {% endfor %}
                           {% endif %}
-
                           Zona: {{ state_attr(ENTITY, 'zone_name') }}
                         alexa:
                           message_tts: &dpc_vigilance_tts_msg >- # mapday[day] #repeat.index == DAYS|length
@@ -1197,7 +1196,7 @@ automation:
             {{as_timestamp(data_utc)|timestamp_custom('%H:%M:%S - %d/%m/%Y')}}
             {% set state_dict = {'home': 'casa', 'not_home': 'fuori casa', 'unknown': '❓'} %}
             {%- for person in expand(states.person)|sort(attribute='name') -%}
-            {% if 'latitude' in person.attributes -%}
+            {% if 'latitude' in person.attributes and person.attributes.latitude is not none -%}
             {% set distanza = distance(trigger.entity_id, person.entity_id) -%}
             {{"📍{} ({}) a circa {} km dall'epicentro.".format(person.name|upper, state_dict.get(person.state, person.state), distanza|round(1)) }}
             {% else -%}
@@ -1442,7 +1441,8 @@ script:
             {{ (DEFAULT_NOTIFY|replace('notify.','')|regex_replace(find=" *, *", replace=",")|lower).rsplit(",") 
             if DEFAULT_NOTIFY is string else DEFAULT_NOTIFY }}
           title: "{{ title|default }}"
-          message: "{{ message|default }}"
+          message: > # SUB_NOTIFICHE_WRAP = [(" +"," "),("\s\s+","\n")] # SUB_NOTIFICHE_NOWRAP = [("\s+"," "),(" +"," ")] 
+            {{ message|default|regex_replace(find=" +", replace=" ")|regex_replace(find="\s\s+", replace="\n") }}
           link: "{{ link|default }}"
           alexa_message: >
             {% if alexa is boolean %}
@@ -1587,7 +1587,6 @@ script:
                                     title: "{{ title }}"
                                     message: "{{'\n{}\n{}'.format(message,link_uri) }}"
                                     data: "{{ data|default({}) }}"
-
               - alias: NOTIFY TEXT
                 choose:
                   - alias: IF MESSAGGE AND NOT URL OR FILE
