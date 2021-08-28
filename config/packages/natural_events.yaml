@@ -11,6 +11,7 @@
 ## Centro Notifiche (AppDaemon Notifier): https://github.com/caiosweet/Package-Notification-HUB-AppDaemon/wiki
 ## Alelxa Sound Library TO Google. soundbank://soundlibrary/ >> REPLACE TO  >> https://d3qhmae9zx9eb.cloudfront.net/
 
+
 homeassistant:
   customize:
     ########################################################################
@@ -21,7 +22,7 @@ homeassistant:
         package: "Natural_events 🌍"
         site: "hassiohelp.eu 🌐"
         author: "Caio & Gianpi"
-        version: "2021.8.2"
+        version: "2021.8.3"
       ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
       ## DEFAULT
       SCRIPT centro notifiche: &DEFAULT_SCRIPT !secret pkg_natural_events_script
@@ -53,7 +54,7 @@ homeassistant:
       ##----------------------- HELP SETTINGS BEGIN -------------------------##
       DEFAULT_MOBILE_APP_ICON_2: &DEFAULT_MOBILE_APP_ICON_2 "https://hassiohelp.eu/wp-content/uploads/2021/05/icon_forum-750x750-full.png"
       DEFAULT_MOBILE_APP_ICON_1: &DEFAULT_MOBILE_APP_ICON_1 "https://hassiohelp.eu/wp-content/uploads/2021/05/icon_site-750x750-full.png"
-      #"https://hassiohelp.eu/wp-content/uploads/2019/03/hassiohelp-192.png"
+      # "https://hassiohelp.eu/wp-content/uploads/2019/03/hassiohelp-192.png"
 
       CARDINAL:
         &CARDINAL {
@@ -248,7 +249,7 @@ homeassistant:
       <<: *CUSTOMIZE
       friendly_name: Scossa Terremoto
       icon: mdi:pulse
-    binary_sensor.check_url:
+    binary_sensor.download_file:
       <<: *CUSTOMIZE
       friendly_name: Check URL
       icon: mdi:link
@@ -270,6 +271,10 @@ homeassistant:
       <<: *CUSTOMIZE
       friendly_name: "Info e Impostazioni"
       icon: mdi:cogs
+    input_boolean.natural_events_ssh_addon:
+      <<: *CUSTOMIZE
+      friendly_name: "SSH Web Addon"
+      icon: mdi:ssh
     input_boolean.natural_events_send_image:
       <<: *CUSTOMIZE
       friendly_name: "Invia Immagini"
@@ -417,6 +422,11 @@ input_select:
 input_boolean:
   natural_events:
   natural_events_send_image:
+  natural_events_ssh_addon:
+input_text:
+  ingv_path_image:
+    max: 255
+    initial: "path image"
 #######################################-#######################################
 ##                                   GROUP
 #######################################-#######################################
@@ -460,6 +470,26 @@ binary_sensor:
     country: "italy"
     province: *CONF_METEOALARM_REGION
     language: "it"
+
+  #-------------------------------------
+  # LAST QUAKE
+  #-------------------------------------
+  - platform: command_line # check URL
+    name: download_file #shakemap
+    device_class: connectivity
+    # command: response=$(curl -LIk -m 3 "{{state_attr('binary_sensor.lastquake', 'image_url')}}" -o /dev/null -w "%{http_code}\n" -s); test "$response" -eq 200 && echo "ON" || echo "OFF"
+    # command: 'rm -f "{{state_attr(''binary_sensor.lastquake'', ''download_dir'')}}lastquake.jpg";
+    #   wget --spider "{{state_attr(''binary_sensor.lastquake'', ''image_url'')}}" &&
+    #   curl -Lk -f -m 5 "{{state_attr(''binary_sensor.lastquake'', ''image_url'')}}" 
+    #   --create-dirs -o "{{state_attr(''binary_sensor.lastquake'', ''download_dir'')}}lastquake.jpg" &&
+    #   echo "ON" || echo "OFF"'
+    command: 'rm -f "{{states(''input_text.ingv_path_image'').split()[0]}}";
+      wget --spider "{{states(''input_text.ingv_path_image'').split()[1]}}" &&
+      curl -Lk -f -m 5 "{{states(''input_text.ingv_path_image'').split()[1]}}" 
+      --create-dirs -o "{{states(''input_text.ingv_path_image'').split()[0]}}" &&
+      echo "ON" || echo "OFF"'
+    scan_interval: 525600 # 1 year
+    value_template: '{{ value }}'
 #######################################-#######################################
 ##                                  SENSOR
 #######################################-#######################################
@@ -751,11 +781,10 @@ automation:
             message_tts: "{{burze_tts_msg}}"
           google:
             message_tts: "{{burze_tts_msg}}"
-          file: >-
+          image: >-
             {% if trigger.from_state is defined and trigger.from_state.state == 'off' 
             and is_state('input_boolean.natural_events_send_image', 'on') %}
             /config/www/hassiohelp/pkg_natural_events/burze.png{% else %}{% endif %}
-
   #----------------------------------------------------------------------------------------------------#
   # D. PROTEZIONE CIVILE - Notifica criticità meteo-idro Sensor
   #----------------------------------------------------------------------------------------------------#
@@ -767,10 +796,20 @@ automation:
       - platform: state
         entity_id:
           - sensor.dpc_alert
-    condition: >-
-      {{ not trigger.from_state.state in ["unavailable","unknown"] 
-      and ( trigger.from_state.attributes.total_alerts != trigger.to_state.attributes.total_alerts or
-          ( trigger.to_state.attributes.id != trigger.from_state.attributes.id and trigger.to_state.attributes.total_alerts > 0 )) }}
+    condition:
+      - "{{ trigger.from_state.state not in ['unavailable','unknown'] }}"
+      # - "{{ trigger.to_state.state|int > 1 }}"
+      - condition: or
+        conditions:
+          - "{{ trigger.from_state.attributes.total_alerts != trigger.to_state.attributes.total_alerts }}"
+          - condition: and
+            conditions:
+              - "{{ trigger.to_state.attributes.id != trigger.from_state.attributes.id }}"
+              - "{{ trigger.to_state.attributes.total_alerts > 0  }}"
+    # condition: >-
+    #   {{ not trigger.from_state.state in ["unavailable","unknown"] 
+    #   and ( trigger.from_state.attributes.total_alerts != trigger.to_state.attributes.total_alerts or
+    #       ( trigger.to_state.attributes.id != trigger.from_state.attributes.id and trigger.to_state.attributes.total_alerts > 0 )) }}
     action:
       - variables:
           WARNING_SIGN: *WARNING_SIGN
@@ -819,8 +858,10 @@ automation:
                         google:
                           message_tts: *dpc_criticita_tts_msg
                           audio: "https://d3qhmae9zx9eb.cloudfront.net/nature/amzn_sfx_rain_01.mp3"
-                        url: >
+                        image: >
+                          {% if is_state('input_boolean.natural_events_send_image', 'on') %}
                           {{ state_attr(ENTITY, day).image_url |default("", true) }}
+                          {% endif %}
                         link: >
                           [Bollettino di criticità]({{ BULLETIN }})
                         level: >
@@ -837,11 +878,25 @@ automation:
       - platform: state
         entity_id:
           - sensor.dpc_vigilance
-    condition: >-
-      {{ trigger.from_state.state not in ["unavailable","unknown"] 
-      and ( trigger.from_state.attributes.total_alerts != trigger.to_state.attributes.total_alerts or
-          ( trigger.to_state.attributes.id != trigger.from_state.attributes.id and
-          ( trigger.to_state.attributes.total_phenomena > 0 or trigger.to_state.attributes.total_alerts > 0 ))) }}
+    condition:
+      - "{{ trigger.from_state.state not in ['unavailable','unknown'] }}"
+      # - "{{ trigger.to_state.state|int > 1 }}"
+      - condition: or
+        conditions:
+          - "{{ trigger.from_state.attributes.total_alerts != trigger.to_state.attributes.total_alerts }}"
+          - condition: and
+            conditions:
+              - "{{ trigger.to_state.attributes.id != trigger.from_state.attributes.id }}"
+              - condition: or
+                conditions:
+                  - "{{ trigger.to_state.attributes.total_phenomena > 0  }}"
+                  - "{{ trigger.to_state.attributes.total_alerts > 0  }}"
+      
+    # condition: >-
+    #   {{ trigger.from_state.state not in ["unavailable","unknown"] 
+    #   and ( trigger.from_state.attributes.total_alerts != trigger.to_state.attributes.total_alerts or
+    #       ( trigger.to_state.attributes.id != trigger.from_state.attributes.id and
+    #       ( trigger.to_state.attributes.total_phenomena > 0 or trigger.to_state.attributes.total_alerts > 0 ))) }}
     action:
       - variables:
           BULLETIN: "https://mappe.protezionecivile.gov.it/it/mappe-rischi/bollettino-di-vigilanza"
@@ -859,7 +914,8 @@ automation:
                 day: "{{ DAYS[repeat.index] }}"
             - choose:
                 - conditions:
-                    - "{{ state_attr(ENTITY, day) is not none }}"
+                    - "{{ state_attr(ENTITY, day) is not none 
+                      and (state_attr(ENTITY, day)['level'] > 1 or state_attr(ENTITY, day)['phenomena']|length  > 0) }}"
                   sequence:
                     - service: *DEFAULT_SCRIPT
                       data:
@@ -875,11 +931,10 @@ automation:
                           ➡️ {{p.event}}: {{p.value}} in direzione {{CARDINAL[p.direction]}} alla distanza di {{p.distance}}km.
                           {% endfor %}
                           {% endif %}
-
                           Zona: {{ state_attr(ENTITY, 'zone_name') }}
                         alexa:
-                          message_tts: &dpc_vigilance_tts_msg >- # mapday[day]
-                            {% if repeat.index == DAYS|length %}
+                          message_tts: &dpc_vigilance_tts_msg >- # mapday[day] #repeat.index == DAYS|length
+                            {% if repeat.first %}
                               {# % set mapday = {'today':'Oggi', 'tomorrow':'Domani', 'aftertomorrow': 'Dopodomani'} % #} 
                               Vigilanza meteo, 
                                 {%- for day in DAYS.values() %}
@@ -902,8 +957,10 @@ automation:
                         google:
                           message_tts: *dpc_vigilance_tts_msg
                           audio: "https://d3qhmae9zx9eb.cloudfront.net/nature/amzn_sfx_rain_01.mp3"
-                        url: >
+                        image: >
+                          {% if is_state('input_boolean.natural_events_send_image', 'on') %}
                           {{ state_attr(ENTITY, day).image_url |default("", true) }}
+                          {% endif %}
                         link: >
                           [Bollettino di criticità]({{ BULLETIN }})
                         level: >
@@ -965,10 +1022,11 @@ automation:
           level: >
             {% set attr = trigger.to_state.attributes if trigger.to_state is defined else ({}) %}
             {{attr.get('level', 0)}}
-          url: >
+          image: >
+            {% if is_state('input_boolean.natural_events_send_image', 'on') %}
             {% set attr = trigger.to_state.attributes if trigger.to_state is defined else ({}) %}
             {{attr.get('image_url', PREVIEW.format('20210702_1500', 'domani'))}}
-
+            {% endif %}
   #----------------------------------------------------------------------------------------------------#
   # METEOALARM - Notifica criticità meteo nella regione impostata - Vedi tabella a fine package
   #----------------------------------------------------------------------------------------------------#
@@ -1006,9 +1064,10 @@ automation:
             Descrizione: {{attr.get('description','Test Descrizione').split('(DISCLAIMER')[0]}}
             {{as_timestamp(attr.get('effective'))|timestamp_custom('Valido dalle ore %H:%M del %d/%m')|default(now(),true)}}
             {{as_timestamp(attr.get('expires'))|timestamp_custom(' alle ore %H:%M del %d/%m')|default(now(),true)}}
-          file: >-
+          image: >-
             {% if is_state('input_boolean.natural_events_send_image', 'on') %}
-            {{'/config/www/hassiohelp/pkg_natural_events/meteoalarm_{}.png'.format(type)}}{% else %}{% endif %}
+            {{'/config/www/hassiohelp/pkg_natural_events/meteoalarm_{}.png'.format(type)}}{% else %}
+            {% endif %}
           alexa:
             message_tts: "{{meteoalarm_tts_msg}}"
             audio: "{{METEOALARM_SIGN[type].alexa_sound}}"
@@ -1123,7 +1182,7 @@ automation:
             di magnitudo {{trigger.to_state.attributes.magnitude}},
             con epicentro {{trigger.to_state.attributes.region}}.
 
-      # NTIFICATION WITHOUT IMAGE
+      # NOTIFICATION WITHOUT IMAGE
       - service: *DEFAULT_SCRIPT
         data:
           call_no_annuncio: 1
@@ -1135,10 +1194,9 @@ automation:
             Epicentro: {{trigger.to_state.attributes.region}}
             {% set data_utc = trigger.to_state.attributes.publication_date %}
             {{as_timestamp(data_utc)|timestamp_custom('%H:%M:%S - %d/%m/%Y')}}
-
             {% set state_dict = {'home': 'casa', 'not_home': 'fuori casa', 'unknown': '❓'} %}
             {%- for person in expand(states.person)|sort(attribute='name') -%}
-            {% if 'latitude' in person.attributes -%}
+            {% if 'latitude' in person.attributes and person.attributes.latitude is not none -%}
             {% set distanza = distance(trigger.entity_id, person.entity_id) -%}
             {{"📍{} ({}) a circa {} km dall'epicentro.".format(person.name|upper, state_dict.get(person.state, person.state), distanza|round(1)) }}
             {% else -%}
@@ -1160,28 +1218,43 @@ automation:
           - alias: Check if url exists and download the file
             conditions: "{{ image_url|length > 0 }}" #{{trigger.to_state.attributes.magnitude >= 3}}"
             sequence:
+              - service: input_text.set_value
+                target:
+                  entity_id: input_text.ingv_path_image
+                data:
+                  value: >-
+                    {{DOWNLOAD_DIR}}lastquake.jpg {{image_url}}
               - repeat:
                   sequence:
-                    - service: hassio.addon_stdin
-                      data:
-                        addon: a0d7b954_ssh
-                        input: >-
-                          rm -f "{{DOWNLOAD_DIR}}lastquake.jpg";
-                          wget --spider "{{image_url}}" &&
-                          curl -Lk -f -m 5 "{{image_url}}" --create-dirs -o "{{DOWNLOAD_DIR}}lastquake.jpg" &&
-                          hass-cli state edit binary_sensor.check_url "on" ||
-                          hass-cli state edit binary_sensor.check_url "off"
+                    - alias: Download mode
+                      choose:
+                        - alias: If SSH Web & Terminal Addon
+                          conditions: "{{is_state('input_boolean.natural_events_ssh_addon', 'on')}}"
+                          sequence:
+                            - service: hassio.addon_stdin
+                              data:
+                                addon: a0d7b954_ssh
+                                input: >-
+                                  rm -f "{{DOWNLOAD_DIR}}lastquake.jpg";
+                                  wget --spider "{{image_url}}" &&
+                                  curl -Lk -f -m 5 "{{image_url}}" --create-dirs -o "{{DOWNLOAD_DIR}}lastquake.jpg" &&
+                                  hass-cli state edit binary_sensor.download_file "on" ||
+                                  hass-cli state edit binary_sensor.download_file "off"
+                      default:
+                        - service: homeassistant.update_entity
+                          entity_id: binary_sensor.download_file
+
                     - wait_for_trigger:
                         - platform: state
-                          entity_id: binary_sensor.check_url
+                          entity_id: binary_sensor.download_file
                           to: "on"
                       timeout: "00:00:20" #TODO DYNAMIC TIME
-                  until: "{{ is_state('binary_sensor.check_url', 'on') or repeat.index >= 18 }}"
+                  until: "{{ is_state('binary_sensor.download_file', 'on') or repeat.index >= 18 }}"
               - alias: Send Image
                 choose:
                   - alias: If successful check
                     conditions: >
-                      {{ image_url|length > 0 and is_state('binary_sensor.check_url', 'on') }}
+                      {{ image_url|length > 0 and is_state('binary_sensor.download_file', 'on') }}
                     sequence:
                       - service: *DEFAULT_SCRIPT
                         data:
@@ -1196,8 +1269,10 @@ automation:
                             {{ as_timestamp(data_utc)|timestamp_custom('%H:%M:%S - %d/%m/%Y') }}
                           link: >
                             [Compila il Questionario](https://www.hsit.it/xml-server.php?item=quest&action=compile&event_id={{trigger.to_state.attributes.event_id}})
-                          file: "{{ DOWNLOAD_DIR }}lastquake.jpg"
-                          url: "{{ image_url }}"
+                          image: >
+                            {% if is_state('input_boolean.natural_events_send_image', 'on') %} 
+                            {{ DOWNLOAD_DIR }}lastquake.jpg
+                            {% endif %}
                           level: "{{ level }}"
   # USGS
   - alias: natural_events_quake_usgs_notifications
@@ -1335,17 +1410,10 @@ script:
         default: "notify.telegram"
         selector:
           text:
-      file:
-        name: file
-        description: "Path to send local image"
+      image:
+        name: image
+        description: "Uri or Path to send remote or local image"
         example: "/config/www/hassiohelp/pkg_natural_events/burze.png"
-        default: "/config/www/hassiohelp/pkg_natural_events/burze.png"
-        selector:
-          text:
-      url:
-        name: url
-        description: "Uri to send remote image"
-        example: "https://hassiohelp.eu/wp-content/uploads/2020/11/Notifer-3.0-00-2-2048x1451.jpg"
         default: "https://hassiohelp.eu/wp-content/uploads/2020/11/Notifer-3.0-00-2-2048x1451.jpg"
         selector:
           text:
@@ -1373,7 +1441,8 @@ script:
             {{ (DEFAULT_NOTIFY|replace('notify.','')|regex_replace(find=" *, *", replace=",")|lower).rsplit(",") 
             if DEFAULT_NOTIFY is string else DEFAULT_NOTIFY }}
           title: "{{ title|default }}"
-          message: "{{ message|default }}"
+          message: > # SUB_NOTIFICHE_WRAP = [(" +"," "),("\s\s+","\n")] # SUB_NOTIFICHE_NOWRAP = [("\s+"," "),(" +"," ")] 
+            {{ message|default|regex_replace(find=" +", replace=" ")|regex_replace(find="\s\s+", replace="\n") }}
           link: "{{ link|default }}"
           alexa_message: >
             {% if alexa is boolean %}
@@ -1423,12 +1492,12 @@ script:
                     |\\bverde\\b|\\bgiall.\\b|\\barancione\\b|\\bross.\\b)"
               - alias: NOTIFY IMAGE
                 choose:
-                  - alias: IF URL OR FILE
+                  - alias: IF IMAGE
                     conditions:
-                      - "{{ file|default not in INVALIDATE or url|default not in INVALIDATE }}"
+                      - "{{ image|default not in INVALIDATE }}"
                     sequence:
                       - variables:
-                          local_remote: "{{ file if file is defined else url }}"
+                          is_local_file: "{{ true if not 'http' in image|default else false }}"
                       - alias: "REPEAT Image notify"
                         repeat:
                           while: "{{ repeat.index <= notify_service|length }}"
@@ -1452,14 +1521,14 @@ script:
                                             color: "{{ color|default(WARNING_SIGN[level|default(0)|int].decimal_color) }}"
                                             author:
                                               name: "Mini Centro Notifiche 👨‍✈️"
-                                              url: "{{local_remote if 'http' in local_remote }}"
-                                              icon_url: "{{local_remote if 'http' in local_remote else DEFAULT_MOBILE_APP_ICON_2 }}"
+                                              url: "{{ image if not is_local_file }}"
+                                              icon_url: "{{image if not is_local_file else DEFAULT_MOBILE_APP_ICON_2 }}"
                                             thumbnail:
-                                              url: "{{local_remote if 'http' in local_remote else DEFAULT_MOBILE_APP_ICON_2 }}"
+                                              url: "{{image if not is_local_file else DEFAULT_MOBILE_APP_ICON_2 }}"
                                             footer:
                                               text: "by HassioHelp"
                                               icon_url: "{{DEFAULT_MOBILE_APP_ICON_1}}"
-                                          images: "{{[local_remote] if 'http' not in local_remote else [] }}"
+                                          images: "{{[image] if is_local_file else [] }}"
                                 - alias: MOBILE APP
                                   conditions: "{{ 'mobile_app' in notify_name }}"
                                   sequence:
@@ -1471,7 +1540,7 @@ script:
                                           sticky: true
                                           clickAction: "{{ link_uri }}"
                                           url: "{{ link_uri }}"
-                                          image: "{{ local_remote|replace('config/www','local') }}"
+                                          image: "{{ image|replace('config/www','local') }}"
                                 - alias: PUSHBULLET
                                   conditions: "{{ 'pushbullet' in notify_name }}"
                                   sequence:
@@ -1480,7 +1549,7 @@ script:
                                         title: "{{ title }}"
                                         message: "{{ '{}\n\n{}'.format(message,link_uri) }}"
                                         data:
-                                          "{{ 'file' if file is defined else 'file_url' }}": "{{ local_remote }}"
+                                          "{{ 'file' if is_local_file else 'file_url' }}": "{{ image }}"
                                 - alias: PUSHOVER
                                   conditions: "{{ 'pushover' in notify_name }}"
                                   sequence:
@@ -1496,8 +1565,8 @@ script:
                                             ignorecase=True) %}
                                           {{ '{}\n\n<a href={}>{}</a>'.format(message_regex,link_uri,link_alias) }}
                                         data:
-                                          "{{ 'attachment' if file is defined else 'url' }}": "{{ local_remote }}"
-                                          url_title: "{{ 'Remote Image' if url is defined else '' }}"
+                                          "{{ 'attachment' if is_local_file else 'url' }}": "{{ image }}"
+                                          url_title: "{{ 'Remote Image' if 'http' in image else '' }}"
                                           html: 1
                                           sound: "{{ sound|default('siren') }}"
                                 - alias: TELEGRAM
@@ -1509,7 +1578,7 @@ script:
                                         message: "{{message}}"
                                         data:
                                           photo:
-                                            "{{ 'file' if file is defined else 'url' }}": "{{ local_remote }}"
+                                            "{{ 'file' if is_local_file else 'url' }}": "{{ image }}"
                                             caption: "{{ title }}\n{{ message ~ '\n\n{}'.format(link) }}"
                                             timeout: 90
                               default:
@@ -1517,15 +1586,13 @@ script:
                                   data:
                                     title: "{{ title }}"
                                     message: "{{'\n{}\n{}'.format(message,link_uri) }}"
-                                    # target: []
                                     data: "{{ data|default({}) }}"
-
               - alias: NOTIFY TEXT
                 choose:
                   - alias: IF MESSAGGE AND NOT URL OR FILE
                     conditions:
                       - "{{ message|length > 0 }}"
-                      - "{{ file|default in INVALIDATE and url|default in INVALIDATE }}"
+                      - "{{ image|default in INVALIDATE }}"
                     sequence:
                       - variables:
                           extra_discord:
