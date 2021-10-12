@@ -22,7 +22,7 @@ homeassistant:
         package: "Natural_events 🌍"
         site: "hassiohelp.eu 🌐"
         author: "Caio & Gianpi"
-        version: "2021.8.3"
+        version: "2021.8.4"
       ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
       ## DEFAULT
       SCRIPT centro notifiche: &DEFAULT_SCRIPT !secret pkg_natural_events_script
@@ -291,6 +291,8 @@ homeassistant:
       <<: *CUSTOMIZE
       friendly_name: Meteo Map
       icon: mdi:tooltip-image
+    input_text.ingv_path_image:
+      <<: *CUSTOMIZE
     ## Sensor
     sensor.meteoalarm_custom:
       <<: *CUSTOMIZE
@@ -314,7 +316,7 @@ homeassistant:
     zone.meteoalert:
       <<: *CUSTOMIZE
       friendly_name: Zona Allerta Meteo
-      icon: mdi:flash-circle
+      icon: mdi:lightning-bolt-circle
   #######################################-#######################################
   ##                              CUSTOMIZE GLOB
   #######################################-#######################################
@@ -412,6 +414,7 @@ input_select:
   meteo_iframe:
     options:
       - Windy Alert
+      - AM Ita
       - DPC Radar
       - DPC Bollettino Criticità
       - DPC Vigilanza Meteo
@@ -480,16 +483,16 @@ binary_sensor:
     # command: response=$(curl -LIk -m 3 "{{state_attr('binary_sensor.lastquake', 'image_url')}}" -o /dev/null -w "%{http_code}\n" -s); test "$response" -eq 200 && echo "ON" || echo "OFF"
     # command: 'rm -f "{{state_attr(''binary_sensor.lastquake'', ''download_dir'')}}lastquake.jpg";
     #   wget --spider "{{state_attr(''binary_sensor.lastquake'', ''image_url'')}}" &&
-    #   curl -Lk -f -m 5 "{{state_attr(''binary_sensor.lastquake'', ''image_url'')}}" 
+    #   curl -Lk -f -m 5 "{{state_attr(''binary_sensor.lastquake'', ''image_url'')}}"
     #   --create-dirs -o "{{state_attr(''binary_sensor.lastquake'', ''download_dir'')}}lastquake.jpg" &&
     #   echo "ON" || echo "OFF"'
     command: 'rm -f "{{states(''input_text.ingv_path_image'').split()[0]}}";
       wget --spider "{{states(''input_text.ingv_path_image'').split()[1]}}" &&
-      curl -Lk -f -m 5 "{{states(''input_text.ingv_path_image'').split()[1]}}" 
+      curl -Lk -f -m 5 "{{states(''input_text.ingv_path_image'').split()[1]}}"
       --create-dirs -o "{{states(''input_text.ingv_path_image'').split()[0]}}" &&
       echo "ON" || echo "OFF"'
     scan_interval: 525600 # 1 year
-    value_template: '{{ value }}'
+    value_template: "{{ value }}"
 #######################################-#######################################
 ##                                  SENSOR
 #######################################-#######################################
@@ -807,7 +810,7 @@ automation:
               - "{{ trigger.to_state.attributes.id != trigger.from_state.attributes.id }}"
               - "{{ trigger.to_state.attributes.total_alerts > 0  }}"
     # condition: >-
-    #   {{ not trigger.from_state.state in ["unavailable","unknown"] 
+    #   {{ not trigger.from_state.state in ["unavailable","unknown"]
     #   and ( trigger.from_state.attributes.total_alerts != trigger.to_state.attributes.total_alerts or
     #       ( trigger.to_state.attributes.id != trigger.from_state.attributes.id and trigger.to_state.attributes.total_alerts > 0 )) }}
     action:
@@ -891,9 +894,9 @@ automation:
                 conditions:
                   - "{{ trigger.to_state.attributes.total_phenomena > 0  }}"
                   - "{{ trigger.to_state.attributes.total_alerts > 0  }}"
-      
+
     # condition: >-
-    #   {{ trigger.from_state.state not in ["unavailable","unknown"] 
+    #   {{ trigger.from_state.state not in ["unavailable","unknown"]
     #   and ( trigger.from_state.attributes.total_alerts != trigger.to_state.attributes.total_alerts or
     #       ( trigger.to_state.attributes.id != trigger.from_state.attributes.id and
     #       ( trigger.to_state.attributes.total_phenomena > 0 or trigger.to_state.attributes.total_alerts > 0 ))) }}
@@ -914,7 +917,7 @@ automation:
                 day: "{{ DAYS[repeat.index] }}"
             - choose:
                 - conditions:
-                    - "{{ state_attr(ENTITY, day) is not none 
+                    - "{{ state_attr(ENTITY, day) is not none
                       and (state_attr(ENTITY, day)['level'] > 1 or state_attr(ENTITY, day)['phenomena']|length  > 0) }}"
                   sequence:
                     - service: *DEFAULT_SCRIPT
@@ -933,7 +936,8 @@ automation:
                           {% endif %}
                           Zona: {{ state_attr(ENTITY, 'zone_name') }}
                         alexa:
-                          message_tts: &dpc_vigilance_tts_msg >- # mapday[day] #repeat.index == DAYS|length
+                          message_tts:
+                            &dpc_vigilance_tts_msg >- # mapday[day] #repeat.index == DAYS|length
                             {% if repeat.first %}
                               {# % set mapday = {'today':'Oggi', 'tomorrow':'Domani', 'aftertomorrow': 'Dopodomani'} % #} 
                               Vigilanza meteo, 
@@ -1249,7 +1253,7 @@ automation:
                           entity_id: binary_sensor.download_file
                           to: "on"
                       timeout: "00:00:20" #TODO DYNAMIC TIME
-                  until: "{{ is_state('binary_sensor.download_file', 'on') or repeat.index >= 18 }}"
+                  until: "{{ is_state('binary_sensor.download_file', 'on') or repeat.index >= 30 }}"
               - alias: Send Image
                 choose:
                   - alias: If successful check
@@ -1435,13 +1439,15 @@ script:
           DEFAULT_MEDIA_PLAYER_GOOGLE: *DEFAULT_MEDIA_PLAYER_GOOGLE
           DEFAULT_MOBILE_APP_ICON_1: *DEFAULT_MOBILE_APP_ICON_1
           DEFAULT_MOBILE_APP_ICON_2: *DEFAULT_MOBILE_APP_ICON_2
-          INVALIDATE: [false, null, "", "none"]
+          DEFAULT_SERVICE_TTS_GOOGLE: *DEFAULT_SERVICE_TTS
+          INVALIDATE: [false, null, "", none, "none", "null"]
           notify_service: >-
             {% set DEFAULT_NOTIFY = notify|default(DEFAULT_NOTIFY) %}
             {{ (DEFAULT_NOTIFY|replace('notify.','')|regex_replace(find=" *, *", replace=",")|lower).rsplit(",") 
             if DEFAULT_NOTIFY is string else DEFAULT_NOTIFY }}
           title: "{{ title|default }}"
-          message: > # SUB_NOTIFICHE_WRAP = [(" +"," "),("\s\s+","\n")] # SUB_NOTIFICHE_NOWRAP = [("\s+"," "),(" +"," ")] 
+          message:
+            > # SUB_NOTIFICHE_WRAP = [(" +"," "),("\s\s+","\n")] # SUB_NOTIFICHE_NOWRAP = [("\s+"," "),(" +"," ")]
             {{ message|default|regex_replace(find=" +", replace=" ")|regex_replace(find="\s\s+", replace="\n") }}
           link: "{{ link|default }}"
           alexa_message: >
@@ -1735,7 +1741,8 @@ script:
                                   seconds: >
                                     {{expand(google_players)|selectattr('attributes.media_duration','defined')
                                     |map(attribute='attributes.media_duration')|list|first|default(7)|float}}
-                      - service: *DEFAULT_SERVICE_TTS
+                      - service: >-
+                          {{ DEFAULT_SERVICE_TTS_GOOGLE if DEFAULT_SERVICE_TTS_GOOGLE not in INVALIDATE else 'tts.google_translate_say' }}
                         data:
                           entity_id: "{{google_players}}"
                           message: "{{message_tts}}"

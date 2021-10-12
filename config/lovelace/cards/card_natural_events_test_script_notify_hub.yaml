@@ -4,7 +4,7 @@ cards:
     cards:
       - type: button
         name: Solo Testo
-        icon: 'mdi:telegram'
+        icon: 'si:telegram'
         tap_action:
           action: call-service
           service: script.notify_hub
@@ -13,7 +13,7 @@ cards:
             message: messaggio principale.
       - type: button
         name: Solo Alexa
-        icon: 'mdi:amazon-alexa'
+        icon: 'si:amazonalexa'
         tap_action:
           action: call-service
           service: script.notify_hub
