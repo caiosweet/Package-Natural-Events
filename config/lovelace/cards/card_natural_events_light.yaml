@@ -295,7 +295,7 @@ cards:
                   :host {
                     --color:
                       {% set color = {0:'White', 1:'Green', 2:'Gold', 3:'Orange', 4:'Red', 5:'BlueViolet'} %}
-                      {% if is_state_attr(config.entity, 'integration', 'dpc') %} {{color[state_attr(config.entity, 'max_level')|int]}}
+                      {% if is_state_attr(config.entity, 'integration', 'dpc') %} {{color[state_attr(config.entity, 'max_level')|int(0)]}}
                       {% endif %};
                     color: var(--color);
                     --paper-item-icon-color: var(--paper-item-icon-active-color); ##var(--color);
@@ -313,9 +313,9 @@ cards:
                   :host {
                     --color:
                       {% set color = {0:'White', 1:'Green', 2:'Gold', 3:'Orange', 4:'Red'} %}
-                      {% if is_state_attr(config.entity, 'integration', 'dpc') %} {{color[state_attr(config.entity, 'level')|int]}}
+                      {% if is_state_attr(config.entity, 'integration', 'dpc') %} {{color[state_attr(config.entity, 'level')|int(0)]}}
                       {% elif 'meteoalarm' in config.entity %} {{state_attr('binary_sensor.global_natural_alert','meteoalarm_level')}}
-                      {% elif 'quake' in config.entity %} {{color[state_attr('binary_sensor.lastquake', 'level')|int]}}
+                      {% elif 'quake' in config.entity %} {{color[state_attr('binary_sensor.lastquake', 'level')|int(0)]}}
                       {% elif 'burze' in config.entity and states(config.entity) == 'on'%}
                         {% set d = state_attr(config.entity,'distance') %}
                         {% if d %}
@@ -347,7 +347,7 @@ cards:
                         {% endif -%}
                     {%- endfor -%}
                     {% endmacro -%}
-                    --color: {{color[code()|max|int]}};
+                    --color: {{color[code()|max|int(0)]}};
                     color: var(--color);
                     --paper-item-icon-color: var(--paper-item-icon-active-color);
                   }
@@ -382,7 +382,7 @@ cards:
               #### TEMPORALI
 
               <font color="{{mycolor}}">{{state_attr('binary_sensor.burze_storms_nearby', 'number')}}</font>
-              <font color="{{color2}}"><ha-icon icon="mdi:flash" style="width: 24px; height: 24px; transform: rotate(35deg);"></ha-icon></font> 
+              <font color="{{color2}}"><ha-icon icon="mdi:flash"></ha-icon></font> 
               in <font color="{{mycolor}}"> {{state_attr('binary_sensor.burze_storms_nearby', 'period')}}</font> minuti.
               Il più vicino è caduto a <font color="{{mycolor}}"> {{state_attr('binary_sensor.burze_storms_nearby', 'distance')}} Km </font> 
               a <font color="{{mycolor}}"> {{state_attr('binary_sensor.global_natural_alert','burze_direction')}} </font>
@@ -423,7 +423,7 @@ cards:
               {%- if state.attributes.integration == "dpc" %}  
 
               {% set entity = state.entity_id %}
-              {%- if 'alert' in entity and states(entity)|int > 1 %}
+              {%- if 'alert' in entity and states(entity)|int(0) > 1 %}
 
               ___
 
@@ -458,8 +458,8 @@ cards:
               {% endif %}
 
               {%- if 'vigilance' in entity
-              and (states(entity)|int > 1 
-              or state_attr(entity, 'total_phenomena')|int > 0) %}
+              and (states(entity)|int(0) > 1 
+              or state_attr(entity, 'total_phenomena')|int(0) > 0) %}
 
               ___
 
@@ -524,8 +524,8 @@ cards:
               {% set days = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"] %}
               {% set start = as_timestamp(state_attr('binary_sensor.meteoalarm', 'effective'),0) %}
               {% set end = as_timestamp(state_attr('binary_sensor.meteoalarm', 'expires'),0) %}
-              <font>Da {{days[start|timestamp_custom('%w')|int]}}{{start|timestamp_custom(' %d alle %H:%M')}}</font>
-              a {{days[end|timestamp_custom('%w')|int]}}{{end|timestamp_custom(' %d alle %H:%M')}}</font><br><br>
+              <font>Da {{days[start|timestamp_custom('%w')|int(0)]}}{{start|timestamp_custom(' %d alle %H:%M')}}</font>
+              a {{days[end|timestamp_custom('%w')|int(0)]}}{{end|timestamp_custom(' %d alle %H:%M')}}</font><br><br>
               **Titolo**<br>
               <font color="{{mycolor}}"> {{state_attr('binary_sensor.meteoalarm', 'headline')}} </font><br><br>
               **Descrizione**<br>
@@ -579,7 +579,7 @@ cards:
                       {% set l = dict_code[d['code']] %}
                       {% set t = type[d['event']] %}
               **{{day[s]}}:** <img src="https://www.meteoalarm.eu/documents/rss/wflag-l{{'0' if not l else l.split(';')[0]}}-t{{'0' if not t else t.split(';')[0]}}.jpg"> <font color="{{d['code']}}">**{{dict_type[d['event']]}}** </font>
-              **Allerta:** <font color="{{d['code']}}"><ha-icon icon="{{'mdi:numeric-'~dict_code[d['code']]~'-box'}}" style="width: 36px; height: 36px;"></ha-icon>{{color[d['code']]}}</font><br>
+              **Allerta:** <font color="{{d['code']}}"><ha-icon icon="{{'mdi:numeric-'~dict_code[d['code']]~'-box'}}"></ha-icon>{{color[d['code']]}}</font><br>
               Descrizione: <font color="{{mycolor}}">{{d['italiano']}}</font><br>
               Data: <font color="{{mycolor}}">{{d['start']|trim("CEST")|replace('.','/')}} - {{d['end']|trim("CEST")|replace('.','/')}}</font><br>
                       {%- endfor -%}
@@ -617,13 +617,13 @@ cards:
                   {%- set id = state_attr(entityid, 'event_id') -%}
                   {%- set magnitudo = state_attr(entityid, 'magnitude')|float(default=0) -%}
                   {%- set code = {0:'White', 1:'Green', 2:'Gold', 3:'Orange', 4:'Red'} -%}
-                  {%- set color = code[state_attr('binary_sensor.lastquake', 'level')|int] -%}
+                  {%- set color = code[state_attr('binary_sensor.lastquake', 'level')|int(0)] -%}
                   {%- set lat = state_attr(entityid, 'lat') -%}
                   {%- set long = state_attr(entityid, 'long') -%}
-                  {%- set utc = as_timestamp(state_attr(entityid, 'publication_date'))|timestamp_custom('%H:%M:%S del %d/%m/%Y') -%}
+                  {%- set utc = as_timestamp(state_attr(entityid, 'publication_date'),0) -%}
                   <font>
 
-                  **<font color="{{color}}">{{ utc if utc is not none else state_attr(entityid, 'publication_date') }}</font>**<br><br>
+                  **<font color="{{color}}">{{ utc|timestamp_custom('%H:%M:%S del %d/%m/%Y') if utc is not none else 0}}</font>**<br><br>
                   Un terremoto di magnitudo **<font color="{{color}}">{{magnitudo}}</font>**<br>
                   è avvenuto nella zona: [{{state_attr(entityid, 'region')}}](https://www.openstreetmap.org/?mlat={{lat}}&mlon={{long}}#map=12/{{lat}}/{{long}})<br>
                   a <font color="{{color}}">**{{state_attr(entityid, 'distance')}}**</font> km da casa,<br>

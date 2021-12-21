@@ -11,7 +11,6 @@
 ## Centro Notifiche (AppDaemon Notifier): https://github.com/caiosweet/Package-Notification-HUB-AppDaemon/wiki
 ## Alelxa Sound Library TO Google. soundbank://soundlibrary/ >> REPLACE TO  >> https://d3qhmae9zx9eb.cloudfront.net/
 
-
 homeassistant:
   customize:
     ########################################################################
@@ -22,7 +21,7 @@ homeassistant:
         package: "Natural_events 🌍"
         site: "hassiohelp.eu 🌐"
         author: "Caio & Gianpi"
-        version: "2021.10.0"
+        version: "2021.12.0"
       ##--------------------- IMPOSTAZIONI DEL PACKAGE ---------------------##
       ## DEFAULT
       SCRIPT centro notifiche: &DEFAULT_SCRIPT !secret pkg_natural_events_script
@@ -271,10 +270,6 @@ homeassistant:
       <<: *CUSTOMIZE
       friendly_name: "Info e Impostazioni"
       icon: mdi:cogs
-    input_boolean.natural_events_ssh_addon:
-      <<: *CUSTOMIZE
-      friendly_name: "SSH Web Addon"
-      icon: mdi:ssh
     input_boolean.natural_events_send_image:
       <<: *CUSTOMIZE
       friendly_name: "Invia Immagini"
@@ -425,7 +420,6 @@ input_select:
 input_boolean:
   natural_events:
   natural_events_send_image:
-  natural_events_ssh_addon:
 input_text:
   ingv_path_image:
     max: 255
@@ -481,16 +475,12 @@ binary_sensor:
     name: download_file #shakemap
     device_class: connectivity
     # command: response=$(curl -LIk -m 3 "{{state_attr('binary_sensor.lastquake', 'image_url')}}" -o /dev/null -w "%{http_code}\n" -s); test "$response" -eq 200 && echo "ON" || echo "OFF"
-    # command: 'rm -f "{{state_attr(''binary_sensor.lastquake'', ''download_dir'')}}lastquake.jpg";
-    #   wget --spider "{{state_attr(''binary_sensor.lastquake'', ''image_url'')}}" &&
-    #   curl -Lk -f -m 5 "{{state_attr(''binary_sensor.lastquake'', ''image_url'')}}"
-    #   --create-dirs -o "{{state_attr(''binary_sensor.lastquake'', ''download_dir'')}}lastquake.jpg" &&
-    #   echo "ON" || echo "OFF"'
-    command: 'rm -f "{{states(''input_text.ingv_path_image'').split()[0]}}";
-      wget --spider "{{states(''input_text.ingv_path_image'').split()[1]}}" &&
-      curl -Lk -f -m 5 "{{states(''input_text.ingv_path_image'').split()[1]}}"
-      --create-dirs -o "{{states(''input_text.ingv_path_image'').split()[0]}}" &&
-      echo "ON" || echo "OFF"'
+    command: >
+      local=$(echo "{{states('input_text.ingv_path_image')}}" | cut -d" " -f1);
+      remote=$(echo "{{states('input_text.ingv_path_image')}}" | cut -d" " -f2);
+      rm -f "$local";
+      curl -sSf -Lk -m 5 "$remote" --create-dirs -o "$local" &&
+      echo "ON" || echo "OFF"
     scan_interval: 525600 # 1 year
     value_template: "{{ value }}"
 #######################################-#######################################
@@ -611,7 +601,7 @@ template:
             'Non disponibile',
             'Alluvione',
             'Pioggia-Alluvione'] %}
-          {{ 'Non disponibile' if type is none else warning_texts[type.split(';')[0]|int] }}
+          {{ 'Non disponibile' if type is none else warning_texts[type.split(';')[0]|int(0)] }}
         meteoalarm_type_icon: >-
           {% set type = state_attr('binary_sensor.meteoalarm', 'awareness_type') %}
           {% set warning_icons = {
@@ -629,7 +619,7 @@ template:
             11 : "help-circle",
             12 : "waves",
             13 : "home-flood", } %}
-          {{ 'mdi:help-circle' if type is none else 'mdi:' ~ warning_icons[type.split(';')[0]|int]}}
+          {{ 'mdi:help-circle' if type is none else 'mdi:' ~ warning_icons[type.split(';')[0]|int(0)]}}
         meteoalarm_level: >
           {% set level = state_attr('binary_sensor.meteoalarm', 'awareness_level') %}
           {{ 'White' if level is none else level.split(';')[1]|title |replace('Yellow', 'Gold')}}
@@ -757,7 +747,7 @@ automation:
       WARNING_SIGN: *WARNING_SIGN
       attr: "{{states.binary_sensor.burze_storms_nearby.attributes if trigger.to_state is defined else ({}) }}"
       direction: "{{state_attr('binary_sensor.global_natural_alert','burze_direction')|default('Nord',true)}}"
-      radius: "{{(state_attr('zone.meteoalert','radius') //1000)|int}}"
+      radius: "{{(state_attr('zone.meteoalert','radius') //1000)|int(0)}}"
       burze_tts_msg: >-
         {% if trigger.from_state is defined and trigger.from_state.state == 'off' %}
         Probabile arrivo di un temporale da {{direction}}. 
@@ -776,7 +766,7 @@ automation:
             {% set d = attr.get('distance')|default(radius,'0') %}
             {% macro range_distance() %} {% if d <= 0.5 %}5{% elif 0.5 < d <= 1 %}4{% elif 1 < d <= 5 %}3
             {% elif 5 < d <= 10 %}2{% elif 10 < d <= 20 %}1{% else %}0{% endif %} {% endmacro %}
-            {{WARNING_SIGN.get(range_distance()|int).icon_color}} Negli ultimi {{attr.get('period',0)}} minuti
+            {{WARNING_SIGN.get(range_distance()|int(0)).icon_color}} Negli ultimi {{attr.get('period',0)}} minuti
             {% for x in n|string %} {{NUMBER_ICONS[x]|default(x)}}{% endfor %}⚡{% if n != 1 %}
             scariche di fulmini {% else %} fulmine scaricato {% endif %} nel raggio di {{radius}} km. 
             La scarica più vicina è avvenuta a {{attr.get('distance', 0)}} km a {{direction}} da casa.
@@ -801,7 +791,7 @@ automation:
           - sensor.dpc_alert
     condition:
       - "{{ trigger.from_state.state not in ['unavailable','unknown'] }}"
-      # - "{{ trigger.to_state.state|int > 1 }}"
+      # - "{{ trigger.to_state.state|int(0)> 1 }}"
       - condition: or
         conditions:
           - "{{ trigger.from_state.attributes.total_alerts != trigger.to_state.attributes.total_alerts }}"
@@ -868,7 +858,7 @@ automation:
                         link: >
                           [Bollettino di criticità]({{ BULLETIN }})
                         level: >
-                          {{ state_attr(ENTITY, event)['level'] |default(0) |int }}
+                          {{ state_attr(ENTITY, event)['level'] |default(0) |int(0)}}
 
   #----------------------------------------------------------------------------------------------------#
   # D. PROTEZIONE CIVILE - Notifica Vigilanza Meteo Sensor
@@ -883,7 +873,7 @@ automation:
           - sensor.dpc_vigilance
     condition:
       - "{{ trigger.from_state.state not in ['unavailable','unknown'] }}"
-      # - "{{ trigger.to_state.state|int > 1 }}"
+      # - "{{ trigger.to_state.state|int(0)> 1 }}"
       - condition: or
         conditions:
           - "{{ trigger.from_state.attributes.total_alerts != trigger.to_state.attributes.total_alerts }}"
@@ -968,7 +958,7 @@ automation:
                         link: >
                           [Bollettino di criticità]({{ BULLETIN }})
                         level: >
-                          {{ state_attr(ENTITY, day)['level'] |default(0) |int }}
+                          {{ state_attr(ENTITY, day)['level'] |default(0) |int(0)}}
 
   #----------------------------------------------------------------------------------------------------#
   # D. PROTEZIONE CIVILE - Notifica criticità meteo-idro Binary Sensor
@@ -1048,9 +1038,9 @@ automation:
       WARNING_SIGN: *WARNING_SIGN
       WEEKDAYS: *WEEKDAYS
       attr: "{{states.binary_sensor.meteoalarm.attributes if trigger.to_state is defined else ({}) }}"
-      day: "{{as_timestamp(attr.get('onset', now()))|timestamp_custom('%w', true)|int}}"
-      level: "{{attr.get('awareness_level')|regex_replace(find='(\\D)')|int}}" #|regex_replace(find="[^\d][^;]*")|int
-      type: "{{attr.get('awareness_type')|regex_replace(find='(\\D)')|int}}" #|regex_replace(find="[^\d][^;]*")|int
+      day: "{{as_timestamp(attr.get('onset', now()))|timestamp_custom('%w', true)|int(0)}}"
+      level: "{{attr.get('awareness_level')|regex_replace(find='(\\D)')|int(0)}}" #|regex_replace(find="[^\d][^;]*")|int(0)
+      type: "{{attr.get('awareness_type')|regex_replace(find='(\\D)')|int(0)}}" #|regex_replace(find="[^\d][^;]*")|int(0)
       meteoalarm_tts_msg: >
         {{("oh no! ", "accipicchia! ", "accidenti! ", "attenzione! ", "come non detto! ") |random }}
         per {{WEEKDAYS[day]}}, {{attr.get('headline','Test Intestazione')}}, 
@@ -1170,7 +1160,7 @@ automation:
         zone: zone.geoalert
         event: enter
     condition: >-
-      {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.publication_date))/3600*60)|int < 90 }}
+      {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.publication_date))/3600*60)|int(0)< 1490 }}
     action:
       - variables:
           WARNING_SIGN: *WARNING_SIGN
@@ -1180,7 +1170,7 @@ automation:
             {% set m = trigger.to_state.attributes.magnitude %}
             {% macro magnitude() %}
             {%if 0<=m<=1.9%}0{%elif 2<=m<=2.9%}1{%elif 3<=m<=3.9%}2{%elif 4<=m<=5.9%}3{%else%}4{%endif%}
-            {% endmacro %} {{ magnitude()|int }}
+            {% endmacro %} {{ magnitude()|int(0)}}
           quake_tts_msg: >-
             Rilevato terremoto a {{trigger.to_state.state}} km,
             di magnitudo {{trigger.to_state.attributes.magnitude}},
@@ -1230,24 +1220,8 @@ automation:
                     {{DOWNLOAD_DIR}}lastquake.jpg {{image_url}}
               - repeat:
                   sequence:
-                    - alias: Download mode
-                      choose:
-                        - alias: If SSH Web & Terminal Addon
-                          conditions: "{{is_state('input_boolean.natural_events_ssh_addon', 'on')}}"
-                          sequence:
-                            - service: hassio.addon_stdin
-                              data:
-                                addon: a0d7b954_ssh
-                                input: >-
-                                  rm -f "{{DOWNLOAD_DIR}}lastquake.jpg";
-                                  wget --spider "{{image_url}}" &&
-                                  curl -Lk -f -m 5 "{{image_url}}" --create-dirs -o "{{DOWNLOAD_DIR}}lastquake.jpg" &&
-                                  hass-cli state edit binary_sensor.download_file "on" ||
-                                  hass-cli state edit binary_sensor.download_file "off"
-                      default:
-                        - service: homeassistant.update_entity
-                          entity_id: binary_sensor.download_file
-
+                    - service: homeassistant.update_entity
+                      entity_id: binary_sensor.download_file
                     - wait_for_trigger:
                         - platform: state
                           entity_id: binary_sensor.download_file
@@ -1289,14 +1263,14 @@ automation:
         zone: zone.geoalert
         event: enter
     condition: >
-      {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.time))/3600*60)|int < 60}}
+      {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.time))/3600*60)|int(0)< 60}}
     action:
       - variables:
           level: >-
             {% set m = trigger.to_state.attributes.magnitude %}
             {% macro magnitude() %}
             {%if 0<=m<=1.9%}0{%elif 2<=m<=2.9%}1{%elif 3<=m<=3.9%}2{%elif 4<=m<=5.9%}3{%else%}4{%endif%}
-            {% endmacro %} {{ magnitude()|int }}
+            {% endmacro %} {{ magnitude()|int(0)}}
           WARNING_SIGN: *WARNING_SIGN
           usgs_tts_msg: >-
             Evento sismico a {{trigger.to_state.state}} km.
@@ -1524,7 +1498,7 @@ script:
                                             title: "{{title}}"
                                             description: "{{ '\n{}\n\n{}'.format(message,link) }}"
                                             url: "{{link_uri}}"
-                                            color: "{{ color|default(WARNING_SIGN[level|default(0)|int].decimal_color) }}"
+                                            color: "{{ color|default(WARNING_SIGN[level|default(0)].decimal_color) }}"
                                             author:
                                               name: "Mini Centro Notifiche 👨‍✈️"
                                               url: "{{ image if not is_local_file }}"
@@ -1566,7 +1540,7 @@ script:
                                           {% set message = 'Image' if message in INVALIDATE else message %}
                                           {% set message_regex = message |regex_replace(find=word_regex_color, 
                                             replace='<font color="{}">{}</font>'.format(
-                                            color|default(WARNING_SIGN[level|default(0)|int].hex_color),
+                                            color|default(WARNING_SIGN[level|default(0)|int(0)].hex_color),
                                             "\\1"),
                                             ignorecase=True) %}
                                           {{ '{}\n\n<a href={}>{}</a>'.format(message_regex,link_uri,link_alias) }}
@@ -1606,7 +1580,7 @@ script:
                               title: "{{ title }}"
                               description: "{{ '\n{}\n\n{}'.format(message,link) }}"
                               url: "{{ link_uri }}"
-                              color: "{{ color|default(WARNING_SIGN[level|default(0)|int].decimal_color) }}"
+                              color: "{{ color|default(WARNING_SIGN[level|default(0)|int(0)].decimal_color) }}"
                               author:
                                 name: "Mini Centro Notifiche 👨‍✈️"
                                 url: "{{ link_uri }}"
@@ -1623,8 +1597,8 @@ script:
                             sticky: true
                             clickAction: "{{ link_uri }}"
                             url: "{{ link_uri }}"
-                            color: "{{ color|default(WARNING_SIGN[level|default(0)|int].hex_color) }}"
-                            ledColor: "{{ color|default(WARNING_SIGN[level|default(0)|int].hex_color) }}"
+                            color: "{{ color|default(WARNING_SIGN[level|default(0)|int(0)].hex_color) }}"
+                            ledColor: "{{ color|default(WARNING_SIGN[level|default(0)|int(0)].hex_color) }}"
                             icon_url: "{{ icon|default(DEFAULT_MOBILE_APP_ICON_1) }}"
                           extra_pushbullet: { "url": "{{ link_uri }}" }
                           extra_pushover:
@@ -1649,7 +1623,7 @@ script:
                                   {% elif 'pushover' in notify_name %}
                                     {% set message_regex = message |regex_replace(find=word_regex_color, 
                                       replace='<font color="{}">{}</font>'.format(
-                                      color|default(WARNING_SIGN[level|default(0)|int].hex_color),
+                                      color|default(WARNING_SIGN[level|default(0)|int(0)].hex_color),
                                       "\\1"),
                                       ignorecase=True) %}
                                     {{ message_regex }}
