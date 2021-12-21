@@ -4,7 +4,7 @@ cards:
     cards:
       - type: button
         name: Solo Testo
-        icon: 'si:telegram'
+        icon: mdi:message-text-outline
         tap_action:
           action: call-service
           service: script.notify_hub
@@ -13,7 +13,7 @@ cards:
             message: messaggio principale.
       - type: button
         name: Solo Alexa
-        icon: 'si:amazonalexa'
+        icon: mdi:dots-circle
         tap_action:
           action: call-service
           service: script.notify_hub
@@ -22,7 +22,7 @@ cards:
               message: prova alexa message
       - type: button
         name: Solo Google
-        icon: 'mdi:google-home'
+        icon: mdi:google-home
         tap_action:
           action: call-service
           service: script.notify_hub
@@ -40,6 +40,7 @@ cards:
             message: messaggio principale.
             google: true
             alexa: true
+        icon: mdi:text-to-speech
   - type: horizontal-stack
     cards:
       - type: button
@@ -48,17 +49,19 @@ cards:
           action: call-service
           service: script.notify_hub
           service_data:
-            url: 'https://hassiohelp.eu/wp-content/uploads/2019/04/Indice-00.jpg'
+            url: https://hassiohelp.eu/wp-content/uploads/2019/04/Indice-00.jpg
+        icon: mdi:image
       - type: button
         name: URL Foto + Titolo + Messaggio
         tap_action:
           action: call-service
           service: script.notify_hub
           service_data:
-            title: 'Una foto dal URL a caso :0)'
+            title: Una foto dal URL a caso :0)
             message: Messaggio e titolo come caption
             url: >-
               https://hassiohelp.eu/wp-content/uploads/2019/04/Assistente-Personale-00-1525x1080.jpg
+        icon: mdi:image-plus
   - type: horizontal-stack
     cards:
       - type: button
@@ -68,15 +71,17 @@ cards:
           service: script.notify_hub
           service_data:
             file: /config/www/hassiohelp/pkg_natural_events/burze.png
+        icon: mdi:file-image
       - type: button
         name: FILE Foto + Titolo + Messaggio
         tap_action:
           action: call-service
           service: script.notify_hub
           service_data:
-            title: 'Una foto da FILE a caso :0)'
+            title: Una foto da FILE a caso :0)
             message: Messaggio e titolo come caption
             file: /config/www/hassiohelp/pkg_natural_events/burze.png
+        icon: mdi:file-image-plus
   - type: horizontal-stack
     cards:
       - type: button
@@ -85,7 +90,7 @@ cards:
           action: call-service
           service: script.notify_hub
           service_data:
-            title: 'Una foto a caso :0)'
+            title: Una foto a caso :0)
             message: >-
               Mentre ascolti alexa o google, ti ricordo che puoi usare meggase o
               message tts sotto google o alexa.
@@ -95,6 +100,7 @@ cards:
               message: Puoi usare message e message_tts
             google:
               message_tts: Puoi usare message e message_tts
+        show_icon: false
   - type: horizontal-stack
     cards:
       - type: button
@@ -107,6 +113,7 @@ cards:
             message: Messaggio testo più alexa da media player specificato
             alexa:
               media_player: media_player.studio
+        show_icon: false
   - type: horizontal-stack
     cards:
       - type: button
@@ -119,3 +126,4 @@ cards:
             message: Messaggio testo più google da media player specificato
             google:
               media_player: media_player.red
+        show_icon: false

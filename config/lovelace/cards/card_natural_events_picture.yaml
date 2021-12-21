@@ -30,7 +30,7 @@ cards:
         --my-border-width: {% if is_state('input_boolean.natural_events', 'off') %} 1px; {% else %} 0px; {% endif %}
         --my-border-color: {% if is_state(global, 'on') %} var(--global-level); {% endif %}
         --my-background: {% if is_state(global, 'on') %} var(--global-level); {% else %} Green;{% endif %}
-        --my-color: {% if state_attr(global, 'level') in ['White','Yellow','Orange'] %} var(--disabled-text-color); {% endif %}
+        --my-color: {% if state_attr(global, 'level') in ['White','Yellow','Gold','Orange'] %} var(--disabled-text-color); {% endif %}
         {% if is_state(global, 'on') %}
         --my-border-width: {% if is_state('input_boolean.natural_events', 'off') %} 1px; {% else %} 1px 0px 0px 0px; {% endif %}
         {% else %}
