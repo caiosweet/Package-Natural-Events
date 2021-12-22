@@ -1160,7 +1160,7 @@ automation:
         zone: zone.geoalert
         event: enter
     condition: >-
-      {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.publication_date))/3600*60)|int(0)< 1490 }}
+      {{((as_timestamp(utcnow())-as_timestamp(trigger.to_state.attributes.publication_date))/3600*60)|int(0)< 90 }}
     action:
       - variables:
           WARNING_SIGN: *WARNING_SIGN
