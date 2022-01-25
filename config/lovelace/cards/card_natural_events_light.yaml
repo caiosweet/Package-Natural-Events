@@ -110,14 +110,6 @@ cards:
               group_config:
                 state_color: true
                 secondary_info: last-updated
-                card_mod:
-                  style: |
-                    :host {
-                      {% if 'meteoalarm_custom' in config.entity
-                        and states(config.entity) > '0' %} 
-                      --paper-item-icon-color: var(--paper-item-icon-active-color);
-                      {% endif %}
-                    }
             - type: custom:fold-entity-row # 2 group.geoalert
               card_mod:
                 style: |
@@ -325,32 +317,6 @@ cards:
                     color: var(--color);
                     {#--paper-item-icon-color: var(--color); #}
                   }
-          - entity_id: "sensor.m*"
-            state: "> 0"
-            attributes:
-              package: "Natural_events*" # 🌍
-            options:
-              entity: this.entity_id
-              secondary_info: last-updated
-              card_mod:
-                style: |
-                  :host {
-                    {% set dict_code={'Green':'1','Yellow':'2','Orange':'3','Red':'4'} %}
-                    {% set color = {0:'White', 1:'Green', 2:'Gold', 3:'Orange', 4:'Red'} %}
-                    {% macro code() %}
-                    {%- for s  in ['today', 'tomorrow'] -%}
-                      {% set v = state_attr('sensor.meteoalarm_custom', s) -%}
-                        {% if v -%}
-                          {% for d  in v -%}
-                          {{dict_code[d['code']]}}
-                          {% endfor -%}
-                        {% endif -%}
-                    {%- endfor -%}
-                    {% endmacro -%}
-                    --color: {{color[code()|max|int(0)]}};
-                    color: var(--color);
-                    --paper-item-icon-color: var(--paper-item-icon-active-color);
-                  }
 
   #################################################################
   ## INFO - Da qui in poi uguale per light e picture menu
@@ -533,61 +499,7 @@ cards:
               **Istruzioni**<br>
               <font color="{{mycolor}}"> {{state_attr('binary_sensor.meteoalarm', 'instruction')}} </font><br><br>
               [MeteoAlarm]({{state_attr('binary_sensor.meteoalarm', 'web')|replace('http://','https://')}})
-        #################################################################
-        ## METEOALARM CUSTOM
-        #################################################################
-        - type: conditional
-          conditions:
-            - entity: sensor.meteoalarm_custom
-              state_not: "0"
-          card:
-            type: markdown
-            card_mod:
-              style: |
-                ha-card {background: none; border-radius: 0px; box-shadow: none;}
-            content: >
-              ___
 
-              #### METEOALARM CUSTOM
-
-              {% set mycolor = 'var(--primary-text-color)' %}
-
-              {%set day = {'today':'Oggi', 'tomorrow':'Domani'} %}
-              {%set color = {'Green':'Verde', 'Yellow':'Gialla', 'Orange':'Arancione', 'Red':'Rossa'} %}
-              {%set dict_code={'Green':'1','Yellow':'2','Orange':'3','Red':'4'}%}
-              {% set dict_type={'No-warnings': 'Nessun Avviso','Wind': 'Vento',
-              'Snow/Ice': 'Neve-Ghiaccio','Thunderstorms': 'Temporali',
-              'Fog': 'Nebbia','Extreme high temperature': 'Caldo intenso',
-              'Extreme low temperature': 'Freddo intenso',
-              'Coastal Event': 'Eventi Costieri','Forestfire': 'Incendi bischivi',
-              'Avalanches': 'Valanghe','Rain': 'Pioggia',
-              'Unavailable': 'Non disponibile','Flood': 'Alluvione',
-              'Rain-Flood': 'Pioggia-Alluvione'} %}
-              {%set type={'No-warnings': '0','Wind': '1',
-              'Snow/Ice': '2','Thunderstorms': '3',
-              'Fog': '4','Extreme high temperature': '5',
-              'Extreme low temperature': '6',
-              'Coastal Event': '7','Forestfire': '8',
-              'Avalanches': '9','Rain': '10',
-              'Unavailable': '11','Flood': '12',
-              'Rain-Flood': '13'}%}
-              {%- if not is_state('sensor.meteoalarm_custom', '0') -%}
-                {%- for s  in ['today', 'tomorrow'] -%}
-                  {%- set v = state_attr('sensor.meteoalarm_custom', s) -%}
-                    {%- if v -%}
-                      {%- for d  in v %}
-                      {% set l = dict_code[d['code']] %}
-                      {% set t = type[d['event']] %}
-              **{{day[s]}}:** <img src="https://www.meteoalarm.eu/documents/rss/wflag-l{{'0' if not l else l.split(';')[0]}}-t{{'0' if not t else t.split(';')[0]}}.jpg"> <font color="{{d['code']}}">**{{dict_type[d['event']]}}** </font>
-              **Allerta:** <font color="{{d['code']}}"><ha-icon icon="{{'mdi:numeric-'~dict_code[d['code']]~'-box'}}"></ha-icon>{{color[d['code']]}}</font><br>
-              Descrizione: <font color="{{mycolor}}">{{d['italiano']}}</font><br>
-              Data: <font color="{{mycolor}}">{{d['start']|trim("CEST")|replace('.','/')}} - {{d['end']|trim("CEST")|replace('.','/')}}</font><br>
-                      {%- endfor -%}
-                    {%- endif -%}
-                {%- endfor -%}
-              {%- endif %}
-
-              [MeteoAlarm]({{state_attr('binary_sensor.meteoalarm', 'web')}})
         #################################################################
         ## LASTQUAKE
         #################################################################
@@ -866,11 +778,13 @@ cards:
         aspect_ratio: 100%
         #hidden=switch,
         #maps...GOOGLE_SATELLITE, GOOGLE_HYBRID, GOOGLE_NORMAL OPEN_STREET_MAP, BING_AERIAL, , ORTHO_MAP, DARK_BASE_MAP
+        # https://servizio-mappe.protezionecivile.it/#/view/dashboard?x=11.747931216338579&y=42.219187239669644&zoom=5.8&basemap=BING_AERIAL&appname=BollettinodiCriticit%C3%A0&file=https:%2F%2Fraw.githubusercontent.com%2Fpcm-dpc%2FDPC-Bollettini-Criticita-Idrogeologica-Idraulica%2Fmaster%2Ffiles%2F20211231_1506.json&hidden=switch,info,minimap&fase=tomorrow
         url: >-
           ${'https://servizio-mappe.protezionecivile.it/#/view/dashboard?x=11.756&y=41.495&
           zoom=5.8&basemap=BING_AERIAL&appname=BollettinodiCriticità&file=
           https://raw.githubusercontent.com/pcm-dpc/DPC-Bollettini-Criticita-Idrogeologica-Idraulica/master/files/'
           +states['sensor.dpc_alert'].attributes.id+'.json&hidden=info,minimap&fase=today'}
+          
   #
   - type: conditional
     conditions:

@@ -23,8 +23,6 @@ cards:
         --meteoalarm-level: {{state_attr(global,'meteoalarm_level')}};
         --meteoalarm-level-left: {% if (state_attr('binary_sensor.meteoalarm', 'urgency')|lower) == 'immediate' %} 5%; {% else %} 90%; {% endif %}
         --meteoalarm-type-left: {% if (state_attr('binary_sensor.meteoalarm', 'urgency')|lower) == 'immediate' %} 10%; {% else %} 95%; {% endif %}
-        --meteoalarmc: {% if 'today' in states('sensor.meteoalarm_custom') %} 10%; {% endif %}
-        --meteoalarmc: {% if 'tomorrow' in states('sensor.meteoalarm_custom') %} 95%; {% endif %}
         --my-border-style: solid;
 
         --my-border-width: {% if is_state('input_boolean.natural_events', 'off') %} 1px; {% else %} 0px; {% endif %}
