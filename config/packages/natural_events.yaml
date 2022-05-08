@@ -781,15 +781,16 @@ automation:
       - platform: state
         entity_id:
           - sensor.dpc_alert
-        not_from:
-          - "unavailable"
-          - "unknown"
+        # not_from: # not_from, not_to, from, to -> trigger only for state!
+        #   - "unavailable"
+        #   - "unknown"
     condition:
+      - "{{ trigger.from_state.state not in ['unavailable','unknown'] }}"
       - or:
           - "{{ trigger.from_state.attributes.total_alerts != trigger.to_state.attributes.total_alerts }}"
           - and:
               - "{{ trigger.to_state.attributes.id != trigger.from_state.attributes.id }}"
-              - "{{ trigger.to_state.attributes.total_alerts > 0  }}"
+              - "{{ trigger.to_state.attributes.total_alerts > 0 }}"
     action:
       - variables:
           WARNING_SIGN: *WARNING_SIGN
@@ -856,17 +857,15 @@ automation:
       - platform: state
         entity_id:
           - sensor.dpc_vigilance
-        not_from:
-          - "unavailable"
-          - "unknown"
     condition:
+      - "{{ trigger.from_state.state not in ['unavailable','unknown'] }}"
       - or:
           - "{{ trigger.from_state.attributes.total_alerts != trigger.to_state.attributes.total_alerts }}"
           - and:
               - "{{ trigger.to_state.attributes.id != trigger.from_state.attributes.id }}"
               - or:
-                  - "{{ trigger.to_state.attributes.total_phenomena > 0  }}"
-                  - "{{ trigger.to_state.attributes.total_alerts > 0  }}"
+                  - "{{ trigger.to_state.attributes.total_phenomena > 0 }}"
+                  - "{{ trigger.to_state.attributes.total_alerts > 0 }}"
     action:
       - variables:
           BULLETIN: "https://mappe.protezionecivile.gov.it/it/mappe-rischi/bollettino-di-vigilanza"
