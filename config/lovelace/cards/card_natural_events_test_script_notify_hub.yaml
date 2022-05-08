@@ -1,5 +1,10 @@
 type: vertical-stack
 cards:
+  - type: markdown
+    content: |
+      <center> TEST 
+
+      `script.notify_hub`
   - type: horizontal-stack
     cards:
       - type: button
@@ -29,6 +34,30 @@ cards:
           service_data:
             google:
               message: prova google message
+
+  - type: horizontal-stack
+    cards:
+      - type: button
+        name: Prova LINK Format Markdown
+        tap_action:
+          action: call-service
+          service: script.notify_hub
+          service_data:
+            message: |
+              Format MarkDown.
+            link: '[Google](https://google.it)'
+        icon: mdi:link
+      - type: button
+        name: Prova LINK
+        tap_action:
+          action: call-service
+          service: script.notify_hub
+          service_data:
+            message: |
+              String LINK.
+            link: https://google.it
+        icon: mdi:link-box-outline
+
   - type: horizontal-stack
     cards:
       - type: button
@@ -49,7 +78,7 @@ cards:
           action: call-service
           service: script.notify_hub
           service_data:
-            url: https://hassiohelp.eu/wp-content/uploads/2019/04/Indice-00.jpg
+            image: https://hassiohelp.eu/wp-content/uploads/2019/04/Indice-00.jpg
         icon: mdi:image
       - type: button
         name: URL Foto + Titolo + Messaggio
@@ -59,7 +88,7 @@ cards:
           service_data:
             title: Una foto dal URL a caso :0)
             message: Messaggio e titolo come caption
-            url: >-
+            image: >-
               https://hassiohelp.eu/wp-content/uploads/2019/04/Assistente-Personale-00-1525x1080.jpg
         icon: mdi:image-plus
   - type: horizontal-stack
@@ -94,12 +123,12 @@ cards:
             message: >-
               Mentre ascolti alexa o google, ti ricordo che puoi usare meggase o
               message tts sotto google o alexa.
-            url: >-
+            image: >-
               https://hassiohelp.eu/wp-content/uploads/2020/11/Notifer-3.0-00-2-2048x1451.jpg
             alexa:
-              message: Puoi usare message e message_tts
+              message: Puoi usare message o message_tts
             google:
-              message_tts: Puoi usare message e message_tts
+              message_tts: Puoi usare message o message_tts
         show_icon: false
   - type: horizontal-stack
     cards:
