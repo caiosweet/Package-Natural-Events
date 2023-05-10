@@ -23,33 +23,35 @@ homeassistant:
         package: "Natural_events"
       version: &VERSION "2022.11.0"
       ##---------------------- IMPOSTAZIONI DEL PACKAGE ----------------------##
+      ### Important! Make sure the editor doesn't change this formatting.
+      ### ====>   DESCRIPTION: &ALIAS !secret parameter_of_secret    <====
       ## DEFAULT
-      SCRIPT centro notifiche: &DEFAULT_SCRIPT !secret pkg_natural_events_script
-      SERVIZIO Notify: &DEFAULT_NOTIFY !secret pkg_natural_events_notify
-      MEDIA PLAYER Alexa: &DEFAULT_MEDIA_PLAYER_ALEXA !secret pkg_natural_events_alexa
-      MEDIA PLAYER Google: &DEFAULT_MEDIA_PLAYER_GOOGLE !secret pkg_natural_events_google
+      SCRIPT NOTIFICHE: &DEFAULT_SCRIPT !secret pkg_natural_events_script
+      SERVIZIO NOTIFY: &DEFAULT_NOTIFY !secret pkg_natural_events_notify
+      MEDIA PLAYER ALEXA: &DEFAULT_MEDIA_PLAYER_ALEXA !secret pkg_natural_events_alexa
+      MEDIA PLAYER GOOGLE: &DEFAULT_MEDIA_PLAYER_GOOGLE !secret pkg_natural_events_google
       SERIVICE TTS: &DEFAULT_SERVICE_TTS !secret pkg_natural_events_service_tts
 
-      ## DND TTS (Orario Non Disturbare - Per script.notify_hub)
-      TTS PRIMA CHE INIZIA DoNotDisturb: &DEFAULT_DND_START !secret pkg_natural_events_dnd_start
-      TTS DOPO CHE FINISCE DoNotDisturb: &DEFAULT_DND_STOP !secret pkg_natural_events_dnd_stop
+      ## DND TTS (Orario Non Disturbare - Per lo script del package script.notify_hub)
+      TTS PRIMA CHE INIZIA DND: &DEFAULT_DND_START !secret pkg_natural_events_dnd_start
+      TTS DOPO CHE FINISCE DND: &DEFAULT_DND_STOP !secret pkg_natural_events_dnd_stop
 
       ## FOLDER DOWLOADS [Se la cambi, ricorda di farlo anche in lovelace!]
       DOWNLOAD DIRECTORY: &DEFAULT_DOWNLOAD_DIR !secret pkg_natural_events_download_dir
 
       ## CONFIGURATION
-      LATITUDINE di casa: &CONF_LATITUDE !secret pkg_natural_events_latitude_home
-      LONGITUDINE di casa: &CONF_LONGITUDE !secret pkg_natural_events_longitude_home
-      RAGGIO ZONA GeoAlert (metri): &CONF_RADIUS_GEOALERT !secret pkg_natural_events_radius_geoalert
-      RAGGIO ZONA MeteoAlert (metri): &CONF_RADIUS_METEOALERT !secret pkg_natural_events_radius_meteoalert
+      LATITUDINE DI CASA: &CONF_LATITUDE !secret pkg_natural_events_latitude_home
+      LONGITUDINE DI CASA: &CONF_LONGITUDE !secret pkg_natural_events_longitude_home
+      RAGGIO ZONA GEOALERT (metri): &CONF_RADIUS_GEOALERT !secret pkg_natural_events_radius_geoalert
+      RAGGIO ZONA METEOALERT (metri): &CONF_RADIUS_METEOALERT !secret pkg_natural_events_radius_meteoalert
       MAGNITUDO INGV minimo: &CONF_MAGNITUDE !secret pkg_natural_events_magnitude
       RAGGIO INGV (km): &CONF_RADIUS_QUAKE !secret pkg_natural_events_radius_quake
-      REGIONE MeteoAlarm: &CONF_METEOALARM_REGION !secret pkg_natural_events_meteoalarm_region
-      API KEY Burze: &CONF_BURZE_API_KEY !secret pkg_natural_events_burze_api_key
+      REGIONE METEOALARM: &CONF_METEOALARM_REGION !secret pkg_natural_events_meteoalarm_region
+      API KEY BURZE: &CONF_BURZE_API_KEY !secret pkg_natural_events_burze_api_key
       RAGGIO BURZE (km): &CONF_RADIUS_BURZE !secret pkg_natural_events_radius_burze
       ##---------------------- FINE IMPOSTAZIONI PACKAGE ---------------------##
 
-      ##------------------------ HELP SETTINGS BEGIN -------------------------##
+      ##----------------------- START OF HELP SETTINGS -----------------------##
       DEFAULT_MOBILE_APP_ICON_2: &DEFAULT_MOBILE_APP_ICON_2 "https://hassiohelp.eu/wp-content/uploads/2021/05/icon_forum-750x750-full.png"
       DEFAULT_MOBILE_APP_ICON_1: &DEFAULT_MOBILE_APP_ICON_1 "https://hassiohelp.eu/wp-content/uploads/2021/05/icon_site-750x750-full.png"
       # "https://hassiohelp.eu/wp-content/uploads/2019/03/hassiohelp-192.png"
@@ -200,7 +202,7 @@ homeassistant:
         - Giovedì
         - Venerdì
         - Sabato
-      ##------------------------- HELP SETTINGS END --------------------------##
+      ##------------------------ END OF HELP SETTINGS ------------------------##
 
     ## Automation
     automation.natural_events_blitzortung_lightning_notifications:

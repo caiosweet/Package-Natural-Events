@@ -44,7 +44,6 @@ cards:
       <center>{{'' if summary == 'unknown' else summary }}
       {% endif %}
 
-
   #################################################################
   ## ROOT -> AUTO-ENTITIES SENSORS ON AND BUTTONS MAPS
   #################################################################
@@ -250,10 +249,6 @@ cards:
                       text-shadow: 0 0 0 var(--color);
                     }
 
-                .: |
-                  :host {
-                    --state-icon-color: var(--state-active-color)
-                  }
           - entity_id: "binary_sensor.*"
             state: "on"
             attributes:
@@ -283,9 +278,7 @@ cards:
                       color: transparent;
                       text-shadow: 0 0 0 var(--color);
                     }
-  #################################################################
-  ## INFO - Da qui in poi uguale per light e picture menu
-  #################################################################
+
   #################################################################
   ## ROOT -> FOLDS + CARDS - SECONDA PARTE
   #################################################################
@@ -351,6 +344,9 @@ cards:
                     }
             - type: divider
 
+        #################################################################
+        ## INFO - Da qui in poi uguale per light e picture menu
+        #################################################################
         #################################################################
         ## BURZE
         #################################################################
@@ -663,11 +659,15 @@ cards:
               ha-card {background: none; border-radius: 0px; box-shadow: none;}
               ha-markdown {padding-top: 0px !important}
           content: >-
+            {# Set Last days to show #}
+            {% set last_days = 7 %}
             {% set gdacs_entities = integration_entities("gdacs")| select('match','geo_location')|list %}
             {% set alert_type = {'Green':'info', 'Green':'success', 'Orange':'warning', 'Red':'error'} %}
-            {% for geo in gdacs_entities if utcnow() < (state_attr(geo, 'from_date')) + timedelta(days = 10) %}
+            {% for geo in gdacs_entities if utcnow() < (state_attr(geo, 'from_date')) + timedelta(days = last_days) %}
             {% set alert = alert_type[state_attr(geo, 'alert_level')] %}
 
+            <details open>
+              <summary> <b><a href="https://gdacs.org/">GDACS </a></b></summary>
 
             <ha-alert title="GDACS - {{ state_attr(geo, 'friendly_name') }}" alert-type={{alert}}>
 
@@ -690,6 +690,7 @@ cards:
 
             [GDACS](https://gdacs.org/)
 
+            </details>
 
             </ha-alert>
             
