@@ -1,4 +1,3 @@
-## package_natural_event:
 ## INFO 📦
 ##  😅 Caio & Gianpi [hassiohelp.eu]
 ##  📅 01/08/2019
@@ -6,7 +5,6 @@
 ##  📂 PATH IMAGE /config/www/hassiohelp/pkg_natural_events
 ##--------------------------------------------------------------------------------------------------|
 ## Strumento per visualizzare il raggio delle zone https://www.mapdevelopers.com/draw-circle-tool.php
-## SSH & Web Terminal: per il check url e download immagine INGV https://github.com/hassio-addons/addon-ssh
 ## Centro Notifiche (AppDaemon Notifier): https://github.com/caiosweet/Package-Notification-HUB-AppDaemon/wiki
 ## Alelxa Sound Library TO Google. soundbank://soundlibrary/ >> REPLACE TO  >> https://d3qhmae9zx9eb.cloudfront.net/
 
@@ -21,7 +19,7 @@ homeassistant:
         attribution: "Caio & Gianpi - hassiohelp.eu"
       package: &PACKAGE
         package: "Natural_events"
-      version: &VERSION "2022.11.0"
+      version: &VERSION "2023.06.0"
       ##---------------------- IMPOSTAZIONI DEL PACKAGE ----------------------##
       ### Important! Make sure the editor doesn't change this formatting.
       ### ====>   DESCRIPTION: &ALIAS !secret parameter_of_secret    <====
@@ -32,7 +30,7 @@ homeassistant:
       MEDIA PLAYER GOOGLE: &DEFAULT_MEDIA_PLAYER_GOOGLE !secret pkg_natural_events_google
       SERIVICE TTS: &DEFAULT_SERVICE_TTS !secret pkg_natural_events_service_tts
 
-      ## DND TTS (Orario Non Disturbare - Per lo script del package script.notify_hub)
+      ## DND TTS (Orario Non Disturbare - Per lo script del package script.notify_hub presente in questo package)
       TTS PRIMA CHE INIZIA DND: &DEFAULT_DND_START !secret pkg_natural_events_dnd_start
       TTS DOPO CHE FINISCE DND: &DEFAULT_DND_STOP !secret pkg_natural_events_dnd_stop
 
@@ -331,6 +329,13 @@ homeassistant:
 # GDACS Configuration in Integration UI
 # Info https://www.home-assistant.io/integrations/gdacs/
 #-------------------------------------
+# gdacs:
+#   categories:
+#     - Drought
+#     - Earthquake
+#   radius: 1000
+#   latitude: *CONF_LATITUDE
+#   longitude: *CONF_LONGITUDE
 
 #-------------------------------------
 # GEO LOCATION info https://www.home-assistant.io/components/geo_location/
@@ -342,6 +347,18 @@ geo_location:
     minimum_magnitude: *CONF_MAGNITUDE
     latitude: *CONF_LATITUDE
     longitude: *CONF_LONGITUDE
+
+#-------------------------------------
+# INGV Configuration in Integration UI o by new config yaml (see below)
+# info https://github.com/caiosweet/Home-Assistant-custom-components-INGV
+#-------------------------------------
+# ingv_centro_nazionale_terremoti:
+#     location: "Home"
+#     radius: *CONF_RADIUS_QUAKE
+#     minimum_magnitude: *CONF_MAGNITUDE
+#     latitude: *CONF_LATITUDE
+#     longitude: *CONF_LONGITUDE
+#     start_time: 24
 
 #-------------------------------------
 # ZONE
@@ -451,17 +468,31 @@ binary_sensor:
   #-------------------------------------
   # LAST QUAKE DOWNLOAD FILE
   #-------------------------------------
-  - platform: command_line # check URL and download
-    name: download_file # shakemap
-    device_class: connectivity
-    command: >
-      local=$(echo "{{ states('input_text.ingv_path_image') }}" | cut -d" " -f1);
-      remote=$(echo "{{ states('input_text.ingv_path_image') }}" | cut -d" " -f2);
-      rm -f "$local";
-      curl -sSf -Lk -m 5 "$remote" --create-dirs -o "$local" &&
-      echo "ON" || echo "OFF"
-    scan_interval: 525600 # 1 year
-    value_template: "{{ value }}"
+## Nuova configurazione command_line dalla versione 2023.06.0 https://www.home-assistant.io/integrations/command_line
+command_line:
+  - binary_sensor:
+      name: download_file # shakemap
+      device_class: connectivity
+      command: >
+        local=$(echo "{{ states('input_text.ingv_path_image') }}" | cut -d" " -f1);
+        remote=$(echo "{{ states('input_text.ingv_path_image') }}" | cut -d" " -f2);
+        rm -f "$local";
+        curl -sSf -Lk -m 5 "$remote" --create-dirs -o "$local" &&
+        echo "ON" || echo "OFF"
+      scan_interval: 525600 # 1 year
+      value_template: "{{ value }}"
+
+  # - platform: command_line # check URL and download
+  #   name: download_file # shakemap
+  #   device_class: connectivity
+  #   command: >
+  #     local=$(echo "{{ states('input_text.ingv_path_image') }}" | cut -d" " -f1);
+  #     remote=$(echo "{{ states('input_text.ingv_path_image') }}" | cut -d" " -f2);
+  #     rm -f "$local";
+  #     curl -sSf -Lk -m 5 "$remote" --create-dirs -o "$local" &&
+  #     echo "ON" || echo "OFF"
+  #   scan_interval: 525600 # 1 year
+  #   value_template: "{{ value }}"
 
 #######################################-########################################
 ##                                 TEMPLATE
