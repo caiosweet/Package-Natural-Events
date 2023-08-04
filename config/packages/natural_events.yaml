@@ -1,25 +1,23 @@
-## INFO 📦
-##  😅 Caio & Gianpi [hassiohelp.eu]
-##  📅 01/08/2019
-##  📌 Information provided by MeteoAlarm, Burze, GDACS, DPC, INGV and USGS
-##  📂 PATH IMAGE /config/www/hassiohelp/pkg_natural_events
-##--------------------------------------------------------------------------------------------------|
-## Strumento per visualizzare il raggio delle zone https://www.mapdevelopers.com/draw-circle-tool.php
-## Centro Notifiche (AppDaemon Notifier): https://github.com/caiosweet/Package-Notification-HUB-AppDaemon/wiki
-## Alelxa Sound Library TO Google. soundbank://soundlibrary/ >> REPLACE TO  >> https://d3qhmae9zx9eb.cloudfront.net/
-
+## How to use the Alexa Audio Library with Google. 
+## soundbank://soundlibrary/ >> REPLACE TO  >> https://d3qhmae9zx9eb.cloudfront.net/
 homeassistant:
   customize:
-    ############################################################################
-    ## CUSTOMIZE NODE ANCHORS
-    ############################################################################
-    package.node_anchors:
-      customize: &CUSTOMIZE
+    package.natural_events:
+      version: &v "2023.08.0"
+      date: 📅 01/08/2019 - Updated 04/08/2023
+      info: https://github.com/caiosweet/Package-Natural-Events#readme
+      information provided by: Blitzortung, Burze, DPC, GDACS, INGV, MeteoAlarm and USGS
+      links: 
+        notifier: https://github.com/jumping2000/notifier
+        centro_notifiche: https://github.com/caiosweet/Package-Notification-HUB-AppDaemon
+        web: https://hassiohelp.eu/
+        tools_radius: https://www.mapdevelopers.com/draw-circle-tool.php
+
+      extra_attributes: &extra_attributes
+        version: *v
         package: "Natural_events"
-        attribution: "Caio & Gianpi - hassiohelp.eu"
-      package: &PACKAGE
-        package: "Natural_events"
-      version: &VERSION "2023.06.0"
+        attribution: "Caio & Gianpi - natural events - hassiohelp.eu"
+
       ##---------------------- IMPOSTAZIONI DEL PACKAGE ----------------------##
       ### Important! Make sure the editor doesn't change this formatting.
       ### ====>   DESCRIPTION: &ALIAS !secret parameter_of_secret    <====
@@ -42,14 +40,13 @@ homeassistant:
       LONGITUDINE DI CASA: &CONF_LONGITUDE !secret pkg_natural_events_longitude_home
       RAGGIO ZONA GEOALERT (metri): &CONF_RADIUS_GEOALERT !secret pkg_natural_events_radius_geoalert
       RAGGIO ZONA METEOALERT (metri): &CONF_RADIUS_METEOALERT !secret pkg_natural_events_radius_meteoalert
-      MAGNITUDO INGV minimo: &CONF_MAGNITUDE !secret pkg_natural_events_magnitude
-      RAGGIO INGV (km): &CONF_RADIUS_QUAKE !secret pkg_natural_events_radius_quake
+      MAGNITUDO USGS minimo: &CONF_MAGNITUDE !secret pkg_natural_events_magnitude
+      RAGGIO USGS (km): &CONF_RADIUS_QUAKE !secret pkg_natural_events_radius_quake
       REGIONE METEOALARM: &CONF_METEOALARM_REGION !secret pkg_natural_events_meteoalarm_region
-      API KEY BURZE: &CONF_BURZE_API_KEY !secret pkg_natural_events_burze_api_key
-      RAGGIO BURZE (km): &CONF_RADIUS_BURZE !secret pkg_natural_events_radius_burze
       ##---------------------- FINE IMPOSTAZIONI PACKAGE ---------------------##
 
       ##----------------------- START OF HELP SETTINGS -----------------------##
+      IMAGE_PATH: &IMAGE_PATH /config/www/hassiohelp/pkg_natural_events
       DEFAULT_MOBILE_APP_ICON_2: &DEFAULT_MOBILE_APP_ICON_2 "https://hassiohelp.eu/wp-content/uploads/2021/05/icon_forum-750x750-full.png"
       DEFAULT_MOBILE_APP_ICON_1: &DEFAULT_MOBILE_APP_ICON_1 "https://hassiohelp.eu/wp-content/uploads/2021/05/icon_site-750x750-full.png"
       # "https://hassiohelp.eu/wp-content/uploads/2019/03/hassiohelp-192.png"
@@ -204,124 +201,159 @@ homeassistant:
 
     ## Automation
     automation.natural_events_blitzortung_lightning_notifications:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: "Blitzortung Notifiche"
     automation.natural_events_burze_notifications:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: "Burze Notifiche"
     automation.natural_events_gdacs_notifications:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: "Gdacs Notifiche"
     automation.natural_events_meteoalarm_notifications:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: "MeteoAlarm Notifiche"
     automation.natural_events_protezione_civile_notifications:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: "DPC Notifiche BinarySensor"
     automation.natural_events_protezione_civile_notifications_criticita_sensor:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: "DPC Notifiche Criticità"
     automation.natural_events_protezione_civile_notifications_vigilance_sensor:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: "DPC Notifiche Vigilanza"
     automation.natural_events_quake_ingv_notifications:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: "INGV Notifiche"
     automation.natural_events_quake_usgs_notifications:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: "USGS Notifiche"
     ## Binary Sensor
     binary_sensor.burze_storms_nearby:
-      <<: *PACKAGE
+      <<: *extra_attributes
       friendly_name: "Temporale nelle vicinanze"
       device_class: vibration
     binary_sensor.download_file:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: Download File
       icon: mdi:link
     binary_sensor.global_natural_alert:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
     binary_sensor.lastquake:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: Scossa Terremoto
       icon: mdi:pulse
     binary_sensor.meteoalarm:
-      <<: *PACKAGE
+      <<: *extra_attributes
       friendly_name: MeteoAlarm
     binary_sensor.natural_events_meteoalert:
-      <<: *PACKAGE
+      <<: *extra_attributes
     ## Group
     group.geoalert:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: "Allerta Geologica"
       icon: mdi:earth
     group.meteoalert:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: "Allerta Meteo"
       icon: mdi:weather-lightning-rainy
     group.natural_events:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: "Eventi Naturali"
       icon: mdi:location-enter
     ## Input
     input_boolean.natural_events:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: "Info e Impostazioni"
       icon: mdi:cogs
     input_boolean.natural_events_send_image:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: "Invia Immagini"
       icon: mdi:image
     input_select.geo_map:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: Geo Map
       icon: mdi:earth-box
     input_select.meteo_iframe:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: Iframe Map
       icon: mdi:image-frame
     input_select.meteo_map:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: Meteo Map
       icon: mdi:tooltip-image
     input_text.ingv_path_image:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: Ingv path-image automatico (non toccare)
     ## Sensor
     sensor.meteoalarm_level:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: "MeteoAlarm Level"
     sensor.meteoalarm_type:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: "MeteoAlarm Type"
     ## Script
     script.notify_hub:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: Mini Centro Notifiche
       icon: mdi:account-tie
     ## Zone
     zone.geoalert:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: Zona Allerta Geologica
       icon: mdi:radiobox-marked
     zone.meteoalert:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       friendly_name: Zona Allerta Meteo
       icon: mdi:lightning-bolt-circle
-
   #######################################-######################################
   ##                              CUSTOMIZE GLOB
   #######################################-######################################
   customize_glob:
     automation.natural_events_*:
-      <<: *CUSTOMIZE
+      <<: *extra_attributes
       icon: mdi:alpha-a-circle-outline
+
+#######################################-########################################
+##                               COMMAND LINE
+#######################################-########################################
+  #-------------------------------------
+  # LAST QUAKE DOWNLOAD FILE
+  #-------------------------------------
+## https://www.home-assistant.io/integrations/command_line
+
+command_line:
+  - binary_sensor:
+      name: download_file # shakemap check URL and download
+      device_class: connectivity
+      command: >
+        local=$(echo "{{ states('input_text.ingv_path_image') }}" | cut -d" " -f1);
+        remote=$(echo "{{ states('input_text.ingv_path_image') }}" | cut -d" " -f2);
+        rm -f "$local";
+        curl -sSf -Lk -m 5 "$remote" --create-dirs -o "$local" &&
+        echo "ON" || echo "OFF"
+      scan_interval: 525600 # 1 year
+      value_template: "{{ value }}"
 
 #######################################-########################################
 ##                                 COMPONENT
 #######################################-########################################
+
 #-------------------------------------
-# DPC Configuration in Integration UI (Only)
+# BLITZORTUNG Configuration in Integration UI  
+# info https://github.com/mrk-its/homeassistant-blitzortung
+#-------------------------------------
+
+#-------------------------------------
+# BURZE Configuration in Integration UI  
+# info https://github.com/PiotrMachowski/Home-Assistant-custom-components-Burze.dzis.net
+#-------------------------------------
+
+  ## binary_sensor.burze_storms_nearby
+  ## binary_sensor.burze_dzis_net_wyladowania_w_poblizu
+  ## {{ integration_entities('Burze.dzis.net') }}
+
+#-------------------------------------
+# DPC Configuration in Integration UI
 # Info https://github.com/caiosweet/Home-Assistant-custom-components-DPC-Alert
 #-------------------------------------
 
@@ -329,16 +361,26 @@ homeassistant:
 # GDACS Configuration in Integration UI
 # Info https://www.home-assistant.io/integrations/gdacs/
 #-------------------------------------
-# gdacs:
-#   categories:
-#     - Drought
-#     - Earthquake
-#   radius: 1000
-#   latitude: *CONF_LATITUDE
-#   longitude: *CONF_LONGITUDE
 
 #-------------------------------------
-# GEO LOCATION info https://www.home-assistant.io/components/geo_location/
+# INGV Configuration in Integration UI
+# info https://github.com/caiosweet/Home-Assistant-custom-components-INGV
+#-------------------------------------
+
+#-------------------------------------
+# METEOALARM INTEGRATION Configuration yaml
+# info https://www.home-assistant.io/components/meteoalarm/
+#-------------------------------------
+binary_sensor:
+  - platform: meteoalarm
+    name: meteoalarm
+    country: "italy"
+    province: *CONF_METEOALARM_REGION
+    language: "it"
+
+#-------------------------------------
+# USGS GEO LOCATION Configuration yaml
+# info https://www.home-assistant.io/components/geo_location/
 #-------------------------------------
 geo_location:
   - platform: usgs_earthquakes_feed
@@ -347,18 +389,6 @@ geo_location:
     minimum_magnitude: *CONF_MAGNITUDE
     latitude: *CONF_LATITUDE
     longitude: *CONF_LONGITUDE
-
-#-------------------------------------
-# INGV Configuration in Integration UI o by new config yaml (see below)
-# info https://github.com/caiosweet/Home-Assistant-custom-components-INGV
-#-------------------------------------
-# ingv_centro_nazionale_terremoti:
-#     location: "Home"
-#     radius: *CONF_RADIUS_QUAKE
-#     minimum_magnitude: *CONF_MAGNITUDE
-#     latitude: *CONF_LATITUDE
-#     longitude: *CONF_LONGITUDE
-#     start_time: 24
 
 #-------------------------------------
 # ZONE
@@ -374,6 +404,29 @@ zone:
     longitude: *CONF_LONGITUDE
     radius: *CONF_RADIUS_METEOALERT
     passive: true
+
+#######################################-########################################
+##                                   GROUP
+#######################################-########################################
+group:
+  natural_events:
+    entities:
+      - group.meteoalert
+      - group.geoalert
+  meteoalert:
+    entities:
+      - binary_sensor.meteoalarm
+      - binary_sensor.burze_storms_nearby
+      - binary_sensor.dpc_temporali_oggi
+      - binary_sensor.dpc_temporali_domani
+      - binary_sensor.natural_events_meteoalert
+  geoalert:
+    entities:
+      - binary_sensor.lastquake
+      - binary_sensor.dpc_idraulico_domani
+      - binary_sensor.dpc_idraulico_oggi
+      - binary_sensor.dpc_idrogeologico_domani
+      - binary_sensor.dpc_idrogeologico_oggi
 
 #######################################-########################################
 ##                                   INPUT
@@ -418,83 +471,6 @@ input_text:
     max: 255
 
 #######################################-########################################
-##                                   GROUP
-#######################################-########################################
-group:
-  natural_events:
-    entities:
-      - group.meteoalert
-      - group.geoalert
-  meteoalert:
-    entities:
-      - binary_sensor.meteoalarm
-      - binary_sensor.burze_storms_nearby
-      - binary_sensor.dpc_temporali_oggi
-      - binary_sensor.dpc_temporali_domani
-      - binary_sensor.natural_events_meteoalert
-  geoalert:
-    entities:
-      - binary_sensor.lastquake
-      - binary_sensor.dpc_idraulico_domani
-      - binary_sensor.dpc_idraulico_oggi
-      - binary_sensor.dpc_idrogeologico_domani
-      - binary_sensor.dpc_idrogeologico_oggi
-
-#######################################-########################################
-##                               BINARY SENSOR
-#######################################-########################################
-binary_sensor:
-  #-------------------------------------
-  # BURZE
-  # info https://github.com/PiotrMachowski/Home-Assistant-custom-components-Burze.dzis.net
-  #-------------------------------------
-  - platform: burze_dzis_net
-    latitude: *CONF_LATITUDE
-    longitude: *CONF_LONGITUDE
-    api_key: *CONF_BURZE_API_KEY
-    name: burze
-    storms_nearby:
-      radius: *CONF_RADIUS_BURZE
-  #-------------------------------------
-  # METEOALARM INTEGRATION
-  # info https://www.home-assistant.io/components/meteoalarm/
-  #-------------------------------------
-  - platform: meteoalarm
-    name: meteoalarm
-    country: "italy"
-    province: *CONF_METEOALARM_REGION
-    language: "it"
-
-  #-------------------------------------
-  # LAST QUAKE DOWNLOAD FILE
-  #-------------------------------------
-## Nuova configurazione command_line dalla versione 2023.06.0 https://www.home-assistant.io/integrations/command_line
-command_line:
-  - binary_sensor:
-      name: download_file # shakemap
-      device_class: connectivity
-      command: >
-        local=$(echo "{{ states('input_text.ingv_path_image') }}" | cut -d" " -f1);
-        remote=$(echo "{{ states('input_text.ingv_path_image') }}" | cut -d" " -f2);
-        rm -f "$local";
-        curl -sSf -Lk -m 5 "$remote" --create-dirs -o "$local" &&
-        echo "ON" || echo "OFF"
-      scan_interval: 525600 # 1 year
-      value_template: "{{ value }}"
-
-  # - platform: command_line # check URL and download
-  #   name: download_file # shakemap
-  #   device_class: connectivity
-  #   command: >
-  #     local=$(echo "{{ states('input_text.ingv_path_image') }}" | cut -d" " -f1);
-  #     remote=$(echo "{{ states('input_text.ingv_path_image') }}" | cut -d" " -f2);
-  #     rm -f "$local";
-  #     curl -sSf -Lk -m 5 "$remote" --create-dirs -o "$local" &&
-  #     echo "ON" || echo "OFF"
-  #   scan_interval: 525600 # 1 year
-  #   value_template: "{{ value }}"
-
-#######################################-########################################
 ##                                 TEMPLATE
 #######################################-########################################
 template:
@@ -522,6 +498,7 @@ template:
         device_class: vibration
         availability: >-
           {{expand(integration_entities("ingv_centro_nazionale_terremoti")) | length > 0}}
+
         state: >-
           {% set pub_date = states.geo_location
             | selectattr('attributes.source','eq','ingv_centro_nazionale_terremoti')
@@ -593,6 +570,7 @@ template:
             {% set alert = expand(integration_entities("dpc")) |select('search', 'total_alerts') 
             |map(attribute='attributes.total_alerts')|list | max | default(0) %}
             {{ (phenomena + alert) > 0 }}
+
           burze_direction: >-
             {% set direction = state_attr('binary_sensor.burze_storms_nearby', 'direction') %}
             {% set cardinal = {
@@ -656,26 +634,33 @@ template:
           meteoalarm_level_icon: >
             {% set level = state_attr('binary_sensor.meteoalarm','awareness_level') %}
             {{'mdi:numeric-0-box' if level is none else 'mdi:numeric-' ~ level.split(';')[0] ~ '-box'}}
-          code: >- #Code color
+          code: >-
+            {# Numeric code for warning and color #}
             {% set color_codes = {'White':'0','Green':'1','Yellow':'2','Orange':'3','Red':'4'} %}
             {% set ma_level = state_attr('binary_sensor.meteoalarm','awareness_level') %}
             {% set lev1 = '0' if not ma_level else ma_level.split(';')[0] %}
+
             {% set lev2 = expand('group.natural_events')
               | selectattr("attributes.level", 'defined') 
               | rejectattr("state", '!=', 'on')
               | join(', ', attribute='attributes.level')|default('0', True)|max %}
+
             {% set lev3 =  expand(integration_entities("dpc"))
               | selectattr("attributes.max_level", 'defined')
               | join(', ', attribute='attributes.max_level')|default('0', True)|max %}
+
             {% set lev_color = [lev1,lev2,lev3]|max %}
             {{ lev_color|max }}
-          icon: >- #Icon code color
+          icon: >-
+            {# Icon to display the numerical code for the warning and color. #}
             {% set lev_color = this.attributes.get('code', 0) %}
             mdi:numeric-{{ lev_color }}-box
-          level: >- #Text color
+          level: >-
+            {# Colored text based on the numerical code for warning and color. #}
             {% set lev_color = this.attributes.get('code', 0) %}
             {% set color_texts = {0:'White', 1:'Green', 2:'Gold', 3:'Orange', 4:'Red'} %}
             {{ color_texts.get(lev_color) }}
+
   - trigger:
       - platform: state
         entity_id: binary_sensor.global_natural_alert
@@ -731,18 +716,21 @@ automation:
     condition: >
       {{ trigger.to_state.state == 'on' and (trigger.from_state.state == 'off' 
       or trigger.to_state.attributes.distance < trigger.from_state.attributes.distance) }}
-    variables:
-      NUMBER_ICONS: *NUMBER_ICONS
-      WARNING_SIGN: *WARNING_SIGN
-      attr: "{{ states.binary_sensor.burze_storms_nearby.attributes if trigger.to_state is defined else ({}) }}"
-      direction: "{{ state_attr('binary_sensor.global_natural_alert','burze_direction')|default('Nord',true) }}"
-      radius: "{{ (state_attr('zone.meteoalert','radius') //1000)|int(0) }}"
-      burze_tts_msg: >-
-        {% if trigger.from_state is defined and trigger.from_state.state == 'off' %}
-        Probabile arrivo di un temporale da {{ direction }}. 
-        {% else %} Aggiornamento Temporale. Il fulmine più vicino è stato rilevato a {{ attr.get('distance','0') }} km 
-        a {{ direction }} da casa. {% endif %}
     action:
+      - variables:
+          NUMBER_ICONS: *NUMBER_ICONS
+          WARNING_SIGN: *WARNING_SIGN
+          IMAGE_PATH: *IMAGE_PATH
+          direction: "{{ state_attr('binary_sensor.global_natural_alert','burze_direction') | default('Nord',true) }}"
+          radius: "{{ (state_attr('zone.meteoalert','radius') //1000)|int(0) }}"
+          distance: "{{ trigger.to_state.attributes.distance | default(radius, true) }}"
+          number: "{{ trigger.to_state.attributes.number | default(0, true) }}"
+          period: "{{ trigger.to_state.attributes.period | default(0, true) }}"
+          burze_tts_msg: >-
+            {% if trigger.from_state is defined and trigger.from_state.state == 'off' %}
+            Probabile arrivo di un temporale da {{ direction }}. 
+            {% else %} Aggiornamento Temporale. Il fulmine più vicino è stato rilevato a {{ distance }} km 
+            a {{ direction }} da casa. {% endif %}
       - service: *DEFAULT_SCRIPT
         data:
           call_no_annuncio: 1
@@ -751,14 +739,14 @@ automation:
             {{ trigger.to_state.attributes.friendly_name }}.
             {% else %} AGGIORNAMENTO TEMPORALE. {% endif %}
           message: >-
-            {% set n = attr.get('number', 0) %}
-            {% set d = attr.get('distance')|default(radius,'0') %}
+            {% set n = number %}
+            {% set d = distance %}
             {% macro range_distance() %} {% if d <= 0.5 %}5{% elif 0.5 < d <= 1 %}4{% elif 1 < d <= 5 %}3
             {% elif 5 < d <= 10 %}2{% elif 10 < d <= 20 %}1{% else %}0{% endif %} {% endmacro %}
-            {{WARNING_SIGN.get(range_distance()|int(0)).icon_color}} Negli ultimi {{attr.get('period',0)}} minuti
+            {{WARNING_SIGN.get(range_distance()|int(0)).icon_color}} Negli ultimi {{ period }} minuti
             {% for x in n|string %} {{NUMBER_ICONS[x]|default(x)}}{% endfor %}⚡{% if n != 1 %}
-            scariche di fulmini {% else %} fulmine scaricato {% endif %} nel raggio di {{radius}} km. 
-            La scarica più vicina è avvenuta a {{attr.get('distance', 0)}} km a {{direction}} da casa.
+            scariche di fulmini {% else %} fulmine scaricato {% endif %} nel raggio di {{ radius }} km. 
+            La scarica più vicina è avvenuta a {{ distance }} km a {{ direction }} da casa.
           alexa:
             # mode: false
             message: "{{ burze_tts_msg }}"
@@ -768,7 +756,7 @@ automation:
           image: >-
             {% if trigger.from_state is defined and trigger.from_state.state == 'off' 
             and is_state('input_boolean.natural_events_send_image', 'on') %}
-            /config/www/hassiohelp/pkg_natural_events/burze.png{% else %}{% endif %}
+            {{ IMAGE_PATH }}/burze.png{% else %}{% endif %}
   
   #----------------------------------------------------------------------------------------------------#
   # DPC - PROTEZIONE CIVILE - Notifica criticità meteo-idro Sensor
@@ -1009,19 +997,20 @@ automation:
     condition: >-
       {{ trigger.to_state.state == 'on' and (trigger.from_state.state == 'off' 
       or trigger.to_state.attributes != trigger.from_state.attributes) }}
-    variables:
-      METEOALARM_SIGN: *METEOALARM_SIGN
-      WARNING_SIGN: *WARNING_SIGN
-      WEEKDAYS: *WEEKDAYS
-      attr: "{{states.binary_sensor.meteoalarm.attributes if trigger.to_state is defined else ({}) }}"
-      day: "{{as_timestamp(attr.get('onset', now()))|timestamp_custom('%w', true)|int(0)}}"
-      level: "{{attr.get('awareness_level')|regex_replace(find='(\\D)')|int(0)}}" #|regex_replace(find="[^\d][^;]*")|int(0)
-      type: "{{attr.get('awareness_type')|regex_replace(find='(\\D)')|int(0)}}" #|regex_replace(find="[^\d][^;]*")|int(0)
-      meteoalarm_tts_msg: >
-        {{("oh no! ", "accipicchia! ", "accidenti! ", "attenzione! ", "come non detto! ") |random }}
-        per {{WEEKDAYS[day]}}, {{attr.get('headline','Test Intestazione')}}, 
-        {{attr.get('description', 'Test Descrizione').split('(DISCLAIMER')[0]}}
     action:
+      - variables:
+          IMAGE_PATH: *IMAGE_PATH
+          METEOALARM_SIGN: *METEOALARM_SIGN
+          WARNING_SIGN: *WARNING_SIGN
+          WEEKDAYS: *WEEKDAYS
+          attr: "{{states.binary_sensor.meteoalarm.attributes if trigger.to_state is defined else ({}) }}"
+          day: "{{as_timestamp(attr.get('onset', now()))|timestamp_custom('%w', true)|int(0)}}"
+          level: "{{attr.get('awareness_level')|regex_replace(find='(\\D)')|int(0)}}" #|regex_replace(find="[^\d][^;]*")|int(0)
+          type: "{{attr.get('awareness_type')|regex_replace(find='(\\D)')|int(0)}}" #|regex_replace(find="[^\d][^;]*")|int(0)
+          meteoalarm_tts_msg: >
+            {{("oh no! ", "accipicchia! ", "accidenti! ", "attenzione! ", "come non detto! ") |random }}
+            per {{WEEKDAYS[day]}}, {{attr.get('headline','Test Intestazione')}}, 
+            {{attr.get('description', 'Test Descrizione').split('(DISCLAIMER')[0]}}
       - service: *DEFAULT_SCRIPT
         data:
           call_no_annuncio: 1
@@ -1036,7 +1025,7 @@ automation:
             {{as_timestamp(attr.get('expires'))|timestamp_custom(' alle ore %H:%M del %d/%m')|default(now(),true)}}
           image: >-
             {% if is_state('input_boolean.natural_events_send_image', 'on') %}
-            {{'/config/www/hassiohelp/pkg_natural_events/meteoalarm_{}.png'.format(type)}}{% else %}
+            {{ '{}/meteoalarm_{}.png'.format(IMAGE_PATH, type)}}{% else %}
             {% endif %}
           alexa:
             # mode: false
@@ -1078,6 +1067,7 @@ automation:
             di magnitudo {{trigger.to_state.attributes.magnitude}},
             con epicentro {{trigger.to_state.attributes.region}},
             ad una profondità di {{trigger.to_state.attributes.depth}} km.
+
       # NOTIFICATION WITHOUT IMAGE
       - service: *DEFAULT_SCRIPT
         data:
@@ -1730,7 +1720,7 @@ script:
 # pkg_natural_events_google: "{{states('sensor.notifier_player_google')}}"
 # pkg_natural_events_alexa: "{{states('sensor.notifier_player_alexa')}}"
 # pkg_natural_events_service_tts: >
-#   tts.{{states('input_select.notifier_tts_notify')|lower
+#   tts.{{states('input_select.notifier_google_tts_notify')|lower
 #   |replace(' ','_')|replace('google','google_translate')
 #   |replace('reverso','reversotts_say')|default('google_translate_say')}}
 
